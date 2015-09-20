@@ -1336,6 +1336,9 @@ void DigitalRenderer::calc_buffer(int16 *buf, long count)
 	}
 }
 
+#ifdef __LIBRETRO__
+#include "SID_retro.i"
+#else
 
 // Manufacturer independent sound is still just a dream...
 #if defined(__BEOS__)
@@ -1376,7 +1379,7 @@ void DigitalRenderer::EmulateLine(void) {}
 void DigitalRenderer::Pause(void) {}
 void DigitalRenderer::Resume(void) {}
 #endif
-
+#endif	//ndef LIBRETRO
 
 /*
  *  Open/close the renderer, according to old and new prefs
@@ -1398,8 +1401,10 @@ void MOS6581::open_close_renderer(int old_type, int new_type)
 		the_renderer = new SIDCardRenderer;
 #endif
 #ifdef __linux__
+#ifndef __LIBRETRO__
 	} else if (new_type == SIDTYPE_SIDCARD) {
 		the_renderer = new CatweaselRenderer;
+#endif
 #endif
 	} else {
 		the_renderer = NULL;

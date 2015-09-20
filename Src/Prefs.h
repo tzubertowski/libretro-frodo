@@ -101,6 +101,10 @@ public:
 	bool SystemKeys;		// Enable system keys and menu keys (Win32)
 	bool ShowLEDs;			// Show LEDs (Win32)
 
+#ifdef __LIBRETRO__
+	void set_drive8(char *filename,int type);
+#endif
+
 #ifdef __mac__
 	void ChangeDisks(void);
 #endif

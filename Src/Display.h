@@ -29,6 +29,10 @@
 #include <graphics/rastport.h>
 #endif
 
+#ifdef __LIBRETRO__
+#include "retro_video.h"
+#endif
+
 #ifdef HAVE_SDL
 struct SDL_Surface;
 #endif
@@ -68,6 +72,12 @@ public:
 	void Speedometer(int speed);
 	uint8 *BitmapBase(void);
 	int BitmapXMod(void);
+
+#ifdef __LIBRETRO__
+	void Keymap_KeyDown(int sdlkey,uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick);
+	void  Keymap_KeyUp(int sdlkey,uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick);
+#endif
+
 #ifdef __riscos__
 	void PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick, uint8 *joystick2);
 #else
@@ -126,6 +136,10 @@ private:
 	LONG pens[16];				// Pens for C64 colors
 	int xo, yo;					// Window X/Y border size
 	struct FileRequester *open_req, *save_req;	// File requesters for load/save snapshot
+#endif
+
+#ifdef __LIBRETRO__
+char speedometer_string[16];		// Speedometer text
 #endif
 
 #ifdef HAVE_SDL

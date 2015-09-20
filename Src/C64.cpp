@@ -701,6 +701,9 @@ bool C64::LoadSnapshot(char *filename)
 	}
 }
 
+#ifdef __LIBRETRO__
+#include "C64_retro.i"
+#else
 
 #ifdef __BEOS__
 #include "C64_Be.h"
@@ -729,3 +732,4 @@ bool C64::LoadSnapshot(char *filename)
 #ifdef __riscos__
 #include "C64_Acorn.h"
 #endif
+#endif	//ndef LIBRETRO

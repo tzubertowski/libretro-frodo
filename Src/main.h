@@ -28,6 +28,32 @@ class C64;
 extern char AppDirPath[1024];	// Path of application directory
 
 
+
+#ifdef __LIBRETRO__
+class Prefs;
+
+class Frodo {
+public:
+	Frodo();
+	void ArgvReceived(int argc, char **argv);
+	void ReadyToRun();
+	bool RunPrefsEditor();
+
+    static const char *get_prefs_path() { return prefs_path; }
+
+private:
+	void load_rom(const char *which, const char *path, uint8 *where, size_t size, const uint8 *builtin);
+	void load_rom_files();
+
+	static char prefs_path[256];	// Pathname of current preferences file
+	static char device_path[256];	// Pathname of libretro content file
+
+};
+
+extern Frodo *the_app;  // Pointer to Frodo object
+
+#else
+
 /*
  *  BeOS specific stuff
  */
@@ -213,6 +239,8 @@ private:
 };
 
 #endif
+
+#endif //ndef libretro
 
 // Global C64 object
 extern C64 *TheC64;

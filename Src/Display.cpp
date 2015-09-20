@@ -83,6 +83,9 @@ void C64Display::UpdateLEDs(int l0, int l1, int l2, int l3)
 	led_state[3] = l3;
 }
 
+#ifdef __LIBRETRO__
+#include "Display_retro.i"
+#else
 
 #if defined(__BEOS__)
 #include "Display_Be.h"
@@ -107,3 +110,6 @@ void C64Display::UpdateLEDs(int l0, int l1, int l2, int l3)
 #elif defined(__riscos__)
 #include "Display_Acorn.h"
 #endif
+
+#endif	//ndef LIBRETRO
+

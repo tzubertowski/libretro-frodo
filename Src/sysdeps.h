@@ -193,6 +193,16 @@ typedef long long int64;
 #error No 8 byte type, you lose.
 #endif
 
+// For systems where SIZEOF_VOID_P is not defined, determine it
+// based on __LP64__ (defined by gcc on 64-bit systems)
+#if !defined(SIZEOF_VOID_P)
+# if defined(__LP64__)
+#  define SIZEOF_VOID_P 8
+# else
+#  define SIZEOF_VOID_P 4
+# endif
+#endif
+
 #if SIZEOF_VOID_P == 4
 typedef uint32 uintptr;
 typedef int32 intptr;

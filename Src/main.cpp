@@ -56,7 +56,6 @@ char AppDirPath[1024];	// Path of application directory
 #include "Char_ROM.h"
 #include "1541_ROM.h"
 
-
 /*
  *  Load C64 ROM files
  */
@@ -84,6 +83,9 @@ void Frodo::load_rom_files()
 	load_rom("1541", DRIVE_ROM_FILE, TheC64->ROM1541, DRIVE_ROM_SIZE, builtin_drive_rom);
 }
 
+#ifdef __LIBRETRO__
+#include "main_retro.i"
+#else
 
 #ifdef __BEOS__
 #include "main_Be.h"
@@ -108,3 +110,4 @@ void Frodo::load_rom_files()
 #ifdef __riscos__
 #include "main_Acorn.h"
 #endif
+#endif //ndef libretro

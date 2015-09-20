@@ -356,6 +356,10 @@ bool Prefs::Save(const char *filename)
 }
 
 
+#ifdef __LIBRETRO__
+#include "Prefs_retro.i"
+#endif
+
 #ifdef __BEOS__
 #include "Prefs_Be.h"
 #endif
