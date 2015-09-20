@@ -1,0 +1,75 @@
+INCFLAGS += -I$(CORE_DIR)/libretro/libco \
+				-I$(CORE_DIR)/libretro/core \
+				-I$(CORE_DIR)/libretro/include \
+				-I$(CORE_DIR)/libretro/emu \
+				-I$(CORE_DIR)/libretro \
+				-I$(CORE_DIR)/Src \
+				-I$(CORE_DIR)
+
+EMU := $(CORE_DIR)/Src
+GUI := $(CORE_DIR)/libretro/gui
+
+SOURCES_CXX := \
+		$(EMU)/main.cpp $(EMU)/Display.cpp $(EMU)/Prefs.cpp \
+		$(EMU)/SID.cpp $(EMU)/REU.cpp $(EMU)/IEC.cpp $(EMU)/1541fs.cpp \
+        $(EMU)/1541d64.cpp $(EMU)/1541t64.cpp $(EMU)/1541job.cpp \
+		$(EMU)/SAM.cpp $(EMU)/CmdPipe.cpp
+
+SLOBJS  := \
+		$(EMU)/C64.cpp $(EMU)/CPUC64.cpp $(EMU)/VIC.cpp \
+		$(EMU)/CIA.cpp $(EMU)/CPU1541.cpp
+
+PCFLAGS = -DPRECISE_CPU_CYCLES=1 -DPRECISE_CIA_CYCLES=1 -DPC_IS_POINTER=0
+
+SCOBJS  = \
+		$(EMU)/C64_SC.cpp $(EMU)/CPUC64_SC.cpp $(EMU)/VIC_SC.cpp \
+		$(EMU)/CIA_SC.cpp $(EMU)/CPU1541_SC.cpp $(EMU)/CPU_common.cpp
+
+SCFLAGS = -DFRODO_SC
+
+GUISRCS = sdlgui.cpp file.cpp dlgFileSelect.cpp dlgMain.cpp \
+		dlgDrives.cpp dlgOptions.cpp dlgVidoSound.cpp \
+		dlgAdvanced.cpp dlgInput.cpp
+
+ifeq ($(EMUTYPE), frodosc)
+SOURCES_CXX += $(SCOBJS)
+CPPFLAGS += $(PCFLAGS)
+CPPFLAGS += $(SCFLAGS)
+else
+SOURCES_CXX += $(SLOBJS)
+CPPFLAGS += $(PCFLAGS)
+endif
+
+VERSION   = 4
+REVISION  = 2
+CPPFLAGS +=  -DFRODO_HPUX_REV=0 -DKBD_LANG=0 -fpermissive
+
+CXXFLAGS += $(CPPFLAGS)
+
+SOURCES_CXX += \
+	$(CORE_DIR)/libretro/core/libretro-core.cpp \
+	$(CORE_DIR)/libretro/core/core-mapper.cpp \
+	$(CORE_DIR)/libretro/core/graph.cpp 
+
+SOURCES_CXX += $(GUI)/dialog.cpp\
+				 $(GUI)/paths.cpp \
+				 $(GUI)/file.cpp \
+				 $(GUI)/unzip.cpp \
+				 $(GUI)/thumb.cpp \
+				 $(GUI)/zip.cpp \
+				 $(GUI)/str.cpp \
+				 $(GUI)/dlgFloppy.cpp \
+				 $(GUI)/dlgFileSelect.cpp \
+				 $(GUI)/dlgJoystick.cpp \
+				 $(GUI)/dlgAbout.cpp \
+				 $(GUI)/dlgSound.cpp \
+				 $(GUI)/dlgAlert.cpp \
+				 $(GUI)/dlgMisc.cpp \
+				 $(GUI)/dlgVideo.cpp \
+				 $(GUI)/dlgMain.cpp \
+				 $(GUI)/dlgSnapshot.cpp \
+				 $(GUI)/sdlgui.cpp
+
+SOURCES_C := \
+	$(CORE_DIR)/libretro/libco/libco.c 
+
