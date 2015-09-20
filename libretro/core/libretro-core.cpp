@@ -41,7 +41,7 @@ void retro_set_environment(retro_environment_t cb)
    struct retro_variable variables[] = {
       {
          "Skel_resolution",
-         "Internal resolution; 400x300|640x480|832x576|800x600|960x720|1024x768|1024x1024",
+         "Internal resolution; 384x288|400x300|640x480|832x576|800x600|960x720|1024x768|1024x1024",
 
       },
       { NULL, NULL },
@@ -69,6 +69,7 @@ static void update_variables(void)
       if (pch)
          retroh = strtoul(pch, NULL, 0);
 
+//FIXME remove force 384x288
 retrow=WINDOW_WIDTH;
 retroh=WINDOW_HEIGHT;
 

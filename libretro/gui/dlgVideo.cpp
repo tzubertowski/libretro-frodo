@@ -20,6 +20,7 @@ const char DlgVideo_fileid[] = "Hatari dlgVideo.c : " __DATE__ " " __TIME__;
 #define DLGVIDEO_INC	    6
 #define DLGVIDEO_SKIPFRAME	7
 #define DLGVIDEO_DEC	    8
+#define DLGVIDEO_LEDS	    9
 #define DLGVIDEO_EXIT       12
 
 char mskip[4];
@@ -40,7 +41,8 @@ static SGOBJ videodlg[] =
 	{ SGTEXT,     0, 0, 17,10,  3,1,mskip },
 	{ SGBUTTON,   SG_EXIT, 0, 23,10,  1,1,  "-" },
 
-	{ SGTEXT, 0, 0, 1,16, 38,1, NULL },				//9
+	{ SGCHECKBOX, 0, 0, 13 ,16, 11,1, "Show Leds" },			//9
+	//{ SGTEXT, 0, 0, 1,16, 38,1, NULL },				//9
 	{ SGTEXT, 0, 0, 1,17, 38,1, NULL },				
 	{ SGTEXT, 0, 0, 1,18, 38,1, NULL },				
 	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 19,23, 8,1, "OK" },	//12
@@ -58,6 +60,13 @@ void Dialog_VideoDlg(void)
 
 	SDLGui_CenterDlg(videodlg);
 
+	videodlg[DLGVIDEO_LEDS].state &= ~SG_SELECTED;
+
+	if (ThePrefs.ShowLEDs) { 
+		videodlg[DLGVIDEO_LEDS].state |= SG_SELECTED;
+	}
+
+
 	videodlg[DLGVIDEO_SPRITES].state &= ~SG_SELECTED;
 	videodlg[DLGVIDEO_SPRITECOL].state &= ~SG_SELECTED;
 
@@ -68,6 +77,7 @@ void Dialog_VideoDlg(void)
 	if (ThePrefs.SpriteCollisions) { 
 		videodlg[DLGVIDEO_SPRITECOL].state |= SG_SELECTED;
 	}
+
 
 	sprintf(mskip, "%3i", ThePrefs.SkipFrames);
 	valskip=ThePrefs.SkipFrames;
@@ -123,5 +133,18 @@ void Dialog_VideoDlg(void)
 
 	}
 
+	if(videodlg[DLGVIDEO_LEDS].state & SG_SELECTED){
 
+		if(!ThePrefs.ShowLEDs){
+			prefs->ShowLEDs=true;
+		}
+
+	}
+	else {
+
+		if(ThePrefs.ShowLEDs){
+			prefs->ShowLEDs=false;
+		}
+
+	}
 }

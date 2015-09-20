@@ -23,6 +23,8 @@ char RETRO_DIR[512];
 #include <time.h>
 #endif
 
+extern void Screen_SetFullUpdate(int scr);
+
 long frame=0;
 unsigned long  Ktime=0 , LastFPSTime=0;
 
@@ -39,8 +41,6 @@ int snd_sampler = 44100 / 50;
 
 //PATH
 char RPATH[512];
-
-//EMU FLAGS
 
 //EMU FLAGS
 int NPAGE=-1, KCOL=1, BKGCOLOR=0;
@@ -258,7 +258,8 @@ int Retro_PollEvent/*(void)*/(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
    else if ( mbt[i]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) )
    {
       mbt[i]=0;
-      SHOWKEY=-SHOWKEY;     
+      SHOWKEY=-SHOWKEY;
+      Screen_SetFullUpdate(0);  
    }
 
    //mouse/joy toggle

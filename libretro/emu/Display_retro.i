@@ -38,7 +38,7 @@ extern int retrow ;
 extern int retroh ;
 retro_Surface *screen; //1bpp depth bitmap surface
 retro_pal palette[PALETTE_SIZE];
-retro_Rect r = {0, DISPLAY_Y, DISPLAY_X, 15};
+retro_Rect r = {0, DISPLAY_Y, DISPLAY_X, 15}; //384*272+16
 extern void Retro_BlitSurface(retro_Surface *ss);
 extern int Retro_PollEvent/*(void)*/(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick);
 extern int input_gui(void);
@@ -122,6 +122,9 @@ void Retro_BlitSurface(retro_Surface *ss)
 	return;
 }
 
+void Retro_ClearSurface(retro_Surface *ss){
+	memset(ss->pixels,0,ss->h*ss->pitch);
+}
 
 /*
  *  Draw string into surface using the C64 ROM font
@@ -150,9 +153,11 @@ void draw_string(retro_Surface *s, int x, int y, const char *str, uint8 front_co
 	}
 }
 
-void Screen_SetFullUpdate(void)
+/* 0 clear emu scr , 1 clear c64 scr ,>1 clear both*/
+void Screen_SetFullUpdate(int scr)
 {
-   memset(Retro_Screen, 0, sizeof(Retro_Screen));
+   if(scr==0 ||scr>1)memset(Retro_Screen, 0, sizeof(Retro_Screen));
+   if(scr>0)if(screen)memset(screen->pixels,0,screen->h*screen->pitch);
 }
 
 
@@ -246,8 +251,8 @@ int init_graphics(void)
 
 //	screen = (retro_Surface *) malloc( sizeof(*retro_Surface));
 	screen=malloc( sizeof(retro_Surface*) );
-	screen->pixels=malloc(DISPLAY_X *( DISPLAY_Y + 17) );
-	screen->h=DISPLAY_Y+17;
+	screen->pixels=malloc(DISPLAY_X *( DISPLAY_Y + 16) );
+	screen->h=DISPLAY_Y+16;
 	screen->w=DISPLAY_X ;
 	screen->pitch=screen->w*1;
 	
@@ -310,6 +315,9 @@ void C64Display::NewPrefs(Prefs *prefs)
 
 void C64Display::Update(void)
 {
+
+if(ThePrefs.ShowLEDs){
+
 	// Draw speedometer/LEDs
 //	retro_Rect r = {0, DISPLAY_Y, DISPLAY_X, 15};
 	r.x =0;
@@ -367,8 +375,11 @@ void C64Display::Update(void)
 	draw_string(screen, DISPLAY_X * 4/5 + 8, DISPLAY_Y + 4, "D\x12 11", black, fill_gray);
 	draw_string(screen, 24, DISPLAY_Y + 4, speedometer_string, black, fill_gray);
 
+} //if showleds
+
 	// Update display
 
+	//blit c64 scr 1bit depth to emu scr 4bit depth
 	retro_Rect src,dst;
 
 	int x,y,w;
@@ -378,7 +389,7 @@ void C64Display::Update(void)
 	src.w=screen->w;
 	src.h=screen->h;
 	dst.x=0;
-	dst.y=0;
+	dst.y=ThePrefs.ShowLEDs?0:8;
 	dst.w=retrow;
 	dst.h=retroh;
 
@@ -400,6 +411,8 @@ void C64Display::Update(void)
 		pin +=(screen->w-src.w)*1;
 		pout+=(retrow-src.w)*4;
 	}
+
+
 
 	//SHOW VKBD
 	if(SHOWKEY==1)virtual_kdb(( char *)Retro_Screen,vkx,vky);
@@ -764,7 +777,7 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
          {
             //VKbd show/hide 			
             oldi=-1;
-            Screen_SetFullUpdate();
+            Screen_SetFullUpdate(0);
             SHOWKEY=-SHOWKEY;
          }
          else if(i==-5)
@@ -777,7 +790,6 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
          {
             if(i==-10)
             {
-               //IKBD_PressSTKey(i,(SHIFTON == 1)?0:1);
  			   validkey(MATRIX(6,4),(SHIFTON == 1)?1:0,key_matrix,rev_matrix,joystick);
                SHIFTON=-SHIFTON;
                //Screen_SetFullUpdate();
@@ -785,17 +797,15 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
                oldi=-1;
             }
             else if(i==-11)
-            {
-               //IKBD_PressSTKey(i,(SHIFTON == 1)?0:1);
+            {               
  			   validkey(MATRIX(7,2),(CTRLON == 1)?1:0,key_matrix,rev_matrix,joystick);
-               SHIFTON=-SHIFTON;
+               CTRLON=-CTRLON;
                //Screen_SetFullUpdate();
 
                oldi=-1;
             }
 			else if(i==-12)
-            {
-               //IKBD_PressSTKey(i,(SHIFTON == 1)?0:1);
+            {               
  			   validkey(MATRIX(7,7),(RSTOPON == 1)?1:0,key_matrix,rev_matrix,joystick);
                RSTOPON=-RSTOPON;
                //Screen_SetFullUpdate();
@@ -805,8 +815,7 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
             else
             {
                oldi=i;
-		       validkey(oldi,0,key_matrix,rev_matrix,joystick);
-               //IKBD_PressSTKey(i,1);
+		       validkey(oldi,0,key_matrix,rev_matrix,joystick);               
             }
 
          }

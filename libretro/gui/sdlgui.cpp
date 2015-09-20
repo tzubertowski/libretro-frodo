@@ -35,7 +35,7 @@ Prefs *prefs;
 extern int retroh,retrow;
 
 #ifdef SNAP_BMP 
-extern unsigned int emubkg[100*75];
+extern unsigned int emubkg[96*72];
 #endif
 
 #define TEXTURE_WIDTH retrow
@@ -525,9 +525,9 @@ void SDLGui_DrawDialog(const SGOBJ *dlg)
 	int j,idx;
 
    idx=0;
-   for(j=0;j<75;j++)
+   for(j=0;j<72;j++)
    {
-      for(i=150;i<250;i++)
+      for(i=152;i<248;i++)
       {
          DrawPointBmp((char *)Retro_Screen,i,j,emubkg[idx]);
          idx++;			

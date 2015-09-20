@@ -21,10 +21,11 @@ int retro_quit=0;
 
 #ifdef SNAP_BMP 
 #include "libretro-core.h"
-unsigned int emubkg[100*75];
+unsigned int emubkg[96*72];
 typedef unsigned  int  PIXEL;
 extern void ScaleRect(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
       int TgtWidth, int TgtHeight);
+extern void Screen_SetFullUpdate(int scr);
 #endif
 
 /*-----------------------------------------------------------------------*/
@@ -54,10 +55,12 @@ bool Dialog_DoProperty(void)
    PIXEL *Source=(unsigned *)&Retro_Screen[0];
    PIXEL *Target=&emubkg[0];
 
-	ScaleRect(Target, Source, 400, 300,100,75);
+	ScaleRect(Target, Source, 384, 288,96,72);
 #endif
 
    bOKDialog = Dialog_MainDlg(&bForceReset, &bLoadedSnapshot);
+
+   Screen_SetFullUpdate(2); //reset c64 src & emu scr
 
    if(bForceReset)
    {
