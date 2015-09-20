@@ -34,7 +34,7 @@ static SGOBJ sounddlg[] =
 
 	{ SGCHECKBOX, 0,0,  2, 9, 10,1, "SID filters" },
 	{ SGBOX,      0,0,  1,18, 38,7, NULL }, //
-	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 10,23, 20,1, "Back to main menu" },//8
+	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 10,23, 24,1, "Back to main menu" },//8
 	{ -1, 0, 0, 0,0, 0,0, NULL }
 };
 

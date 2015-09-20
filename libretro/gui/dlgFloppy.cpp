@@ -83,7 +83,7 @@ static SGOBJ floppydlg[] =
 
 	{ SGTEXT, 0, 0, 3,16, 58,1, NULL },	
 	{ SGCHECKBOX, 0, 0, 3,17, 15,1, "Emulate 1541" },
-	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 22,18, 20,1, "Back to main menu" },
+	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 22,18, 24,1, "Back to main menu" },
 	{ -1, 0, 0, 0,0, 0,0, NULL }
 };
 

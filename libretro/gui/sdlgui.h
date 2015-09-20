@@ -70,8 +70,8 @@ enum
 #define SGRADIOBUTTON_SELECTED '*'//13
 #define SGCHECKBOX_NORMAL 'o'//14
 #define SGCHECKBOX_SELECTED 'X'//15
-#define SGARROWUP "\xCB"// 1
-#define SGARROWDOWN "\xCA"// 2
+#define SGARROWUP "^"// 1
+#define SGARROWDOWN "v"// 2
 #define SGARROWLEFT "<"// 4
 #define SGARROWRIGHT ">"// 3
 #define SGFOLDER     '~'
