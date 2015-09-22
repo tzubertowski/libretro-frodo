@@ -113,15 +113,15 @@ Mvk MVk[NPLGN*NLIGN*2]={
 	{ "SPC" ,"SPC",MATRIX(7,4)},	
 	
 	{ " PG1","PG1" ,-2},//90
-	{ " +"," I"   ,MATRIX(5,0)},
+	{ "GUI","GUI"   ,-14},
 	{ "ABT","ABT"  ,-13},
 	{ "CTR" ,"CTR" ,-12},
 	{ "R/S" ,"R/S" ,-11},
 	{ "SHI" ,"SHI" ,-10},
-	{ "Njoy","Njoy",-5},
-	{ "Col" ,"Col",-3},
+	{ "M/J","M/J",-5},
+	{ "COL" ,"COL",-3},
 	{ "Ent" ,"Ent",MATRIX(0,1)},
-	{ "Kbd" ,"Kbd",-4},
+	{ "KBD" ,"KBD",-4},
 
 } ;
 

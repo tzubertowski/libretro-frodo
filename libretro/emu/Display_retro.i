@@ -742,7 +742,7 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
       if(vky>4)vky=0;
 
    //  virtual_kdb(( char *)Retro_Screen,vkx,vky);
-
+ 
       i=8;
       if(input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i)  && vkflag[4]==0) 	
          vkflag[4]=1;
@@ -783,7 +783,7 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
          }
          else
          {
-            if(i==-10)
+            if(i==-10) //SHIFT
             {
  			   validkey(MATRIX(6,4),(SHIFTON == 1)?1:0,key_matrix,rev_matrix,joystick);
                SHIFTON=-SHIFTON;
@@ -791,7 +791,7 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
 
                oldi=-1;
             }
-            else if(i==-11)
+            else if(i==-11) //CTRL
             {               
  			   validkey(MATRIX(7,2),(CTRLON == 1)?1:0,key_matrix,rev_matrix,joystick);
                CTRLON=-CTRLON;
@@ -799,7 +799,7 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
 
                oldi=-1;
             }
-			else if(i==-12)
+			else if(i==-12) //RSTOP
             {               
  			   validkey(MATRIX(7,7),(RSTOPON == 1)?1:0,key_matrix,rev_matrix,joystick);
                RSTOPON=-RSTOPON;
@@ -807,14 +807,17 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
 
                oldi=-1;
             }
-			else if(i==-13)
+			else if(i==-13) //AUTOBOOT
             {     
           	   kbd_buf_feed("\rLOAD\":*\",8,1:\rRUN\r\0");
 	  		   autoboot=true; 
- 			   //validkey(MATRIX(7,7),(RSTOPON == 1)?1:0,key_matrix,rev_matrix,joystick);
-               //RSTOPON=-RSTOPON;
-               //Screen_SetFullUpdate();
-
+               oldi=-1;
+            }
+			else if(i==-14) //GUI
+            {    
+				pauseg=1; 
+               Screen_SetFullUpdate(0);
+               SHOWKEY=-SHOWKEY;
                oldi=-1;
             }
             else

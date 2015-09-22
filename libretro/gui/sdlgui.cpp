@@ -47,7 +47,7 @@ extern unsigned int emubkg[96*72];
 
 #define RGB565(r, g, b)  (((r) << (5+16)) | ((g) << (5+8)) | (b<<5))
 
-extern void input_gui();
+extern int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick);
 
 static const char *cross[] = {
   "X                               ",
@@ -667,7 +667,7 @@ int SDLGui_DoDialog(SGOBJ *dlg, int/*SDL_Event */*pEventOut)
 	/* (Re-)draw the dialog */
 	SDLGui_DrawDialog(dlg);
 
-	input_gui();
+	Retro_PollEvent(NULL,NULL,NULL);
 
         if(touch!=-1){b=1;boutc=1;}
 	else {b=0;boutc=0;}
@@ -714,7 +714,7 @@ int SDLGui_DoDialog(SGOBJ *dlg, int/*SDL_Event */*pEventOut)
 	while (retbutton == 0 && !bQuitProgram)
 	{
 
-		input_gui();
+		Retro_PollEvent(NULL,NULL,NULL);
 
 		draw_cross(gmx,gmy);
 

@@ -118,7 +118,7 @@ long GetTicks(void)
 #endif
 
 } 
-
+int slowdown=0;
 //NO SURE FIND BETTER WAY TO COME BACK IN MAIN THREAD IN HATARI GUI
 void gui_poll_events(void)
 {
@@ -126,6 +126,7 @@ void gui_poll_events(void)
 
    if(Ktime - LastFPSTime >= 1000/50)
    {
+	  slowdown=0;
       frame++; 
       LastFPSTime = Ktime;		
       co_switch(mainThread);
@@ -256,8 +257,9 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
    int16_t mouse_x,mouse_y;
    mouse_x=mouse_y=0;
 
-   if(SHOWKEY==-1)Process_key(key_matrix,rev_matrix,joystick);
+   if(SHOWKEY==-1 && pauseg==0)Process_key(key_matrix,rev_matrix,joystick);
 
+if(pauseg==0){
 /*
    i=0;//Autoboot
    if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) && mbt[i]==0 )
@@ -279,7 +281,7 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
       SHOWKEY=-SHOWKEY;
       Screen_SetFullUpdate(0);  
    }
-
+}
    i=2;//mouse/joy toggle
    if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) && mbt[i]==0 )
       mbt[i]=1;
@@ -288,6 +290,7 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
       MOUSE_EMULATED=-MOUSE_EMULATED;
    }
 
+/*
    i=3;//push r/s
    if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) && mbt[i]==0 ){
       mbt[i]=1;validkey(MATRIX(0,3),0,key_matrix,rev_matrix,joystick);
@@ -295,19 +298,12 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
    else if ( mbt[i]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) ){
       mbt[i]=0;validkey(MATRIX(0,3),1,key_matrix,rev_matrix,joystick);      
    }
+*/
+
 
    if(MOUSE_EMULATED==1){
 
-      //TODO FIX THIS :(
-#if defined(__CELLOS_LV2__) 
-      //Slow Joypad Mouse Emulation for PS3
-      static int pair=-1;
-      pair=-pair;
-      if(pair==1)return;
-      PAS=1;
-#elif defined(GEKKO) 
-      PAS=1;
-#endif
+	  if(slowdown>0)return;
 
       if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))mouse_x += PAS;
       if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))mouse_x -= PAS;
@@ -317,6 +313,8 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
       mouse_r=input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B);
 
       PAS=SAVPAS;
+
+	  slowdown=1;
    }
    else {
 
@@ -332,12 +330,14 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 
       mmbL=1;		
       pushi=1;
+	  touch=1;
 
    }
    else if(mmbL==1 && !mouse_l) {
 
       mmbL=0;
       pushi=0;
+	  touch=-1;
    }
 
    if(mmbR==0 && mouse_r){
@@ -357,94 +357,6 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 
 
 return 1;
-
-}
-
-
-int input_gui(void)
-{
-
-   int SAVPAS=PAS;	
-
-   input_poll_cb();
-
-   int mouse_l;
-   int mouse_r;
-   int16_t mouse_x,mouse_y;
-   mouse_x=mouse_y=0;
-
-   //mouse/joy toggle
-   if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, 2) && mbt[2]==0 )
-      mbt[2]=1;
-   else if ( mbt[2]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, 2) )
-   {
-      mbt[2]=0;
-      MOUSEMODE=-MOUSEMODE;
-   }
-
-   if(MOUSEMODE==1)
-   {
-      //TODO FIX THIS :(
-#if defined(__CELLOS_LV2__) 
-      //Slow Joypad Mouse Emulation for PS3
-      static int pair=-1;
-      pair=-pair;
-      if(pair==1)
-         return;
-      PAS=1;
-#elif defined(GEKKO) 
-      PAS=1;
-#endif
-
-      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))
-         mouse_x += PAS;
-      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))
-         mouse_x -= PAS;
-      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN))
-         mouse_y += PAS;
-      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP))
-         mouse_y -= PAS;
-      mouse_l=input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A);
-      mouse_r=input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B);
-
-      PAS=SAVPAS;
-   }
-   else
-   {
-      mouse_x = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_X);
-      mouse_y = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_Y);
-      mouse_l    = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_LEFT);
-      mouse_r    = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_RIGHT);
-   }
-
-   static int mmbL = 0, mmbR = 0;
-
-   if(mmbL==0 && mouse_l)
-   {
-      mmbL=1;		
-      touch=1;
-   }
-   else if(mmbL==1 && !mouse_l)
-   {
-      mmbL=0;
-      touch=-1;
-   }
-
-   if(mmbR==0 && mouse_r)
-      mmbR=1;		
-   else if(mmbR==1 && !mouse_r)
-      mmbR=0;
-
-   gmx+=mouse_x;
-   gmy+=mouse_y;
-   if (gmx<0)
-      gmx=0;
-   if (gmx>retrow-1)
-      gmx=retrow-1;
-   if (gmy<0)
-      gmy=0;
-   if (gmy>retroh-1)
-      gmy=retroh-1;
 
 }
 
