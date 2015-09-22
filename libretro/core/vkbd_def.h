@@ -114,7 +114,7 @@ Mvk MVk[NPLGN*NLIGN*2]={
 	
 	{ " PG1","PG1" ,-2},//90
 	{ " +"," I"   ,MATRIX(5,0)},
-	{ " 4","Lft"  ,MATRIX(1,3)},
+	{ "ABT","ABT"  ,-13},
 	{ "CTR" ,"CTR" ,-12},
 	{ "R/S" ,"R/S" ,-11},
 	{ "SHI" ,"SHI" ,-10},

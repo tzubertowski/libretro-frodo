@@ -32,20 +32,33 @@ enum {
 
 
 #ifdef __LIBRETRO__
+
 #include "libretro.h"
 #include "libretro-core.h"
+#include "graph.h"
+#include "vkbd_def.h"
+
 extern int retrow ; 
 extern int retroh ;
 retro_Surface *screen; //1bpp depth bitmap surface
 retro_pal palette[PALETTE_SIZE];
 retro_Rect r = {0, DISPLAY_Y, DISPLAY_X, 15}; //384*272+16
 extern void Retro_BlitSurface(retro_Surface *ss);
-extern int Retro_PollEvent/*(void)*/(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick);
-extern int input_gui(void);
+extern int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick);
 extern void gui_poll_events(void);
-//#include "vkbd.h"
 extern retro_input_state_t input_state_cb;
-#include "graph.h"
+extern int CROP_WIDTH;
+extern int CROP_HEIGHT;
+extern int VIRTUAL_WIDTH;
+extern int NPAGE;
+extern int KCOL;
+extern int BKGCOLOR;
+extern int SHIFTON;
+extern int SHOWKEY;
+int CTRLON=-1;
+int RSTOPON=-1;
+static int vkx=0,vky=0;
+
 #endif
 
 /*
@@ -180,28 +193,15 @@ void kbd_buf_update(C64 *TheC64) {
 	}
 	else if(kbd_feedbuf[kbd_feedbuf_pos]=='\0')autoboot=false;
 }
-//fautoboot
-#define DEFAULT_PATH "/"
-extern char *filebrowser(const char *path_and_name);
 
-extern int CROP_WIDTH;
-extern int CROP_HEIGHT;
-extern int VIRTUAL_WIDTH;
-#include "vkbd_def.h"
-extern int NPAGE;
-extern int KCOL;
-extern int BKGCOLOR;
-extern int SHIFTON;
-extern int SHOWKEY;
-int CTRLON=-1;
-int RSTOPON=-1;
-static int vkx=0,vky=0;
+//fautoboot
+
 
 void virtual_kdb(char *buffer,int vx,int vy)
 {
-#if 1
+
    int x, y, page;
-   unsigned/* *pix,*/ coul;
+   unsigned coul;
 
 #if defined PITCH && PITCH == 4
 unsigned *pix=(unsigned*)buffer;
@@ -228,8 +228,6 @@ unsigned short *pix=(unsigned short *)buffer;
    Draw_text((char*)pix,XBASE0-2+vx*XSIDE ,YBASE0+YSIDE*vy,RGB565(2,31,1), BKGCOLOR ,1, 1,20,
          SHIFTON==-1?MVk[(vy*NPLGN)+vx+page].norml:MVk[(vy*NPLGN)+vx+page].shift);	
 
-#endif
-
 }
 
 int check_vkey2(int x,int y)
@@ -247,9 +245,6 @@ int check_vkey2(int x,int y)
 int init_graphics(void)
 {
 
-	kbd_buf_feed("\rLOAD\":*\",8,1:\rRUN\r\0");
-
-//	screen = (retro_Surface *) malloc( sizeof(*retro_Surface));
 	screen=malloc( sizeof(retro_Surface*) );
 	screen->pixels=malloc(DISPLAY_X *( DISPLAY_Y + 16) );
 	screen->h=DISPLAY_Y+16;
@@ -673,7 +668,7 @@ void C64Display:: Keymap_KeyDown(int symkey,uint8 *key_matrix, uint8 *rev_matrix
 		case RETROK_KP_MULTIPLY:	// '*' on keypad: Toggle speed limiter
 			ThePrefs.LimitSpeed = !ThePrefs.LimitSpeed;
 			break;
-		case RETROK_KP_DIVIDE:	// '*' on keypad: Toggle speed limiter
+		case RETROK_KP_DIVIDE:	// '/' on keypad: Toggle GUI 
 			pauseg=1;
 			break;
 
@@ -812,6 +807,16 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
 
                oldi=-1;
             }
+			else if(i==-13)
+            {     
+          	   kbd_buf_feed("\rLOAD\":*\",8,1:\rRUN\r\0");
+	  		   autoboot=true; 
+ 			   //validkey(MATRIX(7,7),(RSTOPON == 1)?1:0,key_matrix,rev_matrix,joystick);
+               //RSTOPON=-RSTOPON;
+               //Screen_SetFullUpdate();
+
+               oldi=-1;
+            }
             else
             {
                oldi=i;
@@ -855,10 +860,7 @@ void C64Display::InitColors(uint8 *colors)
 	palette[red].g = palette[red].b = 0;
 	palette[green].g = 0xf0;
 	palette[green].r = palette[green].b = 0;
-/*	
-	SDL_SetColors(screen, palette, 0, PALETTE_SIZE);
-    Retro_SetPalette(screen,0, palette, 0, PALETTE_SIZE);
-*/
+
 	for (int i=0; i<256; i++)
 		colors[i] = i & 0x0f;
 }

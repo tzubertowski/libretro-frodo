@@ -24,6 +24,10 @@ char RETRO_DIR[512];
 #endif
 
 extern void Screen_SetFullUpdate(int scr);
+extern void kbd_buf_feed(char *s);
+extern bool Dialog_DoProperty(void);
+extern bool autoboot;
+extern void validkey(int c64_key,int key_up,uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick);
 
 long frame=0;
 unsigned long  Ktime=0 , LastFPSTime=0;
@@ -128,8 +132,6 @@ void gui_poll_events(void)
    }
 }
 
-extern bool Dialog_DoProperty(void);
-
 void enter_gui(void)
 {
   //save_bkg();
@@ -182,6 +184,8 @@ int KBMOD=-1;
 #include "Prefs.h"
 #include "SAM.h"
 extern C64 *TheC64;
+
+#define MATRIX(a,b) (((a) << 3) | (b))
 
 void Process_key/*(void)*/(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 {
@@ -236,10 +240,12 @@ void Process_key/*(void)*/(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick
 
 }
 
-int Retro_PollEvent/*(void)*/(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
+int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 {
 	//   RETRO        B    Y    SLT  STA  UP   DWN  LEFT RGT  A    X    L    R    L2   R2   L3   R3
     //   INDEX        0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15
+    //   C64          BOOT VKB  M/J  R/S  UP   DWN  LEFT RGT  B1   GUI  F7   F1   F5   F3   SPC  1 
+
    int SAVPAS=PAS;	
    int i;
 
@@ -252,7 +258,19 @@ int Retro_PollEvent/*(void)*/(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
 
    if(SHOWKEY==-1)Process_key(key_matrix,rev_matrix,joystick);
 
-   i=10;//show vkbd toggle
+/*
+   i=0;//Autoboot
+   if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) && mbt[i]==0 )
+      mbt[i]=1;
+   else if ( mbt[i]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) )
+   {
+      mbt[i]=0;
+	  kbd_buf_feed("\rLOAD\":*\",8,1:\rRUN\r\0");
+	  autoboot=true; 
+   }
+*/
+
+   i=1;//show vkbd toggle
    if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) && mbt[i]==0 )
       mbt[i]=1;
    else if ( mbt[i]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) )
@@ -262,14 +280,21 @@ int Retro_PollEvent/*(void)*/(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
       Screen_SetFullUpdate(0);  
    }
 
-   //mouse/joy toggle
-   if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, 2) && mbt[2]==0 )
-      mbt[2]=1;
-   else if ( mbt[2]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, 2) ){
-      mbt[2]=0;
+   i=2;//mouse/joy toggle
+   if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) && mbt[i]==0 )
+      mbt[i]=1;
+   else if ( mbt[i]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) ){
+      mbt[i]=0;
       MOUSE_EMULATED=-MOUSE_EMULATED;
    }
 
+   i=3;//push r/s
+   if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) && mbt[i]==0 ){
+      mbt[i]=1;validkey(MATRIX(0,3),0,key_matrix,rev_matrix,joystick);
+   }
+   else if ( mbt[i]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) ){
+      mbt[i]=0;validkey(MATRIX(0,3),1,key_matrix,rev_matrix,joystick);      
+   }
 
    if(MOUSE_EMULATED==1){
 
@@ -339,29 +364,6 @@ return 1;
 int input_gui(void)
 {
 
-/*
-	unsigned char ginputstate =0;
-
-	input_poll_cb();
-	
-	
-     if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))
-         ginputstate|= 0x8;
-      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))
-         ginputstate|= 0x4;
-      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN))
-         ginputstate|= 0x2;
-      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP))
-         ginputstate|= 0x1;
-      if(input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A))
-         ginputstate|= 0x10;
-	if(input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B))
-		ginputstate|=0x20;
-
-
-	return ginputstate;
-*/
-#if 1
    int SAVPAS=PAS;	
 
    input_poll_cb();
@@ -443,91 +445,6 @@ int input_gui(void)
       gmy=0;
    if (gmy>retroh-1)
       gmy=retroh-1;
-#endif
 
 }
 
-int browser_input(void)
-{
-   int ret=0;	
-   static int dskflag[7]={0,0,0,0,0,0,0};// UP -1 DW 1 A 2 B 3 LFT -10 RGT 10 X 4	
-
-  // input_poll_cb();	
-
-   if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) && dskflag[0]==0 )
-   {
-      dskflag[0]=1;
-      //ret= -1; 
-   }
-   else if (dskflag[0]==1/* && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP)*/ )
-   {
-      dskflag[0]=0;
-      ret= -1; 
-   }
-/*
-   else
-      dskflag[0]=0;
-*/
-
-   if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) && dskflag[1]==0 )
-   {
-      dskflag[1]=1;
-     // ret= 1;
-   } 
-   else if (dskflag[1]==1 /*&& ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN)*/ )
-   {
-      dskflag[1]=0;
-      ret= 1; 
-   }
-/*
-   else
-      dskflag[1]=0;
-*/
-
-   if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) && dskflag[4]==0 )
-      dskflag[4]=1;
-   else if (dskflag[4]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) )
-   {
-      dskflag[4]=0;
-      ret= -10; 
-   }
-
-   if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) && dskflag[5]==0 )
-      dskflag[5]=1;
-   else if (dskflag[5]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) )
-   {
-      dskflag[5]=0;
-      ret= 10; 
-   }
-
-   if ( ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A) || \
-            input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0, RETROK_LCTRL) ) && dskflag[2]==0 )
-      dskflag[2]=1;
-
-   else if (dskflag[2]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A)\
-         && !input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0, RETROK_LCTRL) )
-   {
-      dskflag[2]=0;
-      ret= 2;
-   }
-
-   if ( ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) || \
-            input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0, RETROK_LALT) ) && dskflag[3]==0 )
-      dskflag[3]=1;
-   else if (dskflag[3]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B) &&\
-         !input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0, RETROK_LALT) )
-   {
-      dskflag[3]=0;
-      ret= 3;
-   }
-
-   if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X) && dskflag[6]==0 )
-      dskflag[6]=1;
-   else if (dskflag[6]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X) )
-   {
-      dskflag[6]=0;
-      ret= 4; 
-   }
-
-   return ret;
-}
