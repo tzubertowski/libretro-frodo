@@ -6,6 +6,10 @@
 
 #include "Version.h"
 
+#include "core-log.h"
+#include "libco.h"
+extern cothread_t mainThread;
+extern cothread_t emuThread;
 
 extern int init_graphics(void);
 
@@ -27,7 +31,7 @@ int skel_main(int argc, char **argv)
 	gettimeofday(&tv, NULL);
 	srand(tv.tv_usec);
 
-	printf("%s by Christian Bauer\n", VERSION_STRING);
+	LOGI("%s by Christian Bauer\n", VERSION_STRING);
 	if (!init_graphics())
 		return 0;
 	fflush(stdout);
@@ -95,6 +99,8 @@ void Frodo::ReadyToRun(void)
 		strcat(prefs_path, ".frodorc");
 	}
 
+LOGI("pref:(%s) dev:(%s)\n",prefs_path,device_path);
+
 	ThePrefs.Load(prefs_path);
 //test libretro
 	ThePrefs.set_drive8(device_path,0);
@@ -102,8 +108,14 @@ void Frodo::ReadyToRun(void)
 
 	// Create and start C64
 	TheC64 = new C64;
+
 	load_rom_files();
+
+	co_switch(mainThread); //return mainthread before enter C64thread
+
+
 	TheC64->Run();
+
 	delete TheC64;
 }
 

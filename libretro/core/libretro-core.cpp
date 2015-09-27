@@ -129,7 +129,7 @@ void Emu_uninit(){
 
 void retro_shutdown_core(void)
 {
-   printf("SHUTDOWN\n");
+   LOGI("SHUTDOWN\n");
    texture_uninit();
    environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
 }
@@ -172,24 +172,25 @@ void retro_init(void)
    if(retro_system_directory==NULL)sprintf(RETRO_DIR, "%s\0",".");
    else sprintf(RETRO_DIR, "%s\0", retro_system_directory);
 
-   printf("Retro SYSTEM_DIRECTORY %s\n",retro_system_directory);
-   printf("Retro SAVE_DIRECTORY %s\n",retro_save_directory);
-   printf("Retro CONTENT_DIRECTORY %s\n",retro_content_directory);
+   LOGI("Retro SYSTEM_DIRECTORY %s\n",retro_system_directory);
+   LOGI("Retro SAVE_DIRECTORY %s\n",retro_save_directory);
+   LOGI("Retro CONTENT_DIRECTORY %s\n",retro_content_directory);
 
 #ifndef RENDER16B
-printf("pixbit32\n");
+LOGI("pixbit32\n");
     	enum retro_pixel_format fmt =RETRO_PIXEL_FORMAT_XRGB8888;
 #else
-printf("pixbit16\n");
+LOGI("pixbit16\n");
     	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
 #endif
    
    if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
    {
       fprintf(stderr, "PIXEL FORMAT is not supported.\n");
+LOGI("PIXEL FORMAT is not supported.\n");
       exit(0);
    }
-
+/*
 	struct retro_input_descriptor inputDescriptors[] = {
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A, "A" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B, "B" },
@@ -209,9 +210,10 @@ printf("pixbit16\n");
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3, "L3" }
 	};
 	environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, &inputDescriptors);
-
+*/
    Emu_init();
    texture_init();
+
 }
 
 void retro_deinit(void)
@@ -272,12 +274,12 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
 {
    video_cb = cb;
 }
-
+/*
 void retro_audiocb(signed short int *sound_buffer,int sndbufsize){
  	int x;
     for(x=0;x<sndbufsize;x++)audio_cb(sound_buffer[x],sound_buffer[x]);	
 }
-
+*/
 void retro_run(void)
 {
    int x;
@@ -288,9 +290,11 @@ void retro_run(void)
       update_variables();
 
    if(pauseg==0){
-//      Retro_PollEvent();
-//      	if(0/*SND==1*/)
-			// Sound_Callback(NULL/*(unsigned char *)SNDBUF*/, 1/*882*//**2*2*/);
+	  
+      	if(SND==1)
+			for(x=0;x<882;x++)
+				audio_cb(SNDBUF[x],SNDBUF[x]);	
+
    }   
 
    video_cb(Retro_Screen,retrow,retroh,retrow<<PIXEL_BYTES);
@@ -298,7 +302,7 @@ void retro_run(void)
    co_switch(emuThread);
 
 }
-
+/*
 unsigned int lastdown,lastup,lastchar;
 static void keyboard_cb(bool down, unsigned keycode,
       uint32_t character, uint16_t mod)
@@ -309,6 +313,7 @@ if(down)lastdown=keycode;
 else lastup=keycode;
 lastchar=character;
 }
+*/
 
 bool retro_load_game(const struct retro_game_info *info)
 {
@@ -316,9 +321,10 @@ bool retro_load_game(const struct retro_game_info *info)
 
    (void)info;
 
+/*
    struct retro_keyboard_callback cb = { keyboard_cb };
    environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &cb);
-
+*/
    full_path = info->path;
 
    strcpy(RPATH,full_path);
@@ -330,6 +336,9 @@ bool retro_load_game(const struct retro_game_info *info)
 #else
 	memset(Retro_Screen,0,1024*1024*2*2);
 #endif
+	memset(SNDBUF,0,1024*2*2);
+
+	co_switch(emuThread);
 
    return true;
 }

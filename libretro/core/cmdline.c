@@ -53,7 +53,7 @@ int pre_main(const char *argv)
    for (i = 0; i < PARAMCOUNT; i++)
    {
       xargv_cmd[i] = (char*)(XARGV[i]);
-      printf("%2d  %s\n",i,XARGV[i]);
+      LOGI("%2d  %s\n",i,XARGV[i]);
    }
 
    skel_main(PARAMCOUNT,( char **)xargv_cmd); 

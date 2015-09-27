@@ -52,7 +52,8 @@ void DigitalRenderer::Resume(void)
  * Fill buffer, sample volume (for sampled voice)
  */
 
-extern void retro_audiocb(short int *sound_buffer,int sndbufsize);
+//extern void retro_audiocb(short int *sound_buffer,int sndbufsize);
+extern short signed int SNDBUF[1024*2];
 
 void DigitalRenderer::EmulateLine(void)
 {
@@ -82,7 +83,8 @@ void DigitalRenderer::EmulateLine(void)
 	int datalen = sndbufsize - buffer_pos;
 	to_output -= datalen;
 	calc_buffer(sound_buffer + buffer_pos, datalen*2);
-	retro_audiocb(sound_buffer, sndbufsize);
+	memcpy(SNDBUF, sound_buffer , sndbufsize*2);
+//	retro_audiocb(sound_buffer, sndbufsize);
 //	write(devfd, sound_buffer, sndbufsize*2);
 	buffer_pos = 0;
     }    

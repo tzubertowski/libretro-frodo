@@ -51,7 +51,7 @@ int NPAGE=-1, KCOL=1, BKGCOLOR=0;
 int SHOWKEY=-1;
 
 int MAXPAS=6,SHIFTON=-1,MOUSE_EMULATED=-1,MOUSEMODE=-1,PAS=4;
-int SND; //SOUND ON/OFF
+int SND=1; //SOUND ON/OFF
 static int firstps=0;
 int pauseg=0; //enter_gui
 int touch=-1; // gui mouse btn
