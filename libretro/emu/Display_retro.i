@@ -867,13 +867,12 @@ void C64Display::InitColors(uint8 *colors)
 	for (int i=0; i<256; i++)
 		colors[i] = i & 0x0f;
 }
-
-
+ 
 /*
  *  Show a requester (error message)
  */
 
-long int ShowRequester(char *a,char *b,char *)
+long int ShowRequester(const char *a,const char *b,const char *)
 {
 	printf("%s: %s\n", a, b);
 	return 1;

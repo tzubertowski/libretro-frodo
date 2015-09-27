@@ -64,7 +64,6 @@ void Frodo::ArgvReceived(int argc, char **argv)
 
 //test libretro
 	if (argc == 2){
-		//	strncpy(prefs_path, "~/", 255);
 			strncpy(device_path, argv[1], 255);
 	}	
 //ftest libretro
@@ -82,7 +81,13 @@ void Frodo::ReadyToRun(void)
 
 	// Load preferences
 	if (!prefs_path[0]) {
-		char *home = getenv("HOME");
+
+#if  defined(__ANDROID__) || defined(ANDROID)
+		char *home = "/mnt/sdcard";
+#else
+ 		char *home = getenv("HOME");
+#endif
+
 		if (home != NULL && strlen(home) < 240) {
 			strncpy(prefs_path, home, 200);
 			strcat(prefs_path, "/");

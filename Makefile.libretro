@@ -97,7 +97,7 @@ else ifeq ($(platform), qnx)
 else ifeq ($(platform), android)
    TARGET := $(TARGET_NAME)_libretro.so
    COMMONFLAGS += -fpermissive 
-   LDFLAGS += -shared -Wl,--version-script=libretro/link.T
+   LDFLAGS += -lstdc++ -llog -lz -shared -Wl,--version-script=libretro/link.T -Wl,--no-undefined
 
    CC = arm-linux-androideabi-gcc
    CXX = arm-linux-androideabi-g++

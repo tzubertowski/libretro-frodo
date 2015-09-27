@@ -14,7 +14,7 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define if you have the <linux/joystick.h> header file. */
-#define HAVE_LINUX_JOYSTICK_H 1
+//#define HAVE_LINUX_JOYSTICK_H 1
 
 /* Define if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -84,7 +84,7 @@
 #define HAVE_SYS_STATFS_H 1
 
 /* Define if you have the <sys/statvfs.h> header file. */
-#define HAVE_SYS_STATVFS_H 1
+//#define HAVE_SYS_STATVFS_H 1
 
 /* Define if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
@@ -111,7 +111,7 @@
 #define HAVE_UTIME_NULL 1
 
 /* Define if you have the <values.h> header file. */
-#define HAVE_VALUES_H 1
+//#define HAVE_VALUES_H 1
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE void
