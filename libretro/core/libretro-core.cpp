@@ -190,7 +190,7 @@ LOGI("pixbit16\n");
 LOGI("PIXEL FORMAT is not supported.\n");
       exit(0);
    }
-/*
+
 	struct retro_input_descriptor inputDescriptors[] = {
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A, "A" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B, "B" },
@@ -210,7 +210,7 @@ LOGI("PIXEL FORMAT is not supported.\n");
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3, "L3" }
 	};
 	environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, &inputDescriptors);
-*/
+
    Emu_init();
    texture_init();
 
@@ -245,7 +245,7 @@ void retro_get_system_info(struct retro_system_info *info)
    memset(info, 0, sizeof(*info));
    info->library_name     = "Frodo";
    info->library_version  = "V4_2";
-   info->valid_extensions = "d64|t64|x64|P00|lnx|zip";
+   info->valid_extensions = "d64|t64|x64|p00|lnx|zip";
    info->need_fullpath    = true;
    info->block_extract = false;
 

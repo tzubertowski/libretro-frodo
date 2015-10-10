@@ -303,7 +303,7 @@ if(pauseg==0){
 
    if(MOUSE_EMULATED==1){
 
-	  if(slowdown>0)return;
+	  if(slowdown>0)return 1;
 
       if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))mouse_x += PAS;
       if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))mouse_x -= PAS;
