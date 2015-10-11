@@ -58,7 +58,7 @@ extern int SHOWKEY;
 int CTRLON=-1;
 int RSTOPON=-1;
 static int vkx=0,vky=0;
-
+unsigned int mpal[21];
 #endif
 
 /*
@@ -375,39 +375,13 @@ if(ThePrefs.ShowLEDs){
 	// Update display
 
 	//blit c64 scr 1bit depth to emu scr 4bit depth
-	retro_Rect src,dst;
+	int x;
 
-	int x,y,w;
+	unsigned int * pout =(unsigned int *)Retro_Screen+((ThePrefs.ShowLEDs?0:8)*retrow);
+	unsigned char * pin =(unsigned char *)screen->pixels;
 
-	src.x=0;
-	src.y=0;
-	src.w=screen->w;
-	src.h=screen->h;
-	dst.x=0;
-	dst.y=ThePrefs.ShowLEDs?0:8;
-	dst.w=retrow;
-	dst.h=retroh;
-
-	unsigned char * pout=(unsigned char *)Retro_Screen+(dst.x*4+dst.y*retrow*4);
-	unsigned char * pin =(unsigned char *)screen->pixels+(src.x*1+src.y*screen->w*1);
-
-	for(y=0;y<src.h;y++){		
-		for(x=0;x<src.w;x++){
-
-			unsigned int mcoul=palette[*pin].r<<16|palette[*pin].g<<8|palette[*pin].b;
-
-			for(w=0;w<4;w++){	
-		   		*pout=(mcoul>>(8*w))&0xff;
-		   		pout++;
-			}
-			pin++;
-
-		}
-		pin +=(screen->w-src.w)*1;
-		pout+=(retrow-src.w)*4;
-	}
-
-
+	for(x=0;x<screen->w*screen->h;x++)
+		*pout++=mpal[*pin++];
 
 	//SHOW VKBD
 	if(SHOWKEY==1)virtual_kdb(( char *)Retro_Screen,vkx,vky);
@@ -855,7 +829,14 @@ void C64Display::InitColors(uint8 *colors)
 		palette[i].r = palette_red[i];
 		palette[i].g = palette_green[i];
 		palette[i].b = palette_blue[i];
+		mpal[i]=palette[i].r<<16|palette[i].g<<8|palette[i].b;
 	}
+	mpal[fill_gray]=0xd0d0d0;
+	mpal[shine_gray]=0xf0f0f0;
+	mpal[shadow_gray]=0x808080;
+	mpal[red]=0xff0000;
+	mpal[green]=0x00ff00;
+
 	palette[fill_gray].r = palette[fill_gray].g = palette[fill_gray].b = 0xd0;
 	palette[shine_gray].r = palette[shine_gray].g = palette[shine_gray].b = 0xf0;
 	palette[shadow_gray].r = palette[shadow_gray].g = palette[shadow_gray].b = 0x80;
