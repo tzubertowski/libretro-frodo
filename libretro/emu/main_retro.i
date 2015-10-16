@@ -7,9 +7,11 @@
 #include "Version.h"
 
 #include "core-log.h"
+#ifndef NO_LIBCO
 #include "libco.h"
 extern cothread_t mainThread;
 extern cothread_t emuThread;
+#endif
 
 extern int init_graphics(void);
 
@@ -39,11 +41,19 @@ int skel_main(int argc, char **argv)
 	the_app = new Frodo();
 	the_app->ArgvReceived(argc, argv);
 	the_app->ReadyToRun();
+#ifndef NO_LIBCO
 	delete the_app;
-
+#endif
 	return 0;
 }
 
+#ifdef NO_LIBCO
+void quit_frodo_emu(){
+	LOGI("delete c64&app\n");
+	delete TheC64;
+	delete the_app;
+}
+#endif
 
 /*
  *  Constructor: Initialize member variables
@@ -66,11 +76,9 @@ void Frodo::ArgvReceived(int argc, char **argv)
 		strncpy(prefs_path, argv[1], 255);
 */
 
-//test libretro
 	if (argc == 2){
 			strncpy(device_path, argv[1], 255);
 	}	
-//ftest libretro
 
 }
 
@@ -99,24 +107,26 @@ void Frodo::ReadyToRun(void)
 		strcat(prefs_path, ".frodorc");
 	}
 
-LOGI("pref:(%s) dev:(%s)\n",prefs_path,device_path);
+	LOGI("pref:(%s) dev:(%s)\n",prefs_path,device_path);
 
 	ThePrefs.Load(prefs_path);
-//test libretro
+
 	ThePrefs.set_drive8(device_path,0);
-//ftest libretro
 
 	// Create and start C64
 	TheC64 = new C64;
 
 	load_rom_files();
 
+#ifndef NO_LIBCO
 	co_switch(mainThread); //return mainthread before enter C64thread
-
+#endif
 
 	TheC64->Run();
 
+#ifndef NO_LIBCO
 	delete TheC64;
+#endif
 }
 
 

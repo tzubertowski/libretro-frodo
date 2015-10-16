@@ -2,8 +2,18 @@
 
 #include "libretro-core.h"
 
+#ifndef NO_LIBCO
 cothread_t mainThread;
 cothread_t emuThread;
+#else
+#include "main.h"
+#include "C64.h"
+#include "Display.h"
+#include "Prefs.h"
+#include "SAM.h"
+extern C64 *TheC64;
+extern void quit_frodo_emu();
+#endif
 
 int CROP_WIDTH;
 int CROP_HEIGHT;
@@ -88,7 +98,7 @@ static void retro_wrap_emulator()
 {    
 
    pre_main(RPATH);
-
+#ifndef NO_LIBCO
    pauseg=-1;
 
    environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, 0); 
@@ -102,6 +112,7 @@ static void retro_wrap_emulator()
       LOGI("Running a dead emulator.");
       co_switch(mainThread);
    }
+#endif
 }
 
 void Emu_init(){
@@ -115,21 +126,31 @@ void Emu_init(){
    memset(Key_Sate,0,512);
    memset(Key_Sate2,0,512);
 
+#ifndef NO_LIBCO
    if(!emuThread && !mainThread)
    {
       mainThread = co_active();
       emuThread = co_create(65536*sizeof(void*), retro_wrap_emulator);
    }
+#else
+	retro_wrap_emulator();
+#endif
 
 }
 
 void Emu_uninit(){
+#ifdef NO_LIBCO
+	quit_frodo_emu();
+#endif
    texture_uninit();
 }
 
 void retro_shutdown_core(void)
 {
    LOGI("SHUTDOWN\n");
+#ifdef NO_LIBCO
+	quit_frodo_emu();
+#endif
    texture_uninit();
    environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
 }
@@ -177,10 +198,8 @@ void retro_init(void)
    LOGI("Retro CONTENT_DIRECTORY %s\n",retro_content_directory);
 
 #ifndef RENDER16B
-LOGI("pixbit32\n");
     	enum retro_pixel_format fmt =RETRO_PIXEL_FORMAT_XRGB8888;
 #else
-LOGI("pixbit16\n");
     	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
 #endif
    
@@ -210,8 +229,9 @@ LOGI("PIXEL FORMAT is not supported.\n");
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3, "L3" }
 	};
 	environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, &inputDescriptors);
-
+#ifndef NO_LIBCO
    Emu_init();
+#endif
    texture_init();
 
 }
@@ -220,11 +240,13 @@ void retro_deinit(void)
 {	 
    Emu_uninit(); 
 
+#ifndef NO_LIBCO
    if(emuThread)
    {	 
       co_delete(emuThread);
       emuThread = 0;
    }
+#endif
 
    LOGI("Retro DeInit\n");
 }
@@ -293,13 +315,23 @@ void retro_run(void)
 	  
       	if(SND==1)
 			for(x=0;x<882;x++)
-				audio_cb(SNDBUF[x],SNDBUF[x]);	
+				audio_cb(SNDBUF[x],SNDBUF[x]);
+#ifdef NO_LIBCO
+	#ifndef FRODO_SC
+		for(x=0;x<312;x++)
+	#else
+		for(x=0;x<19565;x++) 
+	#endif
+		TheC64->thread_func();
+#endif
 
    }   
 
    video_cb(Retro_Screen,retrow,retroh,retrow<<PIXEL_BYTES);
-   
+
+#ifndef NO_LIBCO   
    co_switch(emuThread);
+#endif
 
 }
 /*
@@ -338,8 +370,11 @@ bool retro_load_game(const struct retro_game_info *info)
 #endif
 	memset(SNDBUF,0,1024*2*2);
 
+#ifndef NO_LIBCO
 	co_switch(emuThread);
-
+#else
+	Emu_init();
+#endif
    return true;
 }
 

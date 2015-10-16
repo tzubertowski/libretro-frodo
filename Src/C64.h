@@ -111,6 +111,11 @@ public:
 	Job1541 *TheJob1541;
 
 	uint32 CycleCounter;  // Cycle counter for Frodo SC
+#ifdef __LIBRETRO__
+#ifdef NO_LIBCO
+	void thread_func(void);
+#endif
+#endif
 
 private:
 	void c64_ctor1(void);
@@ -118,8 +123,13 @@ private:
 	void c64_dtor(void);
 	void open_close_joysticks(int oldjoy1, int oldjoy2, int newjoy1, int newjoy2);
 	uint8 poll_joystick(int port);
+#ifdef __LIBRETRO__
+#ifndef NO_LIBCO
 	void thread_func(void);
-
+#endif
+#else
+	void thread_func(void);
+#endif
 	bool thread_running;	// Emulation thread is running
 	bool quit_thyself;		// Emulation thread shall quit
 	bool have_a_break;		// Emulation thread shall pause
