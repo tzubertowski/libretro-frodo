@@ -11,10 +11,11 @@
 
 #include "libretro.h"
 extern retro_input_state_t input_state_cb;
-
+#ifndef NO_LIBCO
 #include "libco.h"
 extern cothread_t mainThread;
 extern cothread_t emuThread;
+#endif
 extern int pauseg,retro_quit;
 extern void pause_select();
 extern int SHOWKEY;
@@ -66,7 +67,9 @@ void C64::Run(void)
 	PatchKernal(ThePrefs.FastReset, ThePrefs.Emul1541Proc);
 
 	quit_thyself = false;
+#ifndef NO_LIBCO
 	thread_func();
+#endif
 }
 
 /*
@@ -100,6 +103,7 @@ void C64::VBlank(bool draw_frame)
 	TheCIA1->CountTOD();
 	TheCIA2->CountTOD();
 
+#if 0 //disable for now
 	// Update window if needed
 	if (draw_frame) {
     	TheDisplay->Update();
@@ -125,11 +129,16 @@ void C64::VBlank(bool draw_frame)
 
 		TheDisplay->Speedometer((int)speed_index);
 	}
+#else
+    	TheDisplay->Update();
+#endif
 
 #ifdef __LIBRETRO__
 if(pauseg==1)pause_select();
 if(retro_quit==1)quit_thyself = true;
+#ifndef NO_LIBCO
 co_switch(mainThread);
+#endif
 #endif
 
 }
@@ -183,7 +192,10 @@ void C64::thread_func(void)
 	int linecnt = 0;
 
 #ifdef FRODO_SC
-	while (!quit_thyself) {
+#ifndef NO_LIBCO
+	while (!quit_thyself)
+#endif
+    {
 
 		// The order of calls is important here
 		if (TheVIC->EmulateCycle())
@@ -201,7 +213,10 @@ void C64::thread_func(void)
 		}
 		CycleCounter++;
 #else
-	while (!quit_thyself) {
+#ifndef NO_LIBCO
+	while (!quit_thyself)
+#endif
+ 	{
 
 		// The order of calls is important here
 		int cycles = TheVIC->EmulateLine();

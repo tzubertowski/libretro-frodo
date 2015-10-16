@@ -128,15 +128,21 @@ void gui_poll_events(void)
    {
 	  slowdown=0;
       frame++; 
-      LastFPSTime = Ktime;		
+      LastFPSTime = Ktime;
+#ifndef NO_LIBCO		
       co_switch(mainThread);
+#endif
    }
 }
 
 void enter_gui(void)
 {
   //save_bkg();
+#ifndef NO_LIBCO
 	Dialog_DoProperty();
+#else
+	//FIXME nolibco break gui ability 
+#endif
 	pauseg=0;
 }
 

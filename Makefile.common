@@ -1,10 +1,17 @@
-INCFLAGS += -I$(CORE_DIR)/libretro/libco \
-				-I$(CORE_DIR)/libretro/core \
-				-I$(CORE_DIR)/libretro/include \
-				-I$(CORE_DIR)/libretro/emu \
-				-I$(CORE_DIR)/libretro \
-				-I$(CORE_DIR)/Src \
-				-I$(CORE_DIR)
+INCFLAGS += \
+			-I$(CORE_DIR)/libretro/core \
+			-I$(CORE_DIR)/libretro/include \
+			-I$(CORE_DIR)/libretro/emu \
+			-I$(CORE_DIR)/libretro \
+			-I$(CORE_DIR)/Src \
+			-I$(CORE_DIR)
+
+ifneq ($(NOLIBCO), 1)
+	INCFLAGS += -I$(CORE_DIR)/libretro/libco
+endif
+ifeq ($(NOLIBCO), 1)
+	CPPFLAGS += -DNO_LIBCO
+endif
 
 EMU := $(CORE_DIR)/Src
 GUI := $(CORE_DIR)/libretro/gui
@@ -70,6 +77,9 @@ SOURCES_CXX += $(GUI)/dialog.cpp\
 				 $(GUI)/dlgSnapshot.cpp \
 				 $(GUI)/sdlgui.cpp
 
+ifneq ($(NOLIBCO), 1)
 SOURCES_C := \
 	$(CORE_DIR)/libretro/libco/libco.c 
+endif
+
 
