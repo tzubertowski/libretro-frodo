@@ -102,7 +102,8 @@ void C64::VBlank(bool draw_frame)
 	// Count TOD clocks
 	TheCIA1->CountTOD();
 	TheCIA2->CountTOD();
-#ifndef NO_LIBCO
+
+#if 0 //disable for now
 	// Update window if needed
 	if (draw_frame) {
     	TheDisplay->Update();
