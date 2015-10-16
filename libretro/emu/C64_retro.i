@@ -102,7 +102,7 @@ void C64::VBlank(bool draw_frame)
 	// Count TOD clocks
 	TheCIA1->CountTOD();
 	TheCIA2->CountTOD();
-
+#ifndef NO_LIBCO
 	// Update window if needed
 	if (draw_frame) {
     	TheDisplay->Update();
@@ -128,6 +128,9 @@ void C64::VBlank(bool draw_frame)
 
 		TheDisplay->Speedometer((int)speed_index);
 	}
+#else
+    	TheDisplay->Update();
+#endif
 
 #ifdef __LIBRETRO__
 if(pauseg==1)pause_select();
