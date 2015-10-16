@@ -320,7 +320,7 @@ void retro_run(void)
 	#ifndef FRODO_SC
 		for(x=0;x<312;x++)
 	#else
-		for(x=0;x<19565;x++) 
+		for(x=0;x<63*312;x++) 
 	#endif
 		TheC64->thread_func();
 #endif
