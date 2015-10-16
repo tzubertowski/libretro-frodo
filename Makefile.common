@@ -6,8 +6,10 @@ INCFLAGS += \
 			-I$(CORE_DIR)/Src \
 			-I$(CORE_DIR)
 
-ifeq ($(NOLIBCO), 1)
+ifneq ($(NOLIBCO), 1)
 	INCFLAGS += -I$(CORE_DIR)/libretro/libco
+endif
+ifeq ($(NOLIBCO), 1)
 	CPPFLAGS += -DNO_LIBCO
 endif
 
