@@ -118,6 +118,10 @@ long GetTicks(void)
 #endif
 
 } 
+
+#ifdef NO_LIBCO
+extern void retro_run_gui(void);
+#endif
 int slowdown=0;
 //NO SURE FIND BETTER WAY TO COME BACK IN MAIN THREAD IN HATARI GUI
 void gui_poll_events(void)
@@ -131,6 +135,9 @@ void gui_poll_events(void)
       LastFPSTime = Ktime;
 #ifndef NO_LIBCO		
       co_switch(mainThread);
+#else
+	//FIXME nolibco Gui endless loop -> no retro_run() call
+	  retro_run_gui();
 #endif
    }
 }
@@ -138,11 +145,7 @@ void gui_poll_events(void)
 void enter_gui(void)
 {
   //save_bkg();
-#ifndef NO_LIBCO
-	Dialog_DoProperty();
-#else
-	//FIXME nolibco break gui ability 
-#endif
+ 	Dialog_DoProperty();
 	pauseg=0;
 }
 

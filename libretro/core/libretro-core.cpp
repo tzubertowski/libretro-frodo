@@ -302,6 +302,20 @@ void retro_audiocb(signed short int *sound_buffer,int sndbufsize){
     for(x=0;x<sndbufsize;x++)audio_cb(sound_buffer[x],sound_buffer[x]);	
 }
 */
+
+#ifdef NO_LIBCO
+//FIXME nolibco Gui endless loop -> no retro_run() call
+void retro_run_gui(void)
+{
+   bool updated = false;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
+      update_variables();
+  
+   video_cb(Retro_Screen,retrow,retroh,retrow<<PIXEL_BYTES);
+}
+#endif
+
 void retro_run(void)
 {
    int x;
