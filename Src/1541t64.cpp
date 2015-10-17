@@ -44,6 +44,11 @@
 #define DEBUG 0
 #include "debug.h"
 
+#if defined(__LIBRETRO__) 
+#if defined(ANDROID) || defined(__ANDROID__)
+#include "android_tmpfile.i"
+#endif
+#endif
 
 // Prototypes
 static bool is_t64_header(const uint8 *header);
@@ -219,9 +224,17 @@ uint8 ArchDrive::open_file(int channel, const uint8 *name, int name_len)
 	int num;
 	if (find_first_file(plain_name, plain_name_len, num)) {
 
+#if defined(__LIBRETRO__)  
+#if defined(ANDROID) || defined(__ANDROID__)
+		if ((file[channel] = tmpfile2()) != NULL) {
+#else
 		// Open temporary file
 		if ((file[channel] = tmpfile()) != NULL) {
-
+#endif
+#else
+		// Open temporary file
+		if ((file[channel] = tmpfile()) != NULL) {
+#endif
 			// Write load address (.t64 only)
 			if (archive_type == TYPE_T64) {
 				fwrite(&file_info[num].sa_lo, 1, 1, file[channel]);
@@ -295,9 +308,21 @@ uint8 ArchDrive::open_directory(int channel, const uint8 *pattern, int pattern_l
 		pattern = t;
 	}
 
+#if defined(__LIBRETRO__)  
+#if defined(ANDROID) || defined(__ANDROID__)
+	// Create temporary file
+	if ((file[channel] = tmpfile2()) == NULL)
+		return ST_OK;
+#else
 	// Create temporary file
 	if ((file[channel] = tmpfile()) == NULL)
 		return ST_OK;
+#endif
+#else
+	// Create temporary file
+	if ((file[channel] = tmpfile()) == NULL)
+		return ST_OK;
+#endif
 
 	// Create directory title
 	uint8 buf[] = "\001\004\001\001\0\0\022\042                \042 00 2A";

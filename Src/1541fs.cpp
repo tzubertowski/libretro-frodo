@@ -46,6 +46,11 @@
 #include "ROlib.h"
 #endif
 
+#if defined(__LIBRETRO__)  
+#if defined(ANDROID) || defined(__ANDROID__)
+extern FILE* tmpfile2();
+#endif
+#endif
 
 // Prototypes
 static bool match(const char *p, const char *n);
@@ -336,11 +341,26 @@ uint8 FSDrive::open_directory(int channel, const uint8 *pattern, int pattern_len
 	while (de && (0 == strcmp(".", de->d_name) || 0 == strcmp("..", de->d_name))) 
 		de = readdir(dir);
 
+#if defined(__LIBRETRO__) 
+#if defined(ANDROID) || defined(__ANDROID__)
+	if ((file[channel] = tmpfile2()) == NULL) {
+		closedir(dir);
+		return ST_OK;
+	}
+#else
 	// Create temporary file
 	if ((file[channel] = tmpfile()) == NULL) {
 		closedir(dir);
 		return ST_OK;
 	}
+#endif
+#else
+	// Create temporary file
+	if ((file[channel] = tmpfile()) == NULL) {
+		closedir(dir);
+		return ST_OK;
+	}
+#endif
 
 	// Create directory title
 	p = &buf[8];
