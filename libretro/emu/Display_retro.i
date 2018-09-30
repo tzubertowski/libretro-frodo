@@ -254,6 +254,7 @@ int init_graphics(void)
 	return 1;
 }
 
+extern bool quit_requested;
 
 /*
  *  Display constructor
@@ -270,7 +271,7 @@ C64Display::C64Display(C64 *the_c64) : TheC64(the_c64)
 
 	// Start timer for LED error blinking
 	c64_disp = this;
-	pulse_sa.sa_handler = (void (*)(int))pulse_handler;
+	pulse_sa.sa_handler = (void (*)(int))C64Display::pulse_handler;
 	pulse_sa.sa_flags = 0;
 	sigemptyset(&pulse_sa.sa_mask);
 	sigaction(SIGALRM, &pulse_sa, NULL);
