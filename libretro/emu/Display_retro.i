@@ -245,11 +245,11 @@ int check_vkey2(int x,int y)
 int init_graphics(void)
 {
 
-	screen=malloc( sizeof(retro_Surface*) );
-	screen->pixels=malloc(DISPLAY_X *( DISPLAY_Y + 16) );
-	screen->h=DISPLAY_Y+16;
-	screen->w=DISPLAY_X ;
-	screen->pitch=screen->w*1;
+	screen         = (retro_Surface*)malloc( sizeof(retro_Surface*) );
+	screen->pixels = (unsigned char*)malloc(DISPLAY_X *( DISPLAY_Y + 16) );
+	screen->h      = DISPLAY_Y+16;
+	screen->w      = DISPLAY_X ;
+	screen->pitch  = screen->w*1;
 	
 	return 1;
 }
