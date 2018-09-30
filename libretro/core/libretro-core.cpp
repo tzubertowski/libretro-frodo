@@ -70,7 +70,7 @@ static void update_variables(void)
    {
       char *pch;
       char str[100];
-      snprintf(str, sizeof(str), var.value);
+      snprintf(str, sizeof(str), "%s", var.value);
 
       pch = strtok(str, "x");
       if (pch)
