@@ -30,14 +30,10 @@ extern "C" {
 	#include <string.h>
 	#include <signal.h>
 
-#if defined(__alpha__)
-	#include <cma.h>
-#endif
-
-#if defined(AIX)
-	#include <sys/select.h>
+#ifdef _WIN32
+#include <direct.h>
 #else
-	#include <unistd.h>
+#include <unistd.h>
 #endif
 
 #if defined(__linux__)

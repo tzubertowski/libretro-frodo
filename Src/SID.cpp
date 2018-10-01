@@ -32,53 +32,6 @@
 #include "SID.h"
 #include "Prefs.h"
 
-#ifdef __BEOS__
-#include <media/SoundPlayer.h>
-#endif
-
-#ifdef AMIGA
-#include <exec/types.h>
-#include <utility/hooks.h>
-#include <devices/ahi.h>
-#define USE_FIXPOINT_MATHS
-#define FIXPOINT_PREC 16	// number of fractional bits used in fixpoint representation
-#define PRECOMPUTE_RESONANCE
-#define ldSINTAB 9			// size of sinus table (0 to 90 degrees)
-#endif
-
-#ifdef SUN
-extern "C" {
-	#include <sys/audioio.h>
-}
-#endif
-
-#ifdef __hpux
-extern "C" {
-	#include <sys/audio.h>
-}
-#endif
-
-#ifdef __mac__
-#include <Sound.h>
-#define M_PI 3.14159265358979323846
-#endif
-
-#ifdef WIN32
-class DigitalPlayer;
-#endif
-
-#ifdef __riscos__
-#include "ROLib.h"
-# ifndef M_PI
-# define M_PI 3.14159265358979323846
-# endif
-#define USE_FIXPOINT_MATHS
-#define FIXPOINT_PREC 16	// number of fractional bits used in fixpoint representation
-#define PRECOMPUTE_RESONANCE
-#define ldSINTAB 9			// size of sinus table (0 to 90 degrees)
-#endif
-
-
 #ifdef USE_FIXPOINT_MATHS
 #include "FixPoint.h"
 #endif
@@ -277,11 +230,7 @@ void MOS6581::SetState(MOS6581State *ss)
  **  Renderer for digital SID emulation (SIDTYPE_DIGITAL)
  **/
 
-#if defined(AMIGA) || defined(__riscos__)
-const uint32 SAMPLE_FREQ = 22050;	// Sample output frequency in Hz
-#else
 const uint32 SAMPLE_FREQ = 44100;	// Sample output frequency in Hz
-#endif
 const uint32 SID_FREQ = 985248;		// SID frequency in Hz
 const uint32 CALC_FREQ = 50;			// Frequency at which calc_buffer is called in Hz (should be 50Hz)
 const uint32 SID_CYCLES = SID_FREQ/SAMPLE_FREQ;	// # of SID clocks per sample frame
@@ -368,11 +317,7 @@ public:
 private:
 	void init_sound(void);
 	void calc_filter(void);
-#ifdef __riscos__
-	void calc_buffer(uint8 *buf, long count);
-#else
 	void calc_buffer(int16 *buf, long count);
-#endif
 
 	C64 *the_c64;					// Pointer to C64 object
 
@@ -415,83 +360,8 @@ private:
 	uint8 sample_buf[SAMPLE_BUF_SIZE]; // Buffer for sampled voice
 	int sample_in_ptr;				// Index in sample_buf for writing
 
-#ifdef __BEOS__
-	static void buffer_proc(void *cookie, void *buffer, size_t size, const media_raw_audio_format &format);
-	BSoundPlayer *the_player;		// Pointer to sound player
-	bool player_stopped;			// Flag: player stopped
-#endif
-
-#ifdef AMIGA
-	static void sub_invoc(void);	// Sound sub-process
-	void sub_func(void);
-	struct Process *sound_process;
-	int quit_sig, pause_sig,
-		resume_sig, ahi_sig;		// Sub-process signals
-	struct Task *main_task;			// Main task
-	int main_sig;					// Main task signals
-	static ULONG sound_func(void);	// AHI callback
-	struct MsgPort *ahi_port;		// Port and IORequest for AHI
-	struct AHIRequest *ahi_io;
-	struct AHIAudioCtrl *ahi_ctrl;	// AHI control structure
-	struct AHISampleInfo sample[2];	// SampleInfos for double buffering
-	struct Hook sf_hook;			// Hook for callback function
-	int play_buf;					// Number of buffer currently playing
-#endif
-
-
-
-# ifdef __linux__
 	int devfd, sndbufsize, buffer_rate;
 	int16 *sound_buffer;
-# endif
-
-# ifdef SUN
-	int fd;
-	audio_info status;
-	uint_t sent_samples,delta_samples;
-	int16 *sound_calc_buf;
-# endif
-
-# ifdef __hpux
-	int fd;
-	audio_status status;
-	int16 *sound_calc_buf;
-	int linecnt;
-# endif
-
-#ifdef __mac__
-	SndChannelPtr chan1;
-	SndDoubleBufferHeader myDblHeader;
-	SndDoubleBufferPtr sampleBuffer1, sampleBuffer2;
-	SCStatus myStatus;
-	short sndbufsize;
-	OSErr err;
-
-	static void doubleBackProc(SndChannelPtr chan, SndDoubleBufferPtr doubleBuffer);
-#endif
-
-#ifdef WIN32
-public:
-	void VBlank(void);
-
-private:
-	void StartPlayer(void);
-	void StopPlayer(void);
-
-	BOOL direct_sound;
-	DigitalPlayer *ThePlayer;
-	int16_t *sound_buffer;
-	int to_output;
-	int sb_pos;
-	int divisor;
-	int *lead;
-	int lead_pos;
-#endif
-
-#ifdef __riscos__
-	int linecnt, sndbufsize;
-	uint8 *sound_buffer;
-#endif
 };
 
 // Static data members
@@ -1331,7 +1201,97 @@ void DigitalRenderer::calc_buffer(int16 *buf, long count)
 	}
 }
 
-#include "SID_retro.i"
+/*
+ *  SID_linux.i - 6581 emulation, Linux specific stuff
+ *
+ *  Frodo (C) 1994-1997,2002 Christian Bauer
+ *  Linux sound stuff by Bernd Schmidt
+ */
+
+
+#include "VIC.h"
+
+#warning RETRO
+/*
+ *  Initialization
+ */
+
+void DigitalRenderer::init_sound(void)
+{
+	sndbufsize=882;
+	sound_buffer = new int16[sndbufsize*2];
+    ready = true;
+}
+
+
+/*
+ *  Destructor
+ */
+
+DigitalRenderer::~DigitalRenderer()
+{
+}
+
+
+/*
+ *  Pause sound output
+ */
+
+void DigitalRenderer::Pause(void)
+{
+}
+
+
+/*
+ * Resume sound output
+ */
+
+void DigitalRenderer::Resume(void)
+{
+}
+
+
+/*
+ * Fill buffer, sample volume (for sampled voice)
+ */
+
+//extern void retro_audiocb(short int *sound_buffer,int sndbufsize);
+extern short signed int SNDBUF[1024*2];
+
+void DigitalRenderer::EmulateLine(void)
+{
+    static int divisor = 0;
+    static int to_output = 0;
+    static int buffer_pos = 0;
+
+    if (!ready)
+	return;
+
+	sample_buf[sample_in_ptr] = volume;
+	sample_in_ptr = (sample_in_ptr + 1) % SAMPLE_BUF_SIZE;
+
+    /*
+     * Now see how many samples have to be added for this line
+     */
+    divisor += SAMPLE_FREQ;
+    while (divisor >= 0)
+	divisor -= TOTAL_RASTERS*SCREEN_FREQ, to_output++;
+
+    /*
+     * Calculate the sound data only when we have enough to fill
+     * the buffer entirely.
+     */
+    if ((buffer_pos + to_output) >= sndbufsize) {
+
+	int datalen = sndbufsize - buffer_pos;
+	to_output -= datalen;
+	calc_buffer(sound_buffer + buffer_pos, datalen*2);
+	memcpy(SNDBUF, sound_buffer , sndbufsize*2);
+//	retro_audiocb(sound_buffer, sndbufsize);
+//	write(devfd, sound_buffer, sndbufsize*2);
+	buffer_pos = 0;
+    }    
+}
 
 /*
  *  Open/close the renderer, according to old and new prefs
@@ -1346,15 +1306,10 @@ void MOS6581::open_close_renderer(int old_type, int new_type)
 	delete the_renderer;
 
 	// Create new renderer
-	if (new_type == SIDTYPE_DIGITAL) {
+	if (new_type == SIDTYPE_DIGITAL)
 		the_renderer = new DigitalRenderer(the_c64);
-#ifdef AMIGA
-	} else if (new_type == SIDTYPE_SIDCARD) {
-		the_renderer = new SIDCardRenderer;
-#endif
-	} else {
+   else
 		the_renderer = NULL;
-	}
 
 	// Stuff the current register values into the new renderer
 	if (the_renderer != NULL)

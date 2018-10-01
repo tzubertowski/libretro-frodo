@@ -355,5 +355,7 @@ bool Prefs::Save(const char *filename)
 	return false;
 }
 
-
-#include "Prefs_retro.i"
+void Prefs::set_drive8(char *filename,int type)
+{
+	strcpy(DrivePath[0], filename);
+}
