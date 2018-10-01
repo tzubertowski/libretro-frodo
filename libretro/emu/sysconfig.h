@@ -68,26 +68,11 @@
 /* Define if you have the <sys/dir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_SYS_DIR_H */
 
-#ifndef __LIBRETRO__
-/* Define if you have the <sys/mount.h> header file. */
-#define HAVE_SYS_MOUNT_H 1
-#endif
-
 /* Define if you have the <sys/ndir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_SYS_NDIR_H */
 
 /* Define if you have the <sys/param.h> header file. */
 #define HAVE_SYS_PARAM_H 1
-
-#ifndef __LIBRETRO__
-/* Define if you have the <sys/select.h> header file. */
-#define HAVE_SYS_SELECT_H 1
-#endif
-
-#ifndef __LIBRETRO__
-/* Define if you have the <sys/statfs.h> header file. */
-#define HAVE_SYS_STATFS_H 1
-#endif
 
 /* Define if you have the <sys/statvfs.h> header file. */
 //#define HAVE_SYS_STATVFS_H 1
@@ -100,11 +85,6 @@
 
 /* Define if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
-
-#ifndef __LIBRETRO__
-/* Define if you have the <sys/vfs.h> header file. */
-#define HAVE_SYS_VFS_H 1
-#endif
 
 /* Define if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1

@@ -83,31 +83,4 @@ void Frodo::load_rom_files()
 	load_rom("1541", DRIVE_ROM_FILE, TheC64->ROM1541, DRIVE_ROM_SIZE, builtin_drive_rom);
 }
 
-#ifdef __LIBRETRO__
 #include "main_retro.i"
-#else
-
-#ifdef __BEOS__
-#include "main_Be.h"
-#endif
-
-#ifdef AMIGA
-#include "main_Amiga.h"
-#endif
-
-#ifdef __unix
-#include "main_x.h"
-#endif
-
-#ifdef __mac__
-#include "main_mac.h"
-#endif
-
-#ifdef WIN32
-#include "main_WIN32.h"
-#endif
-
-#ifdef __riscos__
-#include "main_Acorn.h"
-#endif
-#endif //ndef libretro

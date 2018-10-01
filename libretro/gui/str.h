@@ -14,14 +14,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-#if HAVE_STRINGS_H
-//RETRO HACK
-#ifdef __LIBRETRO__
-#ifndef PS3PORT
-# include <strings.h>
-#endif
-#endif
-#endif
 
 /* Invalid characters in paths & filenames are replaced by this
  * (valid but very uncommon GEMDOS file name character)

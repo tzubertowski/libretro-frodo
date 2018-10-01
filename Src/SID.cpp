@@ -1337,50 +1337,7 @@ void DigitalRenderer::calc_buffer(int16 *buf, long count)
 	}
 }
 
-#ifdef __LIBRETRO__
 #include "SID_retro.i"
-#else
-
-// Manufacturer independent sound is still just a dream...
-#if defined(__BEOS__)
-#include "SID_Be.h"
-
-#elif defined(AMIGA)
-#include "SID_Amiga.h"
-
-#elif defined(HAVE_SDL)
-#include "SID_SDL.h"
-# if defined(__linux__)
-# include "SID_catweasel.h"
-# endif
-
-#elif defined(__linux__)
-#include "SID_linux.h"
-#include "SID_catweasel.h"
-
-#elif defined(SUN)
-#include "SID_sun.h"
-
-#elif defined(__hpux)
-#include "SID_hp.h"
-
-#elif defined(__mac__)
-#include "SID_mac.h"
-
-#elif defined(WIN32)
-#include "SID_WIN32.h"
-
-#elif defined(__riscos__)
-#include "SID_Acorn.h"
-
-#else	// No sound
-void DigitalRenderer::init_sound(void) {ready = false;}
-DigitalRenderer::~DigitalRenderer() {}
-void DigitalRenderer::EmulateLine(void) {}
-void DigitalRenderer::Pause(void) {}
-void DigitalRenderer::Resume(void) {}
-#endif
-#endif	//ndef LIBRETRO
 
 /*
  *  Open/close the renderer, according to old and new prefs
@@ -1400,12 +1357,6 @@ void MOS6581::open_close_renderer(int old_type, int new_type)
 #ifdef AMIGA
 	} else if (new_type == SIDTYPE_SIDCARD) {
 		the_renderer = new SIDCardRenderer;
-#endif
-#ifdef __linux__
-#ifndef __LIBRETRO__
-	} else if (new_type == SIDTYPE_SIDCARD) {
-		the_renderer = new CatweaselRenderer;
-#endif
 #endif
 	} else {
 		the_renderer = NULL;

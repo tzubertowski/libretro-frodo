@@ -24,13 +24,6 @@ const char Unzip_fileid[] = "Hatari unzip.c : " __DATE__ " " __TIME__;
 #include <string.h>
 #include <zlib.h>
 
-#if HAVE_STRINGS_H
-//RETRO HACK
-#ifndef PS3PORT
-#include <strings.h>
-#endif
-#endif
-
 #include "unzip.h"
 
 #ifdef NO_ERRNO_H

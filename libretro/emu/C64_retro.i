@@ -7,7 +7,6 @@
 
 #include "main.h"
 
-#ifdef __LIBRETRO__
 
 #include "libretro.h"
 extern retro_input_state_t input_state_cb;
@@ -19,7 +18,6 @@ extern cothread_t emuThread;
 extern int pauseg,retro_quit;
 extern void pause_select();
 extern int SHOWKEY;
-#endif
 
 static struct timeval tv_start;
 
@@ -133,12 +131,10 @@ void C64::VBlank(bool draw_frame)
     	TheDisplay->Update();
 #endif
 
-#ifdef __LIBRETRO__
 if(pauseg==1)pause_select();
 if(retro_quit==1)quit_thyself = true;
 #ifndef NO_LIBCO
 co_switch(mainThread);
-#endif
 #endif
 
 }

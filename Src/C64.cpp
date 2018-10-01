@@ -701,35 +701,4 @@ bool C64::LoadSnapshot(char *filename)
 	}
 }
 
-#ifdef __LIBRETRO__
 #include "C64_retro.i"
-#else
-
-#ifdef __BEOS__
-#include "C64_Be.h"
-#endif
-
-#ifdef AMIGA
-#include "C64_Amiga.h"
-#endif
-
-#ifdef __unix
-# if defined(QTOPIA) or defined(MAEMO)
-#  include "C64_Embedded.h"
-# else
-#  include "C64_x.h"
-# endif
-#endif
-
-#ifdef __mac__
-#include "C64_mac.h"
-#endif
-
-#ifdef WIN32
-#include "C64_WIN32.h"
-#endif
-
-#ifdef __riscos__
-#include "C64_Acorn.h"
-#endif
-#endif	//ndef LIBRETRO

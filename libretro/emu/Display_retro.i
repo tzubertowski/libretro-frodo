@@ -31,7 +31,6 @@ enum {
 };
 
 
-#ifdef __LIBRETRO__
 
 #include "libretro.h"
 #include "libretro-core.h"
@@ -59,7 +58,6 @@ int CTRLON=-1;
 int RSTOPON=-1;
 static int vkx=0,vky=0;
 unsigned int mpal[21];
-#endif
 
 /*
   C64 keyboard matrix:

@@ -44,10 +44,8 @@
 #define DEBUG 0
 #include "debug.h"
 
-#if defined(__LIBRETRO__) 
 #if defined(ANDROID) || defined(__ANDROID__)
 #include "android_tmpfile.i"
-#endif
 #endif
 
 // Prototypes
@@ -224,13 +222,8 @@ uint8 ArchDrive::open_file(int channel, const uint8 *name, int name_len)
 	int num;
 	if (find_first_file(plain_name, plain_name_len, num)) {
 
-#if defined(__LIBRETRO__)  
 #if defined(ANDROID) || defined(__ANDROID__)
 		if ((file[channel] = tmpfile2()) != NULL) {
-#else
-		// Open temporary file
-		if ((file[channel] = tmpfile()) != NULL) {
-#endif
 #else
 		// Open temporary file
 		if ((file[channel] = tmpfile()) != NULL) {
@@ -308,16 +301,10 @@ uint8 ArchDrive::open_directory(int channel, const uint8 *pattern, int pattern_l
 		pattern = t;
 	}
 
-#if defined(__LIBRETRO__)  
 #if defined(ANDROID) || defined(__ANDROID__)
 	// Create temporary file
 	if ((file[channel] = tmpfile2()) == NULL)
 		return ST_OK;
-#else
-	// Create temporary file
-	if ((file[channel] = tmpfile()) == NULL)
-		return ST_OK;
-#endif
 #else
 	// Create temporary file
 	if ((file[channel] = tmpfile()) == NULL)
