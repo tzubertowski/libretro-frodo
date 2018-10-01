@@ -32,10 +32,6 @@
 
 #include "retro_video.h"
 
-#ifdef HAVE_SDL
-struct SDL_Surface;
-#endif
-
 #ifdef WIN32
 #include <ddraw.h>
 #endif
@@ -136,11 +132,6 @@ private:
 #endif
 
 char speedometer_string[16];		// Speedometer text
-
-#ifdef HAVE_SDL
-	char speedometer_string[16];		// Speedometer text
-	void draw_string(SDL_Surface *s, int x, int y, const char *str, uint8 front_color, uint8 back_color);
-#endif
 
 #ifdef __unix
 	void draw_led(int num, int state);	// Draw one LED

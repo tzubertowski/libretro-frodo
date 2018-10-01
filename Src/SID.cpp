@@ -439,9 +439,6 @@ private:
 #endif
 
 
-#ifdef HAVE_SDL
-	static void buffer_proc(void *cookie, uint8 *buffer, int size);
-#else
 
 # ifdef __linux__
 	int devfd, sndbufsize, buffer_rate;
@@ -461,9 +458,6 @@ private:
 	int16 *sound_calc_buf;
 	int linecnt;
 # endif
-
-#endif // ndef HAVE_SDL
-
 
 #ifdef __mac__
 	SndChannelPtr chan1;
