@@ -21,6 +21,7 @@
 #ifndef _DISPLAY_H
 #define _DISPLAY_H
 
+#include <stdint.h>
 #ifdef __BEOS__
 #include <InterfaceKit.h>
 #endif
@@ -211,7 +212,7 @@ private:
 	BOOL FileNameDialog(char *prefs_path, BOOL save = false);
 	void OfferSave();			// Offer chance to save changes
 
-	UBYTE *chunky_buf;			// Chunky buffer for drawing
+	uint8_t *chunky_buf;			// Chunky buffer for drawing
 	BOOL active;				// is application active?
 	BOOL paused;				// is application paused?
 	BOOL waiting;				// is application waiting?

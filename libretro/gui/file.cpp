@@ -199,7 +199,7 @@ Uint8 *File_Read(const char *pszFileName, long *pFileSize, const char * const pp
 			FileSize = gztell(hGzFile);
 			gzrewind(hGzFile);
 			/* Read in... */
-			pFile = malloc(FileSize);
+			pFile = (Uint8*)malloc(FileSize);
 			if (pFile)
 				FileSize = gzread(hGzFile, pFile, FileSize);
 
@@ -223,7 +223,7 @@ Uint8 *File_Read(const char *pszFileName, long *pFileSize, const char * const pp
 			FileSize = ftell(hDiskFile);
 			fseek(hDiskFile, 0, SEEK_SET);
 			/* Read in... */
-			pFile = malloc(FileSize);
+			pFile = (Uint8*)malloc(FileSize);
 			if (pFile)
 				FileSize = fread(pFile, 1, FileSize, hDiskFile);
 
@@ -370,7 +370,7 @@ bool File_QueryOverwrite(const char *pszFileName)
 	{
 		fmt = "File '%s' exists, overwrite?";
 		/* File does exist, are we OK to overwrite? */
-		szString = malloc(strlen(pszFileName) + strlen(fmt) + 1);
+		szString = (char*)malloc(strlen(pszFileName) + strlen(fmt) + 1);
 		sprintf(szString, fmt, pszFileName);
 		fprintf(stderr, "%s\n", szString);
 		ret = DlgAlert_Query(szString);
@@ -388,11 +388,11 @@ bool File_QueryOverwrite(const char *pszFileName)
  */
 char * File_FindPossibleExtFileName(const char *pszFileName, const char * const ppszExts[])
 {
-	char *szSrcDir, *szSrcName, *szSrcExt;
+	char *szSrcName, *szSrcExt;
 	int i;
 
 	/* Allocate temporary memory for strings: */
-	szSrcDir = malloc(3 * FILENAME_MAX);
+	char *szSrcDir = (char*)malloc(3 * FILENAME_MAX);
 	if (!szSrcDir)
 	{
 		perror("File_FindPossibleExtFileName");
@@ -476,12 +476,9 @@ void File_SplitPath(const char *pSrcFileName, char *pDir, char *pName, char *pEx
  */
 char * File_MakePath(const char *pDir, const char *pName, const char *pExt)
 {
-	char *filepath;
-	int len;
-
 	/* dir or "." + "/" + name + "." + ext + \0 */
-	len = strlen(pDir) + 2 + strlen(pName) + 1 + (pExt ? strlen(pExt) : 0) + 1;
-	filepath = malloc(len);
+	int len = strlen(pDir) + 2 + strlen(pName) + 1 + (pExt ? strlen(pExt) : 0) + 1;
+	char *filepath = (char*)malloc(len);
 	if (!filepath)
 	{
 		perror("File_MakePath");
@@ -657,15 +654,15 @@ void File_MakeAbsoluteSpecialName(char *path)
 void File_MakeAbsoluteName(char *pFileName)
 {
 	char *pTempName;
-	int inpos, outpos;
+	int inpos = 0;
+	int outpos;
 
 #if defined (__AMIGAOS4__)
 	/* This function does not work on Amiga OS */
 	return;
 #endif
 
-	inpos = 0;
-	pTempName = malloc(FILENAME_MAX);
+	pTempName = (char*)malloc(FILENAME_MAX);
 	if (!pTempName)
 	{
 		perror("File_MakeAbsoluteName - malloc");

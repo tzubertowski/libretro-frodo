@@ -83,7 +83,7 @@ static void Paths_GetExecDirFromPATH(const char *argv0, char *pExecDir, int nMax
 	if (!pPathEnv)
 		return;
 
-	pTmpName = malloc(FILENAME_MAX);
+	pTmpName = (char*)malloc(FILENAME_MAX);
 	if (!pTmpName)
 		return;
 
@@ -119,10 +119,8 @@ static void Paths_GetExecDirFromPATH(const char *argv0, char *pExecDir, int nMax
  */
 static char *Paths_InitExecDir(const char *argv0)
 {
-	char *psExecDir;  /* Path string where the hatari executable can be found */
-
 	/* Allocate memory for storing the path string of the executable */
-	psExecDir = malloc(FILENAME_MAX);
+	char *psExecDir = (char*)malloc(FILENAME_MAX);
 	if (!psExecDir)
 	{
 		fprintf(stderr, "Out of memory (Paths_Init)\n");

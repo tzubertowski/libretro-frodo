@@ -25,6 +25,7 @@
  *  - Lots of empirically determined constants in the filter calculations
  */
 
+#include <stdint.h>
 #include "sysdeps.h"
 #include <math.h>
 
@@ -485,7 +486,7 @@ private:
 
 	BOOL direct_sound;
 	DigitalPlayer *ThePlayer;
-	SWORD *sound_buffer;
+	int16_t *sound_buffer;
 	int to_output;
 	int sb_pos;
 	int divisor;

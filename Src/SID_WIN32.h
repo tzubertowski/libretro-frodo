@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdint.h>
 #include <dsound.h>
 
 #include "VIC.h"
@@ -95,7 +96,7 @@ private:
 void DigitalRenderer::init_sound()
 {
 	ready = FALSE;
-	sound_buffer = new SWORD[2*FRAGMENT_SIZE];
+	sound_buffer = new int16_t[2*FRAGMENT_SIZE];
 	ThePlayer = 0;
 	to_output = 0;
 	divisor = 0;
