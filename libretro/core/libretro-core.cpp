@@ -1,6 +1,7 @@
 #include "libretro.h"
 
 #include "libretro-core.h"
+#include "libretro_core_options.h"
 
 #ifndef NO_LIBCO
 cothread_t mainThread;
@@ -14,6 +15,7 @@ cothread_t emuThread;
 extern C64 *TheC64;
 extern void quit_frodo_emu();
 #endif
+
 
 int CROP_WIDTH;
 int CROP_HEIGHT;
@@ -48,16 +50,7 @@ void retro_set_environment(retro_environment_t cb)
 {
    environ_cb = cb;
 
-   struct retro_variable variables[] = {
-      {
-         "Skel_resolution",
-         "Internal resolution; 384x288|400x300|640x480|832x576|800x600|960x720|1024x768|1024x1024",
-
-      },
-      { NULL, NULL },
-   };
-
-   cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
+   libretro_set_core_options(environ_cb);
 }
 
 static void update_variables(void)

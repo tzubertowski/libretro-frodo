@@ -74,25 +74,22 @@ enum {
 
 Drive *IEC::create_drive(const char *path)
 {
-	if (IsDirectory(path)) {
-		// Mount host directory
+   // Mount host directory
+	if (IsDirectory(path))
 		return new FSDrive(this, path);
-	} else {
+   {
 		// Not a directory, check for mountable file type
 		int type;
-		if (IsMountableFile(path, type)) {
-			if (type == FILE_IMAGE) {
+		if (IsMountableFile(path, type))
+      {
+			if (type == FILE_IMAGE)
 				// Mount disk image
 				return new ImageDrive(this, path);
-			} else {
-				// Mount archive type file
-				return new ArchDrive(this, path);
-			}
-		} else {
-			// Unknown file type
-			// print error?
+         // Mount archive type file
+         return new ArchDrive(this, path);
 		}
 	}
+   return NULL;
 }
 
 IEC::IEC(C64Display *display) : the_display(display)
