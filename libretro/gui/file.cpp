@@ -439,7 +439,7 @@ void File_SplitPath(const char *pSrcFileName, char *pDir, char *pName, char *pEx
 	char *ptr1, *ptr2;
 
 	/* Build pathname: */
-	ptr1 = strrchr(pSrcFileName, PATHSEP);
+	ptr1 = (char *)strrchr(pSrcFileName, PATHSEP);
 	if (ptr1)
 	{
 		strcpy(pName, ptr1+1);

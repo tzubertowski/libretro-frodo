@@ -131,7 +131,7 @@ static void DlgFileSelect_Convert_ypos_to_scrollbar_Ypos(void);
 static int DlgFileSelect_RefreshEntries(struct dirent **files, char *path, bool browsingzip)
 {
 	int i;
-	char *tempstr = malloc(FILENAME_MAX);
+	char *tempstr = (char *)malloc(FILENAME_MAX);
 
 	if (!tempstr)
 	{
@@ -444,7 +444,7 @@ static char* zip_get_path(const char *zipdir, const char *zipfilename, int brows
 	if (browsingzip)
 	{
 		char *zippath;
-		zippath = malloc(strlen(zipdir) + strlen(zipfilename) + 1);
+		zippath = (char *)malloc(strlen(zipdir) + strlen(zipfilename) + 1);
 		strcpy(zippath, zipdir);
 		strcat(zippath, zipfilename);
 		return zippath;
@@ -516,7 +516,7 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 	entries = 0;
 
 	/* Allocate memory for the file and path name strings: */
-	pStringMem = malloc(4 * FILENAME_MAX);
+	pStringMem = (char *)malloc(4 * FILENAME_MAX);
 	path = pStringMem;
 	fname = pStringMem + FILENAME_MAX;
 	zipdir = pStringMem + 2 * FILENAME_MAX;
@@ -642,7 +642,7 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 		{
 			char *tempstr;
 			
-			tempstr = malloc(FILENAME_MAX);
+			tempstr = (char *)malloc(FILENAME_MAX);
 			if (!tempstr)
 			{
 				perror("Error while allocating temporary memory in SDLGui_FileSelect()");
