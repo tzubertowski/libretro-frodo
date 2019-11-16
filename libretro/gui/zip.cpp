@@ -391,7 +391,7 @@ static char *ZIP_FirstFile(const char *filename, const char * const ppsExts[])
 	if (files == NULL)
 		return NULL;
 
-	name = malloc(ZIP_PATH_MAX);
+	name = (char *)malloc(ZIP_PATH_MAX);
 	if (!name)
 	{
 		perror("ZIP_FirstFile");
@@ -459,7 +459,7 @@ static void *ZIP_ExtractFile(unzFile uf, const char *filename, uLong size)
 	}
 
 	size_buf = size;
-	buf = malloc(size_buf);
+	buf = (char *)malloc(size_buf);
 	if (!buf)
 	{
 		perror("ZIP_ExtractFile");
@@ -524,7 +524,7 @@ Uint8 *ZIP_ReadDisk(const char *pszFileName, const char *pszZipPath, long *pImag
 	}
 	else
 	{
-		path = malloc(ZIP_PATH_MAX);
+		path = (char *)malloc(ZIP_PATH_MAX);
 		if (path == NULL)
 		{
 			perror("ZIP_ReadDisk");
@@ -544,7 +544,7 @@ Uint8 *ZIP_ReadDisk(const char *pszFileName, const char *pszZipPath, long *pImag
 	}
 
 	/* extract to buf */
-	buf = ZIP_ExtractFile(uf, path, ImageSize);
+	buf = (Uint8 *)ZIP_ExtractFile(uf, path, ImageSize);
 
 	unzCloseCurrentFile(uf);
 	unzClose(uf);
@@ -644,7 +644,7 @@ Uint8 *ZIP_ReadFirstFile(const char *pszFileName, long *pImageSize, const char *
 	}
 
 	/* Extract to buffer */
-	pBuffer = ZIP_ExtractFile(uf, pszZipPath, file_info.uncompressed_size);
+	pBuffer = (Uint8 *)ZIP_ExtractFile(uf, pszZipPath, file_info.uncompressed_size);
 
 	/* And close the file */
 	unzCloseCurrentFile(uf);

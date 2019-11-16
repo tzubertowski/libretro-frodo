@@ -67,7 +67,7 @@ public:
 	void Speedometer(int speed);
 	uint8 *BitmapBase(void);
 	int BitmapXMod(void);
-
+	static void pulse_handler(...);
 	void Keymap_KeyDown(int sdlkey,uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick);
 	void  Keymap_KeyUp(int sdlkey,uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick);
 
@@ -96,9 +96,7 @@ public:
 	Joy_Keys JoystickKeys[2];		// it's easier making the joystick keys public
 #endif
 
-#ifdef __unix
 	bool quit_requested;
-#endif
 
 private:
 	int led_state[4];

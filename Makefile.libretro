@@ -55,6 +55,23 @@ ifndef ($(UNIVERSAL))
 	CXXFLAGS += $(ARCHFLAGS)
 	LDFLAGS += $(ARCHFLAGS)
 endif
+else ifeq ($(platform), ios-arm64)
+   TARGET := $(TARGET_NAME)_libretro_ios.dylib
+   COMMONFLAGS += -DHAVE_POSIX_MEMALIGN=1 -marm
+   fpic = -fPIC
+   LDFLAGS += -dynamiclib
+
+	ifeq ($(IOSSDK),)
+		IOSSDK := $(shell xcodebuild -version -sdk iphoneos Path)
+	endif
+	CC = clang -arch arm64 -isysroot $(IOSSDK)
+	CXX = clang++ -arch arm64 -isysroot $(IOSSDK)
+	CXXFLAGS += -std=c++11 -stdlib=libc++
+	COMMONFLAGS += -DIOS 
+	OSXVER = `sw_vers -productVersion | cut -d. -f 2`
+	OSX_LT_MAVERICKS = `(( $(OSXVER) <= 9)) && echo "YES"`
+	CC += -miphoneos-version-min=8.0
+	COMMONFLAGS += -miphoneos-version-min=8.0
 else ifeq ($(platform), ios)
    TARGET := $(TARGET_NAME)_libretro_ios.dylib
    COMMONFLAGS += -DHAVE_POSIX_MEMALIGN=1 -marm

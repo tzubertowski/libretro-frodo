@@ -339,9 +339,32 @@ int init_graphics(void)
 
 extern bool quit_requested;
 
+
+/*
+ *  LED error blink
+ */
+
+
+void C64Display::pulse_handler(...)
+{
+	for (int i=0; i<4; i++)
+		switch (c64_disp->led_state[i]) {
+			case LED_ERROR_ON:
+				c64_disp->led_state[i] = LED_ERROR_OFF;
+				break;
+			case LED_ERROR_OFF:
+				c64_disp->led_state[i] = LED_ERROR_ON;
+				break;
+		}
+}
+
+
+
 /*
  *  Display constructor
  */
+
+
 
 C64Display::C64Display(C64 *the_c64) : TheC64(the_c64)
 {
@@ -472,23 +495,6 @@ if(ThePrefs.ShowLEDs){
 
 }
 
-
-/*
- *  LED error blink
- */
-
-void C64Display::pulse_handler(...)
-{
-	for (int i=0; i<4; i++)
-		switch (c64_disp->led_state[i]) {
-			case LED_ERROR_ON:
-				c64_disp->led_state[i] = LED_ERROR_OFF;
-				break;
-			case LED_ERROR_OFF:
-				c64_disp->led_state[i] = LED_ERROR_ON;
-				break;
-		}
-}
 
 
 /*
