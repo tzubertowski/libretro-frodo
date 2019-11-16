@@ -56,7 +56,7 @@ void Dialog_SnapshotDlg(void)
 
 			case SNATSHOTDLG_SAVE:
 			
-				snapfile=malloc(512*sizeof(char));
+				snapfile=(char *)malloc(512*sizeof(char));
 
 				if(ThePrefs.DrivePath[0]!=NULL){
 

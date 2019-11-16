@@ -223,7 +223,8 @@ void Frodo::ReadyToRun(void)
 bool Frodo::RunPrefsEditor(void)
 {
 	Prefs *prefs = new Prefs(ThePrefs);
-	bool result = prefs->ShowEditor(false, prefs_path);
+	//bool result = prefs->ShowEditor(false, prefs_path);
+	bool result = false;
 	if (result) {
 		TheC64->NewPrefs(prefs);
 		ThePrefs = *prefs;

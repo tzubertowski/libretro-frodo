@@ -14,7 +14,7 @@
 #ifndef HATARI_SDLGUI_H
 #define HATARI_SDLGUI_H
 
-#include "sysconfig.h"
+//#include "sysconfig.h"
 #include "sysdeps.h"
 
 #define SNAP_BMP 1
