@@ -51,6 +51,9 @@ void retro_set_environment(retro_environment_t cb)
    environ_cb = cb;
 
    libretro_set_core_options(environ_cb);
+
+   bool no_rom = true;
+   cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_rom);
 }
 
 static void update_variables(void)
@@ -367,9 +370,12 @@ bool retro_load_game(const struct retro_game_info *info)
    struct retro_keyboard_callback cb = { keyboard_cb };
    environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &cb);
 */
-   full_path = info->path;
+   full_path = info ? info->path : NULL;
 
-   strcpy(RPATH,full_path);
+   if (full_path)
+     strcpy(RPATH,full_path);
+   else
+     memset(RPATH, 0, sizeof(RPATH));
 
    update_variables();
 
