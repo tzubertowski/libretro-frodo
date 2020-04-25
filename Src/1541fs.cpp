@@ -197,7 +197,7 @@ uint8 FSDrive::open_file(int channel, const uint8 *name, int name_len)
 	}
 
 	// Open file
-#ifndef __riscos__
+#if !defined (__riscos__) && !defined(__vita__) && !defined(__psp__)
 	if (chdir(dir_path))
 		set_error(ERR_NOTREADY);
 	else if ((file[channel] = fopen(plain_name, mode_str)) != NULL) {
@@ -211,7 +211,11 @@ uint8 FSDrive::open_file(int channel, const uint8 *name, int name_len)
 	  char fullname[NAMEBUF_LENGTH];
 
   	  // On RISC OS make a full filename
-	  sprintf(fullname,"%s.%s",dir_path,plain_name);
+#ifdef __riscos__
+	  sprintf(fullname,"%s.%s",dir_path, plain_name);
+#else
+	  sprintf(fullname,"%s/%s",dir_path, plain_name);
+#endif	  
 	  if ((file[channel] = fopen(fullname, mode)) != NULL)
 	  {
 	    if (mode == FMODE_READ || mode == FMODE_M)
@@ -365,9 +369,20 @@ uint8 FSDrive::open_directory(int channel, const uint8 *pattern, int pattern_len
 		if (match(ascii_pattern, de->d_name)) {
 
 			// Get file statistics
+#if defined(__vita__) || defined(__psp__)
+		  {
+		    char *buf = (char *) malloc (strlen(dir_path) + strlen(de->d_name) + 3);
+		    strcat(buf, dir_path);
+		    strcat(buf, "/");
+		    strcat(buf, de->d_name);
+		    stat(buf, &statbuf);
+		    free (buf);
+		  }
+#else
 			chdir(dir_path);
 			stat(de->d_name, &statbuf);
 			chdir(AppDirPath);
+#endif
 
 			// Clear line with spaces and terminate with null byte
 			memset(buf, ' ', 31);
