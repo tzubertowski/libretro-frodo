@@ -1,7 +1,3 @@
-#if  defined(__ANDROID__) || defined(ANDROID)
-#include <android/log.h>
-#define LOG_TAG "RetroArch.Frodo"
-#define LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
-#else
-#define LOGI printf
-#endif
+#include "libretro.h"
+extern retro_log_printf_t log_cb;
+#define LOGI(...) log_cb(RETRO_LOG_INFO,__VA_ARGS__)
