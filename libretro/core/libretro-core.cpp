@@ -315,14 +315,25 @@ void retro_run_gui(void)
 }
 #endif
 
+static void (*pulse_handler)(int);
+
+void libretro_pulse_handler(void (*handler)(int))
+{
+   pulse_handler = handler;
+}
+
 void retro_run(void)
 {
+   static int pulse_counter = 0;
    int x;
 
    bool updated = false;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
       update_variables();
+
+   if (pulse_counter > 20 && pulse_handler)
+      pulse_handler(0);
 
    if(pauseg==0){
 	  
