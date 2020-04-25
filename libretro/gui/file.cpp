@@ -655,7 +655,7 @@ void File_MakeAbsoluteName(char *pFileName)
 {
 	char *pTempName;
 	int inpos = 0;
-	int outpos;
+	int outpos = 0;
 
 #if defined (__AMIGAOS4__)
 	/* This function does not work on Amiga OS */
@@ -670,6 +670,7 @@ void File_MakeAbsoluteName(char *pFileName)
 	}
 
 	/* Is it already an absolute name? */
+#if !defined(__psp__) && !defined(__vita__)
 	if (File_IsRootFileName(pFileName))
 	{
 		outpos = 0;
@@ -685,6 +686,7 @@ void File_MakeAbsoluteName(char *pFileName)
 		File_AddSlashToEndFileName(pTempName);
 		outpos = strlen(pTempName);
 	}
+#endif
 
 	/* Now filter out the relative paths "./" and "../" */
 	while (pFileName[inpos] != 0 && outpos < FILENAME_MAX)
