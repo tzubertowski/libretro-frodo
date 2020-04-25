@@ -66,7 +66,9 @@ using std::vector;
 #define HAVE_SELECT 1
 
 /* Define if you have the `sigaction' function. */
+#if !defined (__vita__) && !defined(__psp__)
 #define HAVE_SIGACTION 1
+#endif
 
 /* Define if you have the `statfs' function. */
 #define HAVE_STATFS 1
