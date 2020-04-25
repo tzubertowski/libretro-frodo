@@ -3,6 +3,8 @@
 #include "libretro-core.h"
 #include "libretro_core_options.h"
 
+#include <stdarg.h>
+
 #ifndef NO_LIBCO
 cothread_t mainThread;
 cothread_t emuThread;
@@ -45,10 +47,31 @@ static retro_video_refresh_t video_cb;
 static retro_audio_sample_t audio_cb;
 static retro_audio_sample_batch_t audio_batch_cb;
 static retro_environment_t environ_cb;
+static void RETRO_CALLCONV fallback_log(enum retro_log_level level, const char *fmt, ...);
+retro_log_printf_t log_cb = fallback_log;
+
+static void RETRO_CALLCONV fallback_log(enum retro_log_level level, const char *fmt, ...)
+{
+   va_list va;
+
+   (void)level;
+
+   va_start(va, fmt);
+#if  defined(__ANDROID__) || defined(ANDROID)
+   __android_log_vprint(ANDROID_LOG_INFO,LOG_TAG, fmt, va);
+#else
+   vfprintf(stderr, fmt, va);
+#endif
+   va_end(va);
+}
 
 void retro_set_environment(retro_environment_t cb)
 {
    environ_cb = cb;
+
+   struct retro_log_callback log;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log))
+     log_cb = log.log;
 
    libretro_set_core_options(environ_cb);
 
@@ -201,8 +224,7 @@ void retro_init(void)
    
    if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
    {
-      fprintf(stderr, "PIXEL FORMAT is not supported.\n");
-LOGI("PIXEL FORMAT is not supported.\n");
+      log_cb(RETRO_LOG_ERROR, "PIXEL FORMAT is not supported.\n");
       exit(0);
    }
 
