@@ -388,6 +388,13 @@ bool retro_load_game(const struct retro_game_info *info)
 
    (void)info;
 
+#ifndef NO_LIBCO
+   if (!mainThread || !emuThread) {
+      log_cb(RETRO_LOG_ERROR, "libco init failed\n", __LINE__);
+      return false;
+   }
+#endif
+
 /*
    struct retro_keyboard_callback cb = { keyboard_cb };
    environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &cb);
