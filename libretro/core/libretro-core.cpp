@@ -58,9 +58,9 @@ void retro_set_environment(retro_environment_t cb)
 
 static void update_variables(void)
 {
-   struct retro_variable var = {
-      .key = "Skel_resolution",
-   };
+   struct retro_variable var;
+   var.key = "frodo_resolution";
+   var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
