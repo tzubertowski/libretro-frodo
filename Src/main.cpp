@@ -174,7 +174,11 @@ void Frodo::ArgvReceived(int argc, char **argv)
 
 void Frodo::ReadyToRun(void)
 {
+#if defined (__vita__) || defined(__psp__)
+  strcpy(AppDirPath, "/");
+#else
 	getcwd(AppDirPath, 256);
+#endif
 
 	// Load preferences
 	if (!prefs_path[0]) {

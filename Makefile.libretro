@@ -33,6 +33,7 @@ else ifneq ($(findstring MINGW,$(shell uname -a)),)
    system_platform = win
 endif
 
+NOCMD := 0
 
 ifeq ($(platform), unix)
    TARGET := $(TARGET_NAME)_libretro.so
@@ -140,7 +141,9 @@ else ifeq ($(platform), psp1)
    CXX = psp-g++$(EXE_EXT)
    AR = psp-ar$(EXE_EXT)
    COMMONFLAGS += -DPSP -G0
+   COMMONFLAGS += -I$(shell psp-config --pspsdk-path)/include
 	STATIC_LINKING = 1
+	NOCMD = 1
 
 # Vita
 else ifeq ($(platform), vita)
@@ -150,6 +153,7 @@ else ifeq ($(platform), vita)
 	AR = arm-vita-eabi-ar$(EXE_EXT)
    COMMONFLAGS += -DVITA
 	STATIC_LINKING = 1
+	NOCMD = 1
 
 else ifeq ($(platform), wii)
    TARGET := $(TARGET_NAME)_libretro_wii.a

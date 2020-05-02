@@ -16,4 +16,6 @@ typedef struct{
 } retro_pal;
 
 
+void libretro_pulse_handler(void (*handler)(int));
+
 #endif

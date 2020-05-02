@@ -550,7 +550,11 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 	if (!File_DirExists(path))
 	{
 		File_SplitPath(path, path, fname, NULL);
-		if (!(File_DirExists(path) || getcwd(path, FILENAME_MAX)))
+		if (!(File_DirExists(path)
+#if !defined(__vita__) && !defined(__psp__)
+		      || getcwd(path, FILENAME_MAX)
+#endif
+		      ))
 		{
 			perror("SDLGui_FileSelect: non-existing path and CWD failed");
 			goto clean_exit;
