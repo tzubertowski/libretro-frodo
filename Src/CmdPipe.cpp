@@ -36,7 +36,7 @@ extern "C" {
 #include <unistd.h>
 #endif
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__QNX__)
 	#include <sys/time.h>
 #endif
 
