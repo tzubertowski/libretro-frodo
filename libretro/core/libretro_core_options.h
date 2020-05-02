@@ -28,7 +28,7 @@ extern "C" {
 
 struct retro_core_option_definition option_defs_us[] = {
    {
-      "Skel_resolution",
+      "frodo_resolution",
       "Internal Resolution",
       "Configure the resolution.",
       {
