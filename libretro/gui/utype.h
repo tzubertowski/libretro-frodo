@@ -27,6 +27,11 @@ typedef unsigned int  uint32;
 #ifdef RETRO
 #include <ctype.h>
 
+#if defined (__vita__) || defined(__psp__)
+#define	getcwd(a,b)	"/"
+#define chdir(a) 0
+#endif
+
 #ifdef PS3PORT
 #include <sdk_version.h>
 #include <cell.h>

@@ -47,7 +47,11 @@ SOURCES_CXX := \
 		$(EMU)/main.cpp $(EMU)/Display.cpp $(EMU)/Prefs.cpp \
 		$(EMU)/SID.cpp $(EMU)/REU.cpp $(EMU)/IEC.cpp $(EMU)/1541fs.cpp \
         $(EMU)/1541d64.cpp $(EMU)/1541t64.cpp $(EMU)/1541job.cpp \
-		$(EMU)/SAM.cpp $(EMU)/CmdPipe.cpp
+	$(EMU)/SAM.cpp
+
+ifneq ($(NOCMD), 1)
+      SOURCES_CXX +=  $(EMU)/CmdPipe.cpp
+endif
 
 SLOBJS  := \
 		$(EMU)/C64.cpp $(EMU)/CPUC64.cpp $(EMU)/VIC.cpp \
