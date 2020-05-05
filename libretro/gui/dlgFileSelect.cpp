@@ -826,15 +826,21 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 				break;
 			case SGFSDLG_UP:                    /* Scroll up */
 				DlgFileSelect_ScrollUp();
+#ifndef __LIBRETRO__
 				SDL_Delay(10);
+#endif
 				break;
 			case SGFSDLG_DOWN:                  /* Scroll down */
 				DlgFileSelect_ScrollDown();
+#ifndef __LIBRETRO__
 				SDL_Delay(10);
+#endif
 				break;
 			case SGFSDLG_SCROLLBAR:             /* Scrollbar selected */
 				DlgFileSelect_ManageScrollbar();
+#ifndef __LIBRETRO__
 				SDL_Delay(10);
+#endif
 				break;
 			case SGFSDLG_FILENAME:              /* User entered new filename */
 				strcpy(fname, dlgfname);
