@@ -22,6 +22,7 @@ const char DlgFileSelect_fileid[] = "Hatari dlgFileSelect.c : " __DATE__ " " __T
 #include "file.h"
 #include "paths.h"
 #include "zip.h"
+#include "scandir.h"
 
 extern bool bQuitProgram;
 
