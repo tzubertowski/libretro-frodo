@@ -20,6 +20,18 @@ const char Paths_fileid[] = "Hatari paths.c : " __DATE__ " " __TIME__;
 
 #include "paths.h"
 
+#if defined(VITA)
+#  include <psp2/io/fcntl.h>
+#  include <psp2/io/dirent.h>
+#  include <psp2/io/stat.h>
+#elif defined(PSP)
+#  include <pspiofilemgr.h>
+#endif
+
+#if defined(VITA) || defined(PSP)
+#define mkdir sceIoMkdir
+#endif
+
 #if defined(WIN32) && !defined(mkdir)
 #define mkdir(name,mode) mkdir(name)
 #endif  /* WIN32 */
@@ -245,11 +257,17 @@ void Paths_Init(const char *argv0)
 	char *psExecDir;  /* Path string where the hatari executable can be found */
 
 	/* Init working directory string */
+#ifdef VITA
+	strcpy(sWorkingDir, "ux0:/");
+#elif defined(PSP)
+	strcpy(sWorkingDir, "ms0:/");
+#else
 	if (getcwd(sWorkingDir, FILENAME_MAX) == NULL)
 	{
 		/* This should never happen... just in case... */
 		strcpy(sWorkingDir, ".");
 	}
+#endif
 
 	/* Init the user's home directory string */
 	Paths_InitHomeDirs();
