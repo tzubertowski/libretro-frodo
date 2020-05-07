@@ -137,7 +137,7 @@ else ifeq ($(platform), psp1)
    CC = psp-gcc$(EXE_EXT)
    CXX = psp-g++$(EXE_EXT)
    AR = psp-ar$(EXE_EXT)
-   COMMONFLAGS += -DPSP -G0
+   COMMONFLAGS += -DPSP -G0 -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0
    COMMONFLAGS += -I$(shell psp-config --pspsdk-path)/include
 	STATIC_LINKING = 1
 	NOCMD = 1
@@ -148,7 +148,7 @@ else ifeq ($(platform), vita)
 	CC = arm-vita-eabi-gcc$(EXE_EXT)
 	CXX = arm-vita-eabi-g++$(EXE_EXT)
 	AR = arm-vita-eabi-ar$(EXE_EXT)
-   COMMONFLAGS += -DVITA
+   COMMONFLAGS += -DVITA -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0
 	STATIC_LINKING = 1
 	NOCMD = 1
 
