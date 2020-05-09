@@ -35,6 +35,10 @@
 #include "ROlib.h"
 #endif
 
+#ifdef _WIN32
+#include <windef.h>
+#include <windows.h>
+#endif
 
 // Sizes of memory areas
 const int C64_RAM_SIZE = 0x10000;

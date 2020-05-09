@@ -110,3 +110,7 @@ SOURCES_C += \
 	$(CORE_DIR)/libretro/scandir.c
 
 
+ifeq ($(platform), win)
+SOURCES_C += Src/libretro-common/compat/compat_strl.c \
+	     Src/libretro-common/compat/fopen_utf8.c
+endif

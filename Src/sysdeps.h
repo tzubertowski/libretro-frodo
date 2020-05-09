@@ -63,10 +63,12 @@ using std::vector;
 #define HAVE_RMDIR 1
 
 /* Define if you have the `select' function. */
+#ifndef _WIN32
 #define HAVE_SELECT 1
+#endif
 
 /* Define if you have the `sigaction' function. */
-#if !defined (__vita__) && !defined(__psp__) && !defined(_3DS)
+#if !defined (__vita__) && !defined(__psp__) && !defined(_3DS) && !defined(_WIN32)
 #define HAVE_SIGACTION 1
 #endif
 
@@ -312,7 +314,7 @@ struct utimbuf
 #define M_PI 3.14159265358979323846
 #endif
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
-#if _MSC_VER < 1100
+#if defined(_MSC_VER) && _MSC_VER < 1100
 #define bool char
 #endif
 #define LITTLE_ENDIAN_UNALIGNED 1
