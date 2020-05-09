@@ -103,8 +103,10 @@ static bool num_locked = false;
 
 // For LED error blinking
 static C64Display *c64_disp;
+#if !defined (__LIBRETRO__)
 static struct sigaction pulse_sa;
 static itimerval pulse_tv;
+#endif
 
 // Colors for speedometer/drive LEDs
 enum {

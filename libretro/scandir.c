@@ -214,6 +214,9 @@ error_out:
 #include <windows.h>
 #include <wchar.h>
 
+#define LOG_DEBUG stderr
+#define Log_Printf fprintf
+
 /*-----------------------------------------------------------------------*/
 /**
  * Alphabetic order comparison routine.
