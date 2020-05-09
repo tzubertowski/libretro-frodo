@@ -66,7 +66,7 @@ using std::vector;
 #define HAVE_SELECT 1
 
 /* Define if you have the `sigaction' function. */
-#if !defined (__vita__) && !defined(__psp__)
+#if !defined (__vita__) && !defined(__psp__) && !defined(_3DS)
 #define HAVE_SIGACTION 1
 #endif
 
