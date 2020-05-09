@@ -141,7 +141,15 @@ else ifeq ($(platform), psp1)
    COMMONFLAGS += -I$(shell psp-config --pspsdk-path)/include
 	STATIC_LINKING = 1
 	NOCMD = 1
-
+# CTR (3DS)
+else ifeq ($(platform), ctr)
+	TARGET := $(TARGET_NAME)_libretro_$(platform).a
+	CC = $(DEVKITARM)/bin/arm-none-eabi-gcc$(EXE_EXT)
+	CXX = $(DEVKITARM)/bin/arm-none-eabi-g++$(EXE_EXT)
+	AR = $(DEVKITARM)/bin/arm-none-eabi-ar$(EXE_EXT)
+	DEFINES += -D_3DS -DARM11 -march=armv6k -mtune=mpcore -mfloat-abi=hard
+	COMMONFLAGS += $(DEFINES) -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0
+	STATIC_LINKING = 1
 # Vita
 else ifeq ($(platform), vita)
    TARGET := $(TARGET_NAME)_libretro_vita.a
