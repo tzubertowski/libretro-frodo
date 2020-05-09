@@ -33,8 +33,6 @@ else ifneq ($(findstring MINGW,$(shell uname -a)),)
    system_platform = win
 endif
 
-NOCMD := 0
-
 ifneq (,$(filter $(platform), unix unix-armv7-hardfloat-neon))
    TARGET := $(TARGET_NAME)_libretro.so
    LDFLAGS += -shared -Wl,--version-script=libretro/link.T -lz
@@ -140,7 +138,6 @@ else ifeq ($(platform), psp1)
    COMMONFLAGS += -DPSP -G0 -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0
    COMMONFLAGS += -I$(shell psp-config --pspsdk-path)/include
 	STATIC_LINKING = 1
-	NOCMD = 1
 # CTR (3DS)
 else ifeq ($(platform), ctr)
 	TARGET := $(TARGET_NAME)_libretro_$(platform).a
@@ -158,7 +155,6 @@ else ifeq ($(platform), vita)
 	AR = arm-vita-eabi-ar$(EXE_EXT)
    COMMONFLAGS += -DVITA -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0
 	STATIC_LINKING = 1
-	NOCMD = 1
 
 else ifeq ($(platform), wii)
    TARGET := $(TARGET_NAME)_libretro_wii.a
@@ -168,7 +164,8 @@ else ifeq ($(platform), wii)
    COMMONFLAGS += -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -D__POWERPC__
 	STATIC_LINKING = 1
 else
-   CXXFLAGS += -mno-ms-bitfields
+   CXXFLAGS += -mno-ms-bitfields  -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0
+   CFLAGS += -mno-ms-bitfields  -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0
    TARGET := $(TARGET_NAME)_libretro.dll
    LDFLAGS += -shared -static-libgcc -static-libstdc++ -Wl,--version-script=libretro/link.T -lwinmm
 endif

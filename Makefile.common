@@ -46,10 +46,6 @@ SOURCES_CXX := \
         $(EMU)/1541d64.cpp $(EMU)/1541t64.cpp $(EMU)/1541job.cpp \
 	$(EMU)/SAM.cpp
 
-ifneq ($(NOCMD), 1)
-      SOURCES_CXX +=  $(EMU)/CmdPipe.cpp
-endif
-
 SLOBJS  := \
 		$(EMU)/C64.cpp $(EMU)/CPUC64.cpp $(EMU)/VIC.cpp \
 		$(EMU)/CIA.cpp $(EMU)/CPU1541.cpp
@@ -114,3 +110,7 @@ SOURCES_C += \
 	$(CORE_DIR)/libretro/scandir.c
 
 
+ifeq ($(platform), win)
+SOURCES_C += Src/libretro-common/compat/compat_strl.c \
+	     Src/libretro-common/compat/fopen_utf8.c
+endif
