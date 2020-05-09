@@ -33,9 +33,6 @@ SOURCES_C += $(CORE_DIR)/Src/zlib/adler32.c \
                                  $(CORE_DIR)/Src/zlib/uncompr.c \
                                  $(CORE_DIR)/Src/zlib/zutil.c
 
-ifneq ($(NOLIBCO), 1)
-	INCFLAGS += -I$(CORE_DIR)/libretro/libco
-endif
 ifeq ($(NOLIBCO), 1)
 	CPPFLAGS += -DNO_LIBCO
 endif
@@ -110,7 +107,7 @@ SOURCES_CXX += $(GUI)/dialog.cpp\
 
 ifneq ($(NOLIBCO), 1)
 SOURCES_C += \
-	$(CORE_DIR)/libretro/libco/libco.c 
+	$(CORE_DIR)/Src/libretro-common/libco/libco.c 
 endif
 
 SOURCES_C += \
