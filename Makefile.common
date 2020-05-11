@@ -13,6 +13,7 @@ SOURCES_C := \
         $(CORE_DIR)/Src/libretro-common/encodings/encoding_crc32.c \
         $(CORE_DIR)/Src/libretro-common/encodings/encoding_utf.c \
         $(CORE_DIR)/Src/libretro-common/compat/compat_strcasestr.c \
+	$(CORE_DIR)/Src/libretro-common/compat/compat_strl.c \
         $(CORE_DIR)/Src/libretro-common/vfs/vfs_implementation.c \
         $(CORE_DIR)/Src/libretro-common/streams/trans_stream_zlib.c \
         $(CORE_DIR)/Src/libretro-common/streams/file_stream.c \
