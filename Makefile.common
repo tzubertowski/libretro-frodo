@@ -112,6 +112,5 @@ SOURCES_C += \
 
 
 ifeq ($(platform), win)
-SOURCES_C += Src/libretro-common/compat/compat_strl.c \
-	     Src/libretro-common/compat/fopen_utf8.c
+SOURCES_C += Src/libretro-common/compat/fopen_utf8.c
 endif
