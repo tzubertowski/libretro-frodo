@@ -68,7 +68,7 @@ using std::vector;
 #endif
 
 /* Define if you have the `sigaction' function. */
-#if !defined (__vita__) && !defined(__psp__) && !defined(_3DS) && !defined(_WIN32)
+#if !defined (__vita__) && !defined(__psp__) && !defined(_3DS) && !defined(_WIN32) && !defined(__SWITCH__)
 #define HAVE_SIGACTION 1
 #endif
 
