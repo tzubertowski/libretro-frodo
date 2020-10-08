@@ -37,28 +37,25 @@ int pre_main(const char *argv)
    for (i = 0; i<64; i++)
       xargv_cmd[i] = NULL;
 
-   	Add_Option("skelsdl");
+   Add_Option("skelsdl");
 
    if(Only1Arg)
-   {
-     //Add_Option("skelsdl");
       Add_Option(RPATH/*ARGUV[0]*/);
-   }
    else
-   { // Pass all cmdline args
+   {
+      // Pass all cmdline args
       for(i = 0; i < ARGUC; i++)
          Add_Option(ARGUV[i]);
    }
 
    for (i = 0; i < PARAMCOUNT; i++)
-   {
       xargv_cmd[i] = (char*)(XARGV[i]);
-      LOGI("%2d  %s\n",i,XARGV[i]);
-   }
 
    skel_main(PARAMCOUNT,( char **)xargv_cmd); 
 
    xargv_cmd[PARAMCOUNT - 2] = NULL;
+
+   return 0;
 }
 
 void parse_cmdline(const char *argv)

@@ -1211,16 +1211,15 @@ void DigitalRenderer::calc_buffer(int16 *buf, long count)
 
 #include "VIC.h"
 
-#warning RETRO
 /*
  *  Initialization
  */
 
 void DigitalRenderer::init_sound(void)
 {
-	sndbufsize=882;
-	sound_buffer = new int16[sndbufsize*2];
-    ready = true;
+   sndbufsize=882;
+   sound_buffer = new int16[sndbufsize*2];
+   ready = true;
 }
 
 
