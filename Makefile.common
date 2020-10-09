@@ -1,24 +1,34 @@
-INCFLAGS += \
+LIBRETRO_COMM_DIR := $(CORE_DIR)/Src/libretro-common
+EMU_DIR           := $(CORE_DIR)/Src
+GUI_DIR           := $(CORE_DIR)/libretro/gui
+
+INCFLAGS := \
 			-I$(CORE_DIR)/libretro/core \
 			-I$(CORE_DIR)/libretro/include \
 			-I$(CORE_DIR)/libretro/emu \
 			-I$(CORE_DIR)/libretro \
 			-I$(CORE_DIR)/Src \
 			-I$(CORE_DIR)/Src/zlib \
-			-I$(CORE_DIR)/Src/libretro-common/include \
+			-I$(LIBRETRO_COMM_DIR)/include \
 			-I$(CORE_DIR)
 
 SOURCES_C := \
-	          $(CORE_DIR)/Src/libretro-common/string/stdstring.c \
-				 $(CORE_DIR)/Src/libretro-common/encodings/encoding_crc32.c \
-				 $(CORE_DIR)/Src/libretro-common/encodings/encoding_utf.c \
-				 $(CORE_DIR)/Src/libretro-common/compat/compat_strcasestr.c \
-				 $(CORE_DIR)/Src/libretro-common/compat/compat_strl.c \
-				 $(CORE_DIR)/Src/libretro-common/vfs/vfs_implementation.c \
-				 $(CORE_DIR)/Src/libretro-common/streams/trans_stream_zlib.c \
-				 $(CORE_DIR)/Src/libretro-common/streams/file_stream.c \
-				 $(CORE_DIR)/Src/libretro-common/file/file_path.c \
-				 $(CORE_DIR)/Src/libretro-common/compat/fopen_utf8.c
+	          $(LIBRETRO_COMM_DIR)/string/stdstring.c \
+				 $(LIBRETRO_COMM_DIR)/encodings/encoding_crc32.c \
+				 $(LIBRETRO_COMM_DIR)/encodings/encoding_utf.c \
+				 $(LIBRETRO_COMM_DIR)/compat/compat_strcasestr.c \
+				 $(LIBRETRO_COMM_DIR)/compat/compat_strl.c \
+				 $(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.c \
+				 $(LIBRETRO_COMM_DIR)/streams/trans_stream_zlib.c \
+				 $(LIBRETRO_COMM_DIR)/streams/file_stream.c \
+				 $(LIBRETRO_COMM_DIR)/file/file_path.c \
+				 $(LIBRETRO_COMM_DIR)/compat/fopen_utf8.c
+
+SOURCES_C += $(CORE_DIR)/libretro/scandir.c
+
+ifneq ($(NOLIBCO), 1)
+SOURCES_C += $(LIBRETRO_COMM_DIR)/libco/libco.c 
+endif
 
 SOURCES_C += \
 				 $(CORE_DIR)/Src/zlib/adler32.c \
@@ -40,57 +50,37 @@ ifeq ($(NOLIBCO), 1)
 	CPPFLAGS += -DNO_LIBCO
 endif
 
-EMU := $(CORE_DIR)/Src
-GUI := $(CORE_DIR)/libretro/gui
-
 SOURCES_CXX := \
-		         $(EMU)/main.cpp \
-					$(EMU)/Display.cpp \
-					$(EMU)/Prefs.cpp \
-					$(EMU)/SID.cpp \
-					$(EMU)/REU.cpp \
-					$(EMU)/IEC.cpp \
-					$(EMU)/1541fs.cpp \
-					$(EMU)/1541d64.cpp \
-					$(EMU)/1541t64.cpp \
-					$(EMU)/1541job.cpp \
-					$(EMU)/SAM.cpp
-
-SLOBJS  := \
-		$(EMU)/C64.cpp $(EMU)/CPUC64.cpp $(EMU)/VIC.cpp \
-		$(EMU)/CIA.cpp $(EMU)/CPU1541.cpp
-
-PCFLAGS = -DPRECISE_CPU_CYCLES=1 -DPRECISE_CIA_CYCLES=1 -DPC_IS_POINTER=0
-
-SCOBJS  = \
-			 $(EMU)/C64_SC.cpp \
-			 $(EMU)/CPUC64_SC.cpp \
-			 $(EMU)/VIC_SC.cpp \
-			 $(EMU)/CIA_SC.cpp \
-			 $(EMU)/CPU1541_SC.cpp \
-			 $(EMU)/CPU_common.cpp
-
-SCFLAGS = -DFRODO_SC
-
-GUISRCS = \
-			 sdlgui.cpp \
-			 file.cpp \
-			 dlgFileSelect.cpp \
-			 dlgMain.cpp \
-			 dlgDrives.cpp \
-			 dlgOptions.cpp \
-			 dlgVidoSound.cpp \
-			 dlgAdvanced.cpp \
-			 dlgInput.cpp
+		         $(EMU_DIR)/main.cpp \
+					$(EMU_DIR)/Display.cpp \
+					$(EMU_DIR)/Prefs.cpp \
+					$(EMU_DIR)/SID.cpp \
+					$(EMU_DIR)/REU.cpp \
+					$(EMU_DIR)/IEC.cpp \
+					$(EMU_DIR)/1541fs.cpp \
+					$(EMU_DIR)/1541d64.cpp \
+					$(EMU_DIR)/1541t64.cpp \
+					$(EMU_DIR)/1541job.cpp \
+					$(EMU_DIR)/SAM.cpp
 
 ifeq ($(EMUTYPE), frodosc)
-SOURCES_CXX += $(SCOBJS)
-CPPFLAGS += $(PCFLAGS)
-CPPFLAGS += $(SCFLAGS)
+SOURCES_CXX += \
+					$(EMU_DIR)/C64_SC.cpp \
+					$(EMU_DIR)/CPUC64_SC.cpp \
+					$(EMU_DIR)/VIC_SC.cpp \
+					$(EMU_DIR)/CIA_SC.cpp \
+					$(EMU_DIR)/CPU1541_SC.cpp \
+					$(EMU_DIR)/CPU_common.cpp
+CPPFLAGS += -DFRODO_SC
 else
-SOURCES_CXX += $(SLOBJS)
-CPPFLAGS += $(PCFLAGS)
+SOURCES_CXX += \
+					$(EMU_DIR)/C64.cpp \
+					$(EMU_DIR)/CPUC64.cpp \
+					$(EMU_DIR)/VIC.cpp \
+					$(EMU_DIR)/CIA.cpp \
+					$(EMU_DIR)/CPU1541.cpp
 endif
+CPPFLAGS += -DPRECISE_CPU_CYCLES=1 -DPRECISE_CIA_CYCLES=1 -DPC_IS_POINTER=0
 
 VERSION   = 4
 REVISION  = 2
@@ -101,30 +91,22 @@ CXXFLAGS += $(CPPFLAGS)
 SOURCES_CXX += \
 					$(CORE_DIR)/libretro/core/libretro-core.cpp \
 					$(CORE_DIR)/libretro/core/core-mapper.cpp \
-					$(CORE_DIR)/libretro/core/graph.cpp 
-
-SOURCES_CXX += \
-					$(GUI)/dialog.cpp\
-					$(GUI)/paths.cpp \
-					$(GUI)/file.cpp \
-					$(GUI)/unzip.cpp \
-					$(GUI)/thumb.cpp \
-					$(GUI)/zip.cpp \
-					$(GUI)/str.cpp \
-					$(GUI)/dlgFloppy.cpp \
-					$(GUI)/dlgFileSelect.cpp \
-					$(GUI)/dlgJoystick.cpp \
-					$(GUI)/dlgAbout.cpp \
-					$(GUI)/dlgSound.cpp \
-					$(GUI)/dlgAlert.cpp \
-					$(GUI)/dlgMisc.cpp \
-					$(GUI)/dlgVideo.cpp \
-					$(GUI)/dlgMain.cpp \
-					$(GUI)/dlgSnapshot.cpp \
-					$(GUI)/sdlgui.cpp
-
-ifneq ($(NOLIBCO), 1)
-SOURCES_C += $(CORE_DIR)/Src/libretro-common/libco/libco.c 
-endif
-
-SOURCES_C += $(CORE_DIR)/libretro/scandir.c
+					$(CORE_DIR)/libretro/core/graph.cpp  \
+					$(GUI_DIR)/dialog.cpp\
+					$(GUI_DIR)/paths.cpp \
+					$(GUI_DIR)/file.cpp \
+					$(GUI_DIR)/unzip.cpp \
+					$(GUI_DIR)/thumb.cpp \
+					$(GUI_DIR)/zip.cpp \
+					$(GUI_DIR)/str.cpp \
+					$(GUI_DIR)/dlgFloppy.cpp \
+					$(GUI_DIR)/dlgFileSelect.cpp \
+					$(GUI_DIR)/dlgJoystick.cpp \
+					$(GUI_DIR)/dlgAbout.cpp \
+					$(GUI_DIR)/dlgSound.cpp \
+					$(GUI_DIR)/dlgAlert.cpp \
+					$(GUI_DIR)/dlgMisc.cpp \
+					$(GUI_DIR)/dlgVideo.cpp \
+					$(GUI_DIR)/dlgMain.cpp \
+					$(GUI_DIR)/dlgSnapshot.cpp \
+					$(GUI_DIR)/sdlgui.cpp
