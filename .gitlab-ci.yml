@@ -114,14 +114,14 @@ libretro-build-libnx-aarch64:
     - .libretro-libnx-static-retroarch-master
     - .core-defs
 
-# PlayStation Vita
-libretro-build-vita:
-  extends:
-    - .libretro-vita-static-retroarch-master
-    - .core-defs
-
 # PlayStation Portable
 libretro-build-psp:
   extends:
     - .libretro-psp-static-retroarch-master
+    - .core-defs
+    
+# PlayStation Vita
+libretro-build-vita:
+  extends:
+    - .libretro-vita-static-retroarch-master
     - .core-defs
