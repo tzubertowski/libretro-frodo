@@ -31,6 +31,10 @@ include:
     file: '/android-jni.yml'
     
   ################################## CONSOLES ################################
+  # Nintendo 3DS
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/ctr-static.yml'
+    
   # Nintendo Switch
   - project: 'libretro-infrastructure/ci-templates'
     file: '/libnx-static.yml'
