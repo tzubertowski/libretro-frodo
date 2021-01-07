@@ -35,7 +35,7 @@ endif
 
 ifneq (,$(filter $(platform), unix unix-armv7-hardfloat-neon))
    TARGET := $(TARGET_NAME)_libretro.so
-   LDFLAGS += -shared -Wl,--version-script=libretro/link.T -lz
+   LDFLAGS += -shared -Wl,--version-script=libretro/link.T
    
    fpic = -fPIC
 else ifeq ($(platform), osx)
@@ -122,7 +122,7 @@ else ifeq ($(platform), libnx)
 else ifeq ($(platform), android)
    TARGET := $(TARGET_NAME)_libretro.so
    COMMONFLAGS += -fpermissive 
-   LDFLAGS += -lstdc++ -llog -lz -shared -Wl,--version-script=libretro/link.T -Wl,--no-undefined
+   LDFLAGS += -lstdc++ -llog -shared -Wl,--version-script=libretro/link.T -Wl,--no-undefined
 
    CC = arm-linux-androideabi-gcc
    CXX = arm-linux-androideabi-g++
