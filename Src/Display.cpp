@@ -717,7 +717,11 @@ void C64Display:: Keymap_KeyDown(int symkey,uint8 *key_matrix, uint8 *rev_matrix
 
 	switch (symkey){
 		case RETROK_F9:	// F9: Invoke SAM
+#ifdef GEKKO
+         pauseg = 1;
+#else
 			SAM(TheC64);
+#endif
 			break;
 		case RETROK_F10:	// F10: Quit
 			quit_requested = true;

@@ -60,8 +60,11 @@ SOURCES_CXX := \
 					$(EMU_DIR)/1541fs.cpp \
 					$(EMU_DIR)/1541d64.cpp \
 					$(EMU_DIR)/1541t64.cpp \
-					$(EMU_DIR)/1541job.cpp \
-					$(EMU_DIR)/SAM.cpp
+					$(EMU_DIR)/1541job.cpp
+
+ifneq ($(platform), wii)
+SOURCES_CXX += $(EMU_DIR)/SAM.cpp
+endif
 
 ifeq ($(EMUTYPE), frodosc)
 SOURCES_CXX += \
