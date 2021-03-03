@@ -168,21 +168,12 @@ uint16 MultiExpTable[256] = {
 	0xFFA0, 0xFFA5, 0xFFAA, 0xFFAF, 0xFFF0, 0xFFF5, 0xFFFA, 0xFFFF
 };
 
-#ifdef __POWERPC__
-static union {
-	struct {
-		uint8 a,b,c,d,e,f,g,h;
-	} a;
-	double b;
-} TextColorTable[16][16][256];
-#else
 static union {
 	struct {
 		uint8 a,b,c,d;
 	} a;
 	uint32 b;
 } TextColorTable[16][16][256][2];
-#endif
 
 #ifdef GLOBAL_VARS
 static uint16 mc_color_lookup[4];
@@ -217,9 +208,6 @@ static uint32 ec_color_long;			// ec_color expanded to 32 bits
 static uint8 matrix_line[40];			// Buffer for video line, read in Bad Lines
 static uint8 color_line[40];			// Buffer for color line, read in Bad Lines
 
-#ifdef __POWERPC__
-static double chunky_tmp[DISPLAY_X/8];	// Temporary line buffer for GameKit speedup
-#endif
 static uint8 *chunky_line_start;		// Pointer to start of current line in bitmap buffer
 static int xmod;						// Number of bytes per row
 
@@ -265,16 +253,6 @@ static void init_text_color_table(uint8 *colors)
 	for (int i = 0; i < 16; i++)
 		for (int j = 0; j < 16; j++)
 			for (int k = 0; k < 256; k++) {
-#ifdef __POWERPC__
-				TextColorTable[i][j][k].a.a = colors[k & 128 ? i : j];
-				TextColorTable[i][j][k].a.b = colors[k & 64 ? i : j];
-				TextColorTable[i][j][k].a.c = colors[k & 32 ? i : j];
-				TextColorTable[i][j][k].a.d = colors[k & 16 ? i : j];
-				TextColorTable[i][j][k].a.e = colors[k & 8 ? i : j];
-				TextColorTable[i][j][k].a.f = colors[k & 4 ? i : j];
-				TextColorTable[i][j][k].a.g = colors[k & 2 ? i : j];
-				TextColorTable[i][j][k].a.h = colors[k & 1 ? i : j];
-#else
 				TextColorTable[i][j][k][0].a.a = colors[k & 128 ? i : j];
 				TextColorTable[i][j][k][0].a.b = colors[k & 64 ? i : j];
 				TextColorTable[i][j][k][0].a.c = colors[k & 32 ? i : j];
@@ -283,7 +261,6 @@ static void init_text_color_table(uint8 *colors)
 				TextColorTable[i][j][k][1].a.b = colors[k & 4 ? i : j];
 				TextColorTable[i][j][k][1].a.c = colors[k & 2 ? i : j];
 				TextColorTable[i][j][k][1].a.d = colors[k & 1 ? i : j];
-#endif
 			}
 }
 
@@ -908,11 +885,7 @@ inline void MOS6569::el_std_text(uint8 *p, uint8 *q, uint8 *r)
 #endif
 {
 	unsigned int b0cc = b0c;
-#ifdef __POWERPC__
-	double *dp = (double *)p - 1;
-#else
 	uint32 *lp = (uint32 *)p;
-#endif
 	uint8 *cp = color_line;
 	uint8 *mp = matrix_line;
 
@@ -921,12 +894,8 @@ inline void MOS6569::el_std_text(uint8 *p, uint8 *q, uint8 *r)
 		uint8 color = cp[i];
 		uint8 data = r[i] = q[mp[i] << 3];
 
-#ifdef 	__POWERPC__
-		*++dp = TextColorTable[color][b0cc][data].b;
-#else
 		*lp++ = TextColorTable[color][b0cc][data][0].b;
 		*lp++ = TextColorTable[color][b0cc][data][1].b;
-#endif
 	}
 }
 
@@ -958,15 +927,10 @@ inline void MOS6569::el_mc_text(uint8 *p, uint8 *q, uint8 *r)
 		} else { // Standard mode in multicolor mode
 			uint8 color = cp[i];
 			r[i] = data;
-#ifdef __POWERPC__
-			*(double *)wp = TextColorTable[color][b0c][data].b;
-			wp += 4;
-#else
 			*(uint32 *)wp = TextColorTable[color][b0c][data][0].b;
 			wp += 2;
 			*(uint32 *)wp = TextColorTable[color][b0c][data][1].b;
 			wp += 2;
-#endif
 		}
 	}
 }
@@ -978,11 +942,7 @@ static inline void el_std_bitmap(uint8 *p, uint8 *q, uint8 *r)
 inline void MOS6569::el_std_bitmap(uint8 *p, uint8 *q, uint8 *r)
 #endif
 {
-#ifdef __POWERPC__
-	double *dp = (double *)p-1;
-#else
 	uint32 *lp = (uint32 *)p;
-#endif
 	uint8 *mp = matrix_line;
 
 	// Loop for 40 characters
@@ -991,12 +951,8 @@ inline void MOS6569::el_std_bitmap(uint8 *p, uint8 *q, uint8 *r)
 		uint8 color = mp[i] >> 4;
 		uint8 bcolor = mp[i] & 15;
 
-#ifdef __POWERPC__
-		*++dp = TextColorTable[color][bcolor][data].b;
-#else
 		*lp++ = TextColorTable[color][bcolor][data][0].b;
 		*lp++ = TextColorTable[color][bcolor][data][1].b;
-#endif
 	}
 }
 
@@ -1048,11 +1004,7 @@ static inline void el_ecm_text(uint8 *p, uint8 *q, uint8 *r)
 inline void MOS6569::el_ecm_text(uint8 *p, uint8 *q, uint8 *r)
 #endif
 {
-#ifdef __POWERPC__
-	double *dp = (double *)p - 1;
-#else
 	uint32 *lp = (uint32 *)p;
-#endif
 	uint8 *cp = color_line;
 	uint8 *mp = matrix_line;
 	uint8 *bcp = &b0c;
@@ -1064,12 +1016,8 @@ inline void MOS6569::el_ecm_text(uint8 *p, uint8 *q, uint8 *r)
 		uint8 bcolor = bcp[(data >> 6) & 3];
 
 		data = q[(data & 0x3f) << 3];
-#ifdef __POWERPC__
-		*++dp = TextColorTable[color][bcolor][data].b;
-#else
 		*lp++ = TextColorTable[color][bcolor][data][0].b;
 		*lp++ = TextColorTable[color][bcolor][data][1].b;
-#endif
 	}
 }
 
@@ -1080,17 +1028,6 @@ static inline void el_std_idle(uint8 *p, uint8 *r)
 inline void MOS6569::el_std_idle(uint8 *p, uint8 *r)
 #endif
 {
-#ifdef __POWERPC__
-	uint8 data = *get_physical(ctrl1 & 0x40 ? 0x39ff : 0x3fff);
-	double *dp = (double *)p - 1;
-	double conv = TextColorTable[0][b0c][data].b;
-	r--;
-
-	for (int i=0; i<40; i++) {
-		*++dp = conv;
-		*++r = data;
-	}
-#else
 	uint8 data = *get_physical(ctrl1 & 0x40 ? 0x39ff : 0x3fff);
 	uint32 *lp = (uint32 *)p;
 	uint32 conv0 = TextColorTable[0][b0c][data][0].b;
@@ -1101,7 +1038,6 @@ inline void MOS6569::el_std_idle(uint8 *p, uint8 *r)
 		*lp++ = conv1;
 		*r++ = data;
 	}
-#endif
 }
 
 
@@ -1418,128 +1354,6 @@ spr_off:
 }
 
 
-#ifdef __POWERPC__
-static asm void fastcopy(register uchar *dst, register uchar *src);
-static asm void fastcopy(register uchar *dst, register uchar *src)
-{
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-	blr		
-}
-#endif
-
-
 /*
  *  Emulate one raster line
  */
@@ -1581,11 +1395,7 @@ int MOS6569::EmulateLine(void)
 	if (raster >= FIRST_DISP_LINE && raster <= LAST_DISP_LINE) {
 
 		// Our output goes here
-#ifdef __POWERPC__
-		uint8 *chunky_ptr = (uint8 *)chunky_tmp;
-#else
 		uint8 *chunky_ptr = chunky_line_start;
-#endif
 
 		// Set video counter
 		vc = vc_base;
@@ -1847,11 +1657,6 @@ int MOS6569::EmulateLine(void)
 			for (int i=0; i<DISPLAY_X/4; i++)
 				*++lp = c;
 		}
-
-#ifdef __POWERPC__
-		// Copy temporary buffer to bitmap
-		fastcopy(chunky_line_start, (uint8 *)chunky_tmp);
-#endif
 
 		// Increment pointer in chunky buffer
 		chunky_line_start += xmod;

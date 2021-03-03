@@ -169,9 +169,6 @@ static uint8 spr_color[8];				// Indices for MOB colors
 static uint8 matrix_line[40];			// Buffer for video line, read in Bad Lines
 static uint8 color_line[40];			// Buffer for color line, read in Bad Lines
 
-#ifdef __POWERPC__
-static double chunky_tmp[DISPLAY_X/8];	// Temporary line buffer for GameKit speedup
-#endif
 static uint8 *chunky_ptr;				// Pointer in chunky bitmap buffer
 static uint8 *chunky_line_start;		// Pointer to start of current line in bitmap buffer
 static uint8 *fore_mask_ptr;			// Pointer in fore_mask_buf
@@ -1091,11 +1088,7 @@ inline void MOS6569::draw_sprites(void)
 
 		// Is sprite visible?
 		if ((spr_draw & sbit) && mx[snum] <= DISPLAY_X-32) {
-#ifdef __POWERPC__
-			uint8 *p = (uint8 *)chunky_tmp + mx[snum] + 8;
-#else
 			uint8 *p = chunky_line_start + mx[snum] + 8;
-#endif
 			uint8 *q = spr_coll_buf + mx[snum] + 8;
 			uint8 color = spr_color[snum];
 
@@ -1312,128 +1305,6 @@ inline void MOS6569::draw_sprites(void)
 }
 
 
-#ifdef __POWERPC__
-static asm void fastcopy(register uchar *dst, register uchar *src);
-static asm void fastcopy(register uchar *dst, register uchar *src)
-{
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-
-	lfd		fp0,0(src)
-	lfd		fp1,8(src)
-	lfd		fp2,16(src)
-	lfd		fp3,24(src)
-	lfd		fp4,32(src)
-	lfd		fp5,40(src)
-	lfd		fp6,48(src)
-	lfd		fp7,56(src)
-	addi	src,src,64
-	stfd	fp0,0(dst)
-	stfd	fp1,8(dst)
-	stfd	fp2,16(dst)
-	stfd	fp3,24(dst)
-	stfd	fp4,32(dst)
-	stfd	fp5,40(dst)
-	stfd	fp6,48(dst)
-	stfd	fp7,56(dst)
-	addi	dst,dst,64
-	blr		
-}
-#endif
-
-
 /*
  *  Emulate one clock cycle, returns true if new raster line has started
  */
@@ -1578,11 +1449,7 @@ bool MOS6569::EmulateCycle(void)
 			}
 
 			// Our output goes here
-#ifdef __POWERPC__
-			chunky_ptr = (uint8 *)chunky_tmp;
-#else
 			chunky_ptr = chunky_line_start;
-#endif
 
 			// Clear foreground mask
 			memset(fore_mask_buf, 0, DISPLAY_X/8);
@@ -1909,21 +1776,6 @@ bool MOS6569::EmulateCycle(void)
 					draw_sprites();
 
 				// Draw border
-#ifdef __POWERPC__
-				if (border_on_sample[0])
-					for (i=0; i<4; i++)
-						memset8((uint8 *)chunky_tmp+i*8, border_color_sample[i]);
-				if (border_on_sample[1])
-					memset8((uint8 *)chunky_tmp+4*8, border_color_sample[4]);
-				if (border_on_sample[2])
-					for (i=5; i<43; i++)
-						memset8((uint8 *)chunky_tmp+i*8, border_color_sample[i]);
-				if (border_on_sample[3])
-					memset8((uint8 *)chunky_tmp+43*8, border_color_sample[43]);
-				if (border_on_sample[4])
-					for (i=44; i<DISPLAY_X/8; i++)
-						memset8((uint8 *)chunky_tmp+i*8, border_color_sample[i]);
-#else
 				if (border_on_sample[0])
 					for (i=0; i<4; i++)
 						memset8(chunky_line_start+i*8, border_color_sample[i]);
@@ -1937,12 +1789,6 @@ bool MOS6569::EmulateCycle(void)
 				if (border_on_sample[4])
 					for (i=44; i<DISPLAY_X/8; i++)
 						memset8(chunky_line_start+i*8, border_color_sample[i]);
-#endif
-
-#ifdef __POWERPC__
-				// Copy temporary buffer to bitmap
-				fastcopy(chunky_line_start, (uint8 *)chunky_tmp);
-#endif
 
 				// Increment pointer in chunky buffer
 				chunky_line_start += xmod;

@@ -101,9 +101,6 @@ private:
 	uint8 matrix_line[40];		// Buffer for video line, read in Bad Lines
 	uint8 color_line[40];		// Buffer for color line, read in Bad Lines
 
-#ifdef __POWERPC__
-	double chunky_tmp[0x180/8];	// Temporary line buffer for speedup
-#endif
 	uint8 *chunky_line_start;	// Pointer to start of current line in bitmap buffer
 	int xmod;					// Number of bytes per row
 
