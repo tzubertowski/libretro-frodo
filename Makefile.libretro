@@ -43,11 +43,17 @@ else ifeq ($(platform), osx)
    LDFLAGS += -dynamiclib
    
    fpic = -fPIC
-ifndef ($(UNIVERSAL))
-	CFLAGS += $(ARCHFLAGS)
-	CXXFLAGS += $(ARCHFLAGS)
+   ifeq ($(CROSS_COMPILE),1)
+		TARGET_RULE   = -target $(LIBRETRO_APPLE_PLATFORM) -isysroot $(LIBRETRO_APPLE_ISYSROOT)
+		CFLAGS   += $(TARGET_RULE)
+		CPPFLAGS += $(TARGET_RULE)
+		CXXFLAGS += $(TARGET_RULE)
+		LDFLAGS  += $(TARGET_RULE)
+   endif
+
+	CFLAGS  += $(ARCHFLAGS)
+	CXXFLAGS  += $(ARCHFLAGS)
 	LDFLAGS += $(ARCHFLAGS)
-endif
 else ifeq ($(platform), ios-arm64)
    TARGET := $(TARGET_NAME)_libretro_ios.dylib
    COMMONFLAGS += -DHAVE_POSIX_MEMALIGN=1 -marm
@@ -84,6 +90,42 @@ else ifeq ($(platform), ios)
 		CC += -miphoneos-version-min=5.0
 		COMMONFLAGS += -miphoneos-version-min=5.0
 	endif
+else ifneq (,$(findstring ios,$(platform)))
+	EXT?=dylib
+   COMMONFLAGS += -DHAVE_POSIX_MEMALIGN=1 -marm -DIOS
+   TARGET := $(TARGET_NAME)_libretro_ios.$(EXT)
+   fpic := -fPIC
+   SHARED := -dynamiclib
+   DEFINES := -DIOS
+   MINVERSION :=
+
+ifeq ($(IOSSDK),)
+   IOSSDK := $(shell xcodebuild -version -sdk iphoneos Path)
+endif
+ifeq ($(platform),ios-arm64)
+  CC = cc -arch arm64 -isysroot $(IOSSDK)
+else
+	CC = cc -arch armv7 -isysroot $(IOSSDK)
+endif
+ifeq ($(platform),$(filter $(platform),ios9 ios-arm64))
+   MINVERSION = -miphoneos-version-min=8.0
+else
+   MINVERSION = -miphoneos-version-min=5.0
+endif
+   COMMONFLAGS += $(MINVERSION)
+
+else ifeq ($(platform), tvos-arm64)
+   EXT?=dylib
+   TARGET := $(TARGET_NAME)_libretro_tvos.$(EXT)
+   fpic := -fPIC
+   SHARED := -dynamiclib
+   DEFINES := -DIOS
+   COMMONFLAGS += -DHAVE_POSIX_MEMALIGN=1 -marm -DIOS
+ifeq ($(IOSSDK),)
+   IOSSDK := $(shell xcodebuild -version -sdk appletvos Path)
+endif
+   CC = cc -arch arm64 -isysroot $(IOSSDK)
+
 else ifeq ($(platform), theos_ios)
 DEPLOYMENT_IOSVERSION = 5.0
 TARGET = iphone:latest:$(DEPLOYMENT_IOSVERSION)
