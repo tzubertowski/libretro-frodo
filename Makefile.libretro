@@ -95,7 +95,7 @@ else ifneq (,$(findstring ios,$(platform)))
    COMMONFLAGS += -DHAVE_POSIX_MEMALIGN=1 -marm -DIOS
    TARGET := $(TARGET_NAME)_libretro_ios.$(EXT)
    fpic := -fPIC
-   SHARED := -dynamiclib
+   LDFLAGS += -dynamiclib
    DEFINES := -DIOS
    MINVERSION :=
 
@@ -120,7 +120,7 @@ else ifeq ($(platform), tvos-arm64)
    EXT?=dylib
    TARGET := $(TARGET_NAME)_libretro_tvos.$(EXT)
    fpic := -fPIC
-   SHARED := -dynamiclib
+   LDFLAGS += -dynamiclib
    DEFINES := -DIOS
    COMMONFLAGS += -DHAVE_POSIX_MEMALIGN=1 -marm -DIOS
 ifeq ($(IOSSDK),)
@@ -143,11 +143,11 @@ LIBRARY_NAME = $(TARGET_NAME)_libretro_ios
 else ifeq ($(platform), qnx)
    TARGET := $(TARGET_NAME)_libretro_qnx.so
    fpic := -fPIC
-   SHARED := -lcpp -lm -shared -Wl,-version-script=link.T
-	CC = qcc -Vgcc_ntoarmv7le
+   LDFLAGS += -lcpp -lm -shared -Wl,-version-script=link.T
+   CC = qcc -Vgcc_ntoarmv7le
    CC_AS = qcc -Vgcc_ntoarmv7le
-	CXX = QCC -Vgcc_ntoarmv7le_cpp
-	AR = QCC -Vgcc_ntoarmv7le
+   CXX = QCC -Vgcc_ntoarmv7le_cpp
+   AR = QCC -Vgcc_ntoarmv7le
    PLATFORM_DEFINES := -D__BLACKBERRY_QNX__ -fexceptions -marm -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=softfp
 
 # Nintendo Switch (libnx)
