@@ -159,7 +159,7 @@ unsigned int mpal[21];
   3     V   U   H   B   8   G   Y   7
   4     N   O   K   M   0   J   I   9
   5     ,   @   :   .   -   L   P   +
-  6     /   ^   =  SHR HOM  ;   *   £
+  6     /   ^   =  SHR HOM  ;   *   Â£
   7    R/S  Q   C= SPC  2  CTL  <-  1
 */
 
@@ -299,7 +299,7 @@ unsigned short *pix=(unsigned short *)buffer;
 
    page = (NPAGE == -1) ? 0 : 50;
    coul = RGB565(28, 28, 31);
-   BKGCOLOR = (KCOL>0?0xFF808080:0);
+   BKGCOLOR = (KCOL>0?0xFF404040:0);
 
 
    for(x=0;x<NPLGN;x++)
