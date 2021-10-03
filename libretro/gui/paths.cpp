@@ -134,10 +134,7 @@ static char *Paths_InitExecDir(const char *argv0)
 	/* Allocate memory for storing the path string of the executable */
 	char *psExecDir = (char*)malloc(FILENAME_MAX);
 	if (!psExecDir)
-	{
-		fprintf(stderr, "Out of memory (Paths_Init)\n");
 		exit(-1);
-	}
 
 	/* Determine the bindir...
 	 * Start with empty string, then try to use OS specific functions,
@@ -292,7 +289,4 @@ void Paths_Init(const char *argv0)
 	File_MakeAbsoluteName(sDataDir);
 
 	free(psExecDir);
-
-	/* fprintf(stderr, " WorkingDir = %s\n DataDir = %s\n UserHomeDir = %s\n HatariHomeDir = %s\n",
-	        sWorkingDir, sDataDir, sUserHomeDir, sHatariHomeDir); */
 }

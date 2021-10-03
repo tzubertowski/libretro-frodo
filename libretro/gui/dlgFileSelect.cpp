@@ -579,10 +579,7 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 			{
 				files = ZIP_GetFilesDir(zipfiles, zipdir, &entries);
 				if(!files)
-				{
-					fprintf(stderr, "SDLGui_FileSelect: ZIP_GetFilesDir error!\n");
 					goto clean_exit;
-				}
 			}
 			else
 			{
@@ -597,10 +594,7 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 			}
 
 			if (entries < 0)
-			{
-				fprintf(stderr, "SDLGui_FileSelect: Path not found.\n");
 				goto clean_exit;
-			}
 
 			/* reload always implies refresh */
 			reloaddir = false;
@@ -658,10 +652,7 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 			{
 				if (!strcat_maxlen(tempstr, FILENAME_MAX,
 						   zipdir, files[retbut-SGFSDLG_ENTRYFIRST+ypos]->d_name))
-				{
-					fprintf(stderr, "SDLGui_FileSelect: Path name too long!\n");
 					goto clean_exit;
-				}
 				/* directory? */
 				if (File_DoesFileNameEndWithSlash(tempstr))
 				{
@@ -712,10 +703,7 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 			{
 				if (!strcat_maxlen(tempstr, FILENAME_MAX,
 						   path, files[retbut-SGFSDLG_ENTRYFIRST+ypos]->d_name))
-				{
-					fprintf(stderr, "SDLGui_FileSelect: Path name too long!\n");
 					goto clean_exit;
-				}
 				if (File_DirExists(tempstr))
 				{
 					File_HandleDotDirs(tempstr);
