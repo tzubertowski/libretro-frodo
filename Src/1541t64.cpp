@@ -41,9 +41,6 @@
 #include "IEC.h"
 #include "Prefs.h"
 
-#define DEBUG 0
-#include "debug.h"
-
 #if defined(ANDROID) || defined(__ANDROID__)
 #include <errno.h>
 #include <signal.h>
@@ -310,8 +307,6 @@ bool ArchDrive::change_arch(const char *path)
 
 uint8 ArchDrive::Open(int channel, const uint8 *name, int name_len)
 {
-	D(bug("ArchDrive::Open channel %d, file %s\n", channel, name));
-
 	set_error(ERR_OK);
 
 	// Channel 15: Execute file name as command
@@ -570,8 +565,6 @@ uint8 ArchDrive::open_directory(int channel, const uint8 *pattern, int pattern_l
 
 uint8 ArchDrive::Close(int channel)
 {
-	D(bug("ArchDrive::Close channel %d\n", channel));
-
 	if (channel == 15) {
 		close_all_channels();
 		return ST_OK;
@@ -605,8 +598,6 @@ void ArchDrive::close_all_channels(void)
 
 uint8 ArchDrive::Read(int channel, uint8 &byte)
 {
-	D(bug("ArchDrive::Read channel %d\n", channel));
-
 	// Channel 15: Error channel
 	if (channel == 15) {
 		byte = *error_ptr++;
@@ -639,8 +630,6 @@ uint8 ArchDrive::Read(int channel, uint8 &byte)
 
 uint8 ArchDrive::Write(int channel, uint8 byte, bool eoi)
 {
-	D(bug("ArchDrive::Write channel %d, byte %02x, eoi %d\n", channel, byte, eoi));
-
 	// Channel 15: Collect chars and execute command on EOI
 	if (channel == 15) {
 		if (cmd_len > 58) {

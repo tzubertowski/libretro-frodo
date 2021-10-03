@@ -34,10 +34,6 @@
 #include "C64.h"
 #include "main.h"
 
-#define DEBUG 0
-#include "debug.h"
-
-
 // Channel modes (IRC users listen up :-)
 enum {
 	CHMOD_FREE,			// Channel free
@@ -207,8 +203,6 @@ bool ImageDrive::change_image(const char *path)
 
 uint8 ImageDrive::Open(int channel, const uint8 *name, int name_len)
 {
-	D(bug("ImageDrive::Open channel %d, file %s\n", channel, name));
-
 	set_error(ERR_OK);
 
 	// Channel 15: execute file name as command
@@ -250,8 +244,6 @@ uint8 ImageDrive::open_file(int channel, const uint8 *name, int name_len)
 	if (plain_name_len > 16)
 		plain_name_len = 16;
 
-	D(bug(" plain name %s, type %d, mode %d\n", plain_name, type, mode));
-
 	// Channel 0 is READ, channel 1 is WRITE
 	if (channel == 0 || channel == 1) {
 		mode = channel ? FMODE_WRITE : FMODE_READ;
@@ -284,7 +276,6 @@ uint8 ImageDrive::open_file(int channel, const uint8 *name, int name_len)
 	if (find_first_file(plain_name, plain_name_len, dir_track, dir_sector, entry)) {
 
 		// File exists
-		D(bug(" file exists, dir track %d, sector %d, entry %d\n", dir_track, dir_sector, entry));
 		ch[channel].dir_track = dir_track;
 		ch[channel].dir_sector = dir_sector;
 		ch[channel].entry = entry;
@@ -350,8 +341,6 @@ uint8 ImageDrive::open_file(int channel, const uint8 *name, int name_len)
 	} else {
 
 		// File doesn't exist
-		D(bug(" file not found\n"));
-
 		// Set file type to SEQ if not specified in file name
 		if (type == FTYPE_DEL)
 			type = FTYPE_SEQ;
@@ -374,8 +363,6 @@ uint8 ImageDrive::open_file(int channel, const uint8 *name, int name_len)
 
 uint8 ImageDrive::open_file_ts(int channel, int track, int sector)
 {
-	D(bug("open_file_ts track %d, sector %d\n", track, sector));
-
 	// Allocate buffer and set channel mode
 	int buf = alloc_buffer(-1);
 	if (buf == -1) {
@@ -401,8 +388,6 @@ uint8 ImageDrive::open_file_ts(int channel, int track, int sector)
 
 uint8 ImageDrive::create_file(int channel, const uint8 *name, int name_len, int type, bool overwrite)
 {
-	D(bug("create_file %s, type %d\n", name, type));
-
 	// Allocate buffer
 	int buf = alloc_buffer(-1);
 	if (buf == -1) {
@@ -429,7 +414,6 @@ uint8 ImageDrive::create_file(int channel, const uint8 *name, int name_len, int 
 		return ST_OK;
 	}
 	ch[channel].num_blocks = 1;
-	D(bug(" first data block on track %d, sector %d\n", ch[channel].track, ch[channel].sector));
 
 	// Write directory entry
 	memset(de, 0, SIZEOF_DE);
@@ -652,8 +636,6 @@ uint8 ImageDrive::open_direct(int channel, const uint8 *name)
 
 uint8 ImageDrive::Close(int channel)
 {
-	D(bug("ImageDrive::Close channel %d\n", channel));
-
 	switch (ch[channel].mode) {
 		case CHMOD_FREE:
 			break;
@@ -680,7 +662,6 @@ uint8 ImageDrive::Close(int channel)
 				// Write last data block
 				ch[channel].buf[0] = 0;
 				ch[channel].buf[1] = ch[channel].buf_len - 1;
-				D(bug(" writing last data block\n"));
 				if (!write_sector(ch[channel].track, ch[channel].sector, ch[channel].buf))
 					goto free;
 
@@ -698,7 +679,6 @@ uint8 ImageDrive::Close(int channel)
 					de[DE_OVR_TRACK] = de[DE_OVR_SECTOR] = 0;
 				}
 				write_sector(ch[channel].dir_track, ch[channel].dir_sector, dir);
-				D(bug(" directory entry updated\n"));
 			}
 free:		free_buffer(ch[channel].buf_num);
 			ch[channel].buf = NULL;
@@ -737,8 +717,6 @@ void ImageDrive::close_all_channels()
 
 uint8 ImageDrive::Read(int channel, uint8 &byte)
 {
-//	D(bug("ImageDrive::Read channel %d\n", channel));
-
 	switch (ch[channel].mode) {
 		case CHMOD_FREE:
 			if (current_error == ERR_OK)
@@ -764,7 +742,6 @@ uint8 ImageDrive::Read(int channel, uint8 &byte)
 
 			// Read next block if necessary
 			if (ch[channel].buf_len == 0 && ch[channel].buf[0]) {
-				D(bug(" reading next data block track %d, sector %d\n", ch[channel].buf[0], ch[channel].buf[1]));
 				if (!read_sector(ch[channel].buf[0], ch[channel].buf[1], ch[channel].buf))
 					return ST_READ_TIMEOUT;
 				ch[channel].buf_ptr = ch[channel].buf + 2;
@@ -805,8 +782,6 @@ uint8 ImageDrive::Read(int channel, uint8 &byte)
 
 uint8 ImageDrive::Write(int channel, uint8 byte, bool eoi)
 {
-//	D(bug("ImageDrive::Write channel %d, byte %02x, eoi %d\n", channel, byte, eoi));
-
 	switch (ch[channel].mode) {
 		case CHMOD_FREE:
 			if (current_error == ERR_OK)
@@ -846,7 +821,6 @@ uint8 ImageDrive::Write(int channel, uint8 byte, bool eoi)
 				if (!alloc_next_block(track, sector, DATA_INTERLEAVE))
 					return ST_TIMEOUT;
 				ch[channel].num_blocks++;
-				D(bug("next data block on track %d, sector %d\n", track, sector));
 
 				// Write buffer with link to new block
 				ch[channel].buf[0] = track;
@@ -1028,10 +1002,8 @@ bool ImageDrive::alloc_dir_entry(int &track, int &sector, int &entry)
 
 		uint8 *de = dir + DIR_ENTRIES;
 		for (entry=0; entry<8; entry++, de+=SIZEOF_DE) {
-			if (de[DE_TYPE] == 0) {
-				D(bug(" allocated entry %d in dir track %d, sector %d\n", entry, track, sector));
+			if (de[DE_TYPE] == 0)
 				return true;
-			}
 		}
 	}
 
@@ -1039,7 +1011,6 @@ bool ImageDrive::alloc_dir_entry(int &track, int &sector, int &entry)
 	int last_track = track, last_sector = sector;
 	if (!alloc_next_block(track, sector, DIR_INTERLEAVE))
 		return false;
-	D(bug(" new directory block track %d, sector %d\n", track, sector));
 
 	// Write link to new block to last block
 	dir[DIR_NEXT_TRACK] = track;
@@ -1110,7 +1081,6 @@ int ImageDrive::alloc_block(int track, int sector)
 	if (p[byte] & (1 << bit)) {
 
 		// Yes, allocate and decrement free block count
-		D(bug("allocating block at track %d, sector %d\n", track, sector));
 		p[byte] &= ~(1 << bit);
 		p[0]--;
 		bam_dirty = true;
@@ -1138,7 +1108,6 @@ int ImageDrive::free_block(int track, int sector)
 	if (!(p[byte] & (1 << bit))) {
 
 		// Yes, free and increment free block count
-		D(bug("freeing block at track %d, sector %d\n", track, sector));
 		p[byte] |= (1 << bit);
 		p[0]++;
 		bam_dirty = true;

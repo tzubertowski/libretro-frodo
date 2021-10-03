@@ -334,8 +334,6 @@ class WIMP
 
 extern RO_IconDesc IBarIcon;
 extern unsigned int TaskHandle;
-extern int WimpMessages[];
-
 
 /* Functions available via ROlib (not RISC OS Lib, mind you)
    All SWIs are called in the X-Form! */
