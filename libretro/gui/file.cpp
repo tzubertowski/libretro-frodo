@@ -129,12 +129,10 @@ static bool File_IsRootFileName(const char *pszFileName)
  */
 const char *File_RemoveFileNameDrive(const char *pszFileName)
 {
-	if ( (pszFileName[0] != '\0') && (pszFileName[1] == ':') )
-		return &pszFileName[2];
-	else
-		return pszFileName;
+   if ( (pszFileName[0] != '\0') && (pszFileName[1] == ':') )
+      return &pszFileName[2];
+   return pszFileName;
 }
-
 
 /*-----------------------------------------------------------------------*/
 /**
@@ -296,10 +294,9 @@ bool File_Save(const char *pszFileName, const Uint8 *pAddress, size_t Size, bool
  */
 off_t File_Length(const char *pszFileName)
 {
-	FILE *hDiskFile;
 	off_t FileSize;
+	FILE *hDiskFile = fopen(pszFileName, "rb");
 
-	hDiskFile = fopen(pszFileName, "rb");
 	if (hDiskFile!=NULL)
 	{
 		fseek(hDiskFile, 0, SEEK_END);
@@ -320,25 +317,21 @@ off_t File_Length(const char *pszFileName)
  */
 bool File_Exists(const char *filename)
 {
-//RETRO HACK
 #ifdef RETRO
-
-if( access( filename, F_OK ) != -1 ) {
-    // file exists
-	return true;
-} else {
-    // file doesn't exist
-	return false;
-}
+   if( access( filename, F_OK ) != -1 )
+      // file exists
+      return true;
+   // file doesn't exist
+   return false;
 #else
-	struct stat buf;
-	if (stat(filename, &buf) == 0 &&
-	    (buf.st_mode & (S_IRUSR|S_IWUSR)) && !(buf.st_mode & S_IFDIR))
-	{
-		/* file points to user readable regular file */
-		return true;
-	}
-	return false;
+   struct stat buf;
+   if (stat(filename, &buf) == 0 &&
+         (buf.st_mode & (S_IRUSR|S_IWUSR)) && !(buf.st_mode & S_IFDIR))
+   {
+      /* file points to user readable regular file */
+      return true;
+   }
+   return false;
 #endif
 }
 
@@ -347,13 +340,11 @@ if( access( filename, F_OK ) != -1 ) {
 /**
  * Return TRUE if directory exists.
  */
-#if 1
 bool File_DirExists(const char *path)
 {
 	struct stat buf;
 	return (stat(path, &buf) == 0 && S_ISDIR(buf.st_mode));
 }
-#endif
 
 /*-----------------------------------------------------------------------*/
 /**
@@ -597,40 +588,6 @@ FILE *File_Close(FILE *fp)
 
 /*-----------------------------------------------------------------------*/
 /**
- * Check if input is available at the specified file descriptor.
- */
-bool File_InputAvailable(FILE *fp)
-{
-#if HAVE_SELECT
-	fd_set rfds;
-	struct timeval tv;
-	int fh;
-	int ret;
-
-	if (!fp || (fh = fileno(fp)) == -1)
-		return false;
-
-	/* Add the file handle to the file descriptor set */
-	FD_ZERO(&rfds);
-	FD_SET(fh, &rfds);
-
-	/* Return immediately */
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-
-	/* Check if file descriptor is ready for a read */
-	ret = select(fh+1, &rfds, NULL, NULL, &tv);
-
-	if (ret > 0)
-		return true;    /* Data available */
-#endif
-
-	return false;
-}
-
-
-/*-----------------------------------------------------------------------*/
-/**
  * Wrapper for File_MakeAbsoluteName() which special-cases stdin/out/err
  * named files and empty file name.  The given buffer should be opened
  * with File_Open() and closed with File_Close() if this function is used!
@@ -770,9 +727,7 @@ void File_MakeValidPathName(char *pPathName)
 	{
 		/* Check for a valid path */
 		if (stat(pPathName, &dirstat) == 0 && S_ISDIR(dirstat.st_mode))
-		{
 			break;
-		}
 
 		pLastSlash = strrchr(pPathName, PATHSEP);
 		if (pLastSlash)
@@ -829,7 +784,6 @@ void File_PathShorten(char *path, int dirs)
   also preceding dir (go one dir up).  Leave '/' at the end of
   the path.
 */
-#if 1
 void File_HandleDotDirs(char *path)
 {
 	int len = strlen(path);
@@ -857,4 +811,3 @@ void File_HandleDotDirs(char *path)
 		}
 	}
 }
-#endif

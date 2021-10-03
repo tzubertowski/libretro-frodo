@@ -35,8 +35,8 @@ extern char RETRO_DIR[512];
 extern void update_input(void);
 extern void texture_init(void);
 extern void texture_uninit(void);
-extern void Emu_init();
-extern void Emu_uninit();
+extern void Emu_init(void);
+extern void Emu_uninit(void);
 extern void input_gui(void);
 
 const char *retro_save_directory;
@@ -50,20 +50,8 @@ static retro_environment_t environ_cb;
 static void RETRO_CALLCONV fallback_log(enum retro_log_level level, const char *fmt, ...);
 retro_log_printf_t log_cb = fallback_log;
 
-static void RETRO_CALLCONV fallback_log(enum retro_log_level level, const char *fmt, ...)
-{
-   va_list va;
-
-   (void)level;
-
-   va_start(va, fmt);
-#if  defined(__ANDROID__) || defined(ANDROID)
-   __android_log_vprint(ANDROID_LOG_INFO,LOG_TAG, fmt, va);
-#else
-   vfprintf(stderr, fmt, va);
-#endif
-   va_end(va);
-}
+static void RETRO_CALLCONV fallback_log(
+      enum retro_log_level level, const char *fmt, ...) { }
 
 void retro_set_environment(retro_environment_t cb)
 {
@@ -99,13 +87,10 @@ static void update_variables(void)
          retroh = strtoul(pch, NULL, 0);
 
 //FIXME remove force 384x288
-retrow=WINDOW_WIDTH;
-retroh=WINDOW_HEIGHT;
-
-      fprintf(stderr, "[libretro-test]: Got size: %u x %u.\n", retrow, retroh);
-
-      CROP_WIDTH =retrow;
-      CROP_HEIGHT= (retroh-80);
+      retrow        = WINDOW_WIDTH;
+      retroh        = WINDOW_HEIGHT;
+      CROP_WIDTH    = retrow;
+      CROP_HEIGHT   = (retroh-80);
       VIRTUAL_WIDTH = retrow;
       texture_init();
       //reset_screen();
@@ -113,9 +98,8 @@ retroh=WINDOW_HEIGHT;
 
 }
 
-static void retro_wrap_emulator()
-{    
-
+static void retro_wrap_emulator(void)
+{
    pre_main(RPATH);
 #ifndef NO_LIBCO
    pauseg=-1;
@@ -126,16 +110,13 @@ static void retro_wrap_emulator()
    co_switch(mainThread);
 
    // Dead emulator, but libco says not to return
-   while(true)
-   {
-      LOGI("Running a dead emulator.");
+   while(1)
       co_switch(mainThread);
-   }
 #endif
 }
 
-void Emu_init(){
-
+void Emu_init(void)
+{
 #ifdef RETRO_AND
    MOUSEMODE=1;
 #endif
@@ -152,21 +133,21 @@ void Emu_init(){
       emuThread = co_create(65536*sizeof(void*), retro_wrap_emulator);
    }
 #else
-	retro_wrap_emulator();
+   retro_wrap_emulator();
 #endif
 
 }
 
-void Emu_uninit(){
+void Emu_uninit(void)
+{
 #ifdef NO_LIBCO
-	quit_frodo_emu();
+   quit_frodo_emu();
 #endif
    texture_uninit();
 }
 
 void retro_shutdown_core(void)
 {
-   LOGI("SHUTDOWN\n");
 #ifdef NO_LIBCO
 	quit_frodo_emu();
 #endif
@@ -174,59 +155,43 @@ void retro_shutdown_core(void)
    environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
 }
 
-void retro_reset(void){
-
-}
+/* TODO/FIXME - implement this */
+void retro_reset(void) { }
 
 void retro_init(void)
 {    	
-   const char *system_dir = NULL;
+   const char *save_dir        = NULL;
+   const char *content_dir     = NULL;
+   const char *system_dir      = NULL;
+#ifndef RENDER16B
+   enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
+#else
+   enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
+#endif
 
+   // if defined, use the system directory			
    if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
-   {
-      // if defined, use the system directory			
-      retro_system_directory=system_dir;		
-   }		   
+      retro_system_directory = system_dir;		
 
-   const char *content_dir = NULL;
-
+   // if defined, use the system directory			
    if (environ_cb(RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY, &content_dir) && content_dir)
-   {
-      // if defined, use the system directory			
-      retro_content_directory=content_dir;		
-   }			
+      retro_content_directory = content_dir;		
 
-   const char *save_dir = NULL;
-
+   // If save directory is defined use it, otherwise use system directory
    if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &save_dir) && save_dir)
-   {
-      // If save directory is defined use it, otherwise use system directory
       retro_save_directory = *save_dir ? save_dir : retro_system_directory;      
-   }
    else
    {
       // make retro_save_directory the same in case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY is not implemented by the frontend
       retro_save_directory=retro_system_directory;
    }
 
-   if(retro_system_directory==NULL)sprintf(RETRO_DIR, "%s\0",".");
-   else sprintf(RETRO_DIR, "%s\0", retro_system_directory);
+   if (retro_system_directory)
+      sprintf(RETRO_DIR, "%s\0", retro_system_directory);
+   else
+      sprintf(RETRO_DIR, "%s\0",".");
 
-   LOGI("Retro SYSTEM_DIRECTORY %s\n",retro_system_directory);
-   LOGI("Retro SAVE_DIRECTORY %s\n",retro_save_directory);
-   LOGI("Retro CONTENT_DIRECTORY %s\n",retro_content_directory);
-
-#ifndef RENDER16B
-    	enum retro_pixel_format fmt =RETRO_PIXEL_FORMAT_XRGB8888;
-#else
-    	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
-#endif
-   
-   if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
-   {
-      log_cb(RETRO_LOG_ERROR, "PIXEL FORMAT is not supported.\n");
-      exit(0);
-   }
+   environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt);
 
 	struct retro_input_descriptor inputDescriptors[] = {
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A, "A" },
@@ -265,8 +230,6 @@ void retro_deinit(void)
       emuThread = 0;
    }
 #endif
-
-   LOGI("Retro DeInit\n");
 }
 
 unsigned retro_api_version(void)
@@ -317,22 +280,25 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
 {
    video_cb = cb;
 }
-/*
-void retro_audiocb(signed short int *sound_buffer,int sndbufsize){
- 	int x;
-    for(x=0;x<sndbufsize;x++)audio_cb(sound_buffer[x],sound_buffer[x]);	
+
+#if 0
+void retro_audiocb(signed short int *sound_buffer,int sndbufsize)
+{
+   int x;
+   for(x=0;x<sndbufsize;x++)
+      audio_cb(sound_buffer[x],sound_buffer[x]);	
 }
-*/
+#endif
 
 #ifdef NO_LIBCO
-//FIXME nolibco Gui endless loop -> no retro_run() call
+/* TODO/FIXME - nolibco Gui endless loop -> no retro_run() call */
 void retro_run_gui(void)
 {
    bool updated = false;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
       update_variables();
-  
+
    video_cb(Retro_Screen,retrow,retroh,retrow<<PIXEL_BYTES);
 }
 #endif
@@ -380,18 +346,20 @@ void retro_run(void)
 #endif
 
 }
-/*
+
+#if 0
 unsigned int lastdown,lastup,lastchar;
+
 static void keyboard_cb(bool down, unsigned keycode,
       uint32_t character, uint16_t mod)
 {
    //logging.log(RETRO_LOG_INFO, "Down: %s, Code: %d, Char: %u, Mod: %u.\n",
-     //    down ? "yes" : "no", keycode, character, mod);
-if(down)lastdown=keycode;
-else lastup=keycode;
-lastchar=character;
+   //    down ? "yes" : "no", keycode, character, mod);
+   if(down)lastdown=keycode;
+   else lastup=keycode;
+   lastchar=character;
 }
-*/
+#endif
 
 bool retro_load_game(const struct retro_game_info *info)
 {
@@ -400,16 +368,17 @@ bool retro_load_game(const struct retro_game_info *info)
    (void)info;
 
 #ifndef NO_LIBCO
-   if (!mainThread || !emuThread) {
+   if (!mainThread || !emuThread)
+   {
       log_cb(RETRO_LOG_ERROR, "libco init failed\n", __LINE__);
       return false;
    }
 #endif
 
-/*
+#if 0
    struct retro_keyboard_callback cb = { keyboard_cb };
    environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &cb);
-*/
+#endif
    full_path = info ? info->path : NULL;
 
    if (full_path)
@@ -434,8 +403,8 @@ bool retro_load_game(const struct retro_game_info *info)
    return true;
 }
 
-void retro_unload_game(void){
-
+void retro_unload_game(void)
+{
    pauseg=0;
 }
 
@@ -444,7 +413,8 @@ unsigned retro_get_region(void)
    return RETRO_REGION_NTSC;
 }
 
-bool retro_load_game_special(unsigned type, const struct retro_game_info *info, size_t num)
+bool retro_load_game_special(
+      unsigned type, const struct retro_game_info *info, size_t num)
 {
    (void)type;
    (void)info;
