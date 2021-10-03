@@ -21,6 +21,9 @@
 #ifndef _IEC_H
 #define _IEC_H
 
+#include <vector>
+
+using std::vector;
 
 /*
  *  Definitions

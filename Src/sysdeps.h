@@ -25,9 +25,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
-#include <vector>
-
-using std::vector;
 
 /* sysconfig.h.  Generated automatically by configure.  */
 /* sysconfig.h.in.  Generated from configure.in by autoheader.  */
@@ -53,8 +50,6 @@ using std::vector;
 /* Define if you have the `mkdir' function. */
 #define HAVE_MKDIR 1
 
-/* Define if you have the <ncurses.h> header file. */
-#define HAVE_NCURSES_H 1
 
 /* Define if you have the <ndir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_NDIR_H */
