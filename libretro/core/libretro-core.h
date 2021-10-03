@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
 #include <stdbool.h>
 
 #define UINT16 uint16_t
@@ -41,14 +40,6 @@ extern char Key_Sate2[512];
 
 extern int pauseg; 
 
-#if  defined(__ANDROID__) || defined(ANDROID)
-#include <android/log.h>
-#define LOG_TAG "RetroArch.Frodo"
-#define LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
-#else
-#define LOGI printf
-#endif
-
 #define NPLGN 10
 #define NLIGN 5
 #define NLETT 5
@@ -65,7 +56,6 @@ extern int pauseg;
 #define STAT_YSZ  20
 
 #define RGB565(r, g, b)  (((r) << (5+16)) | ((g) << (5+8)) | (b<<5))
-//#define RGB565(r, g, b)  (((r) << (5+6)) | ((g) << 6) | (b))
 #define uint32 unsigned int
 #define uint8 unsigned char
 #endif

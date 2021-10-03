@@ -134,14 +134,11 @@ bool Str_IsHex(const char *str)
  */
 void Str_Filename2TOSname(const char *source, char *dst)
 {
-	char *dot, *tmp, *src;
-	int len;
-
-	src = strdup(source); /* dup so that it can be modified */
-	len = strlen(src);
-
+	char *tmp = NULL;
+	char *src = strdup(source); /* dup so that it can be modified */
+	int len   = strlen(src);
 	/* does filename have an extension? */
-	dot = strrchr(src, '.');
+	char *dot = strrchr(src, '.');
 	if (dot)
 	{
 		/* limit extension to 3 chars */

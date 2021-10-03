@@ -41,18 +41,11 @@
 /* Define if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
-/* Define if you have the <linux/joystick.h> header file. */
-//#define HAVE_LINUX_JOYSTICK_H 1
-
 /* Define if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
 
 /* Define if you have the `mkdir' function. */
 #define HAVE_MKDIR 1
-
-
-/* Define if you have the <ndir.h> header file, and it defines `DIR'. */
-/* #undef HAVE_NDIR_H */
 
 /* Define if you have the `rmdir' function. */
 #define HAVE_RMDIR 1
@@ -95,17 +88,8 @@
    `HAVE_STRUCT_STAT_ST_BLOCKS' instead. */
 #define HAVE_ST_BLOCKS 1
 
-/* Define if you have the <sys/dir.h> header file, and it defines `DIR'. */
-/* #undef HAVE_SYS_DIR_H */
-
-/* Define if you have the <sys/ndir.h> header file, and it defines `DIR'. */
-/* #undef HAVE_SYS_NDIR_H */
-
 /* Define if you have the <sys/param.h> header file. */
 #define HAVE_SYS_PARAM_H 1
-
-/* Define if you have the <sys/statvfs.h> header file. */
-//#define HAVE_SYS_STATVFS_H 1
 
 /* Define if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
