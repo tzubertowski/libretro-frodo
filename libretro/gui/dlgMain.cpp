@@ -41,8 +41,6 @@ static SGOBJ maindlg[] =
 	{ SGBUTTON, SG_EXIT/*0*/, 0, 35,4, 13,1, "Misc" },
 	{ SGBUTTON, SG_EXIT/*0*/, 0, 2,8, 13,1, "Joy" },
 	{ SGBUTTON, SG_EXIT/*0*/, 0, 35,8, 13,1, "Sound" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 2,12, 13,1, "Load cfg" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 35,12,13,1, "Save cfg" },
 	{ SGRADIOBUT, 0, 0, 3,15, 15,1, "No Reset" },
 	{ SGRADIOBUT, 0, 0, 3,17, 15,1, "Reset" },
 	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 21,15, 8,3, "OK" },
@@ -83,66 +81,41 @@ int Dialog_MainDlg(bool *bReset, bool *bLoadedSnapshot)
 		retbut = SDLGui_DoDialog(maindlg, NULL);
 		switch (retbut)
 		{
-		 case MAINDLG_ABOUT:
-			Dialog_AboutDlg();
-			break;
+			case MAINDLG_ABOUT:
+				Dialog_AboutDlg();
+				break;
 
-		 case MAINDLG_FLOPPYS:
-			DlgFloppy_Main();
-			break;
+			case MAINDLG_FLOPPYS:
+				DlgFloppy_Main();
+				break;
 
-		 case MAINDLG_VIDEO:
-			Dialog_VideoDlg();
-			break;
+			case MAINDLG_VIDEO:
+				Dialog_VideoDlg();
+				break;
 
-		 case MAINDLG_MISC:
-			Dialog_MiscDlg();
-			break;
+			case MAINDLG_MISC:
+				Dialog_MiscDlg();
+				break;
 
-		 case MAINDLG_JOYSTICK:
-			Dialog_JoyDlg();
-			break;
+			case MAINDLG_JOYSTICK:
+				Dialog_JoyDlg();
+				break;
 
-		 case MAINDLG_SOUND:
-			Dialog_SoundDlg();
-			break;
+			case MAINDLG_SOUND:
+				Dialog_SoundDlg();
+				break;
 
-		 case MAINDLG_LOADCFG:
+			case MAINDLG_LOADCFG:
+			case MAINDLG_SAVECFG:
+				break;
 
-			strcpy(sConfigFileName, ".frodorc");
-			psNewCfg = SDLGui_FileSelect(sConfigFileName, NULL, false);
+			case MAINDLG_SNAPSHOT:
+				Dialog_SnapshotDlg();
+				break;
 
-			if (psNewCfg)
-			{						
-				prefs->Load(psNewCfg);
-             	TheC64->NewPrefs(prefs);
-             	ThePrefs = *prefs;
-
-				strcpy(sConfigFileName, psNewCfg);
-				free(psNewCfg);
-			}
-			break;
-
-		case MAINDLG_SAVECFG:
-
-			strcpy(sConfigFileName, ".frodorc");
-			psNewCfg = SDLGui_FileSelect(sConfigFileName, NULL, true);
-
-			if (psNewCfg)
-			{
-				strcpy(sConfigFileName, psNewCfg);
-				prefs->Save(sConfigFileName);
-				free(psNewCfg);
-			}
-			break;
-
- 		case MAINDLG_SNAPSHOT:
-			Dialog_SnapshotDlg();
-			break;
-
-		 case MAINDLG_QUIT:
-			bQuitProgram = true;
-			break;
+			case MAINDLG_QUIT:
+				bQuitProgram = true;
+				break;
 		}
 
 		if(ThePrefs!=*prefs){
@@ -151,8 +124,7 @@ int Dialog_MainDlg(bool *bReset, bool *bLoadedSnapshot)
 			ThePrefs = *prefs;
 		}
 
-                gui_poll_events();
-
+		gui_poll_events();
 	}
 	while (retbut != MAINDLG_OK && retbut != MAINDLG_CANCEL && retbut != SDLGUI_QUIT
 	        && retbut != SDLGUI_ERROR && !bQuitProgram);

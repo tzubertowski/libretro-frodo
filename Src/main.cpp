@@ -102,9 +102,6 @@ extern int init_graphics(void);
 
 Frodo *the_app;
 
-// Global variables
-char Frodo::prefs_path[256] = "";
-
 char Frodo::device_path[256] = "";
 
 /*
@@ -170,24 +167,6 @@ void Frodo::ReadyToRun(void)
 #else
 	getcwd(AppDirPath, 256);
 #endif
-
-	// Load preferences
-	if (!prefs_path[0]) {
-
-#if  defined(__ANDROID__) || defined(ANDROID)
-		char *home = "/mnt/sdcard";
-#else
-		char *home = getenv("HOME");
-#endif
-
-		if (home != NULL && strlen(home) < 240) {
-			strncpy(prefs_path, home, 200);
-			strcat(prefs_path, "/");
-		}
-		strcat(prefs_path, ".frodorc");
-	}
-
-	ThePrefs.Load(prefs_path);
 
 	ThePrefs.set_drive8(device_path,0);
 
