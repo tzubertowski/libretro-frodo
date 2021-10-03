@@ -36,9 +36,8 @@ public:
 	Frodo();
 	void ArgvReceived(int argc, char **argv);
 	void ReadyToRun();
-	bool RunPrefsEditor();
 
-    static const char *get_prefs_path() { return prefs_path; }
+	static const char *get_prefs_path() { return prefs_path; }
 
 private:
 	void load_rom(const char *which, const char *path, uint8 *where, size_t size, const uint8 *builtin);
