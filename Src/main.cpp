@@ -113,15 +113,12 @@ char Frodo::device_path[256] = "";
 
 int skel_main(int argc, char **argv)
 {
-
 	timeval tv;
 	gettimeofday(&tv, NULL);
 	srand(tv.tv_usec);
 
-	LOGI("%s by Christian Bauer\n", VERSION_STRING);
 	if (!init_graphics())
 		return 0;
-	fflush(stdout);
 
 	the_app = new Frodo();
 	the_app->ArgvReceived(argc, argv);
@@ -133,8 +130,8 @@ int skel_main(int argc, char **argv)
 }
 
 #ifdef NO_LIBCO
-void quit_frodo_emu(){
-	LOGI("delete c64&app\n");
+void quit_frodo_emu(void)
+{
 	delete TheC64;
 	delete the_app;
 }
@@ -156,14 +153,8 @@ Frodo::Frodo()
 
 void Frodo::ArgvReceived(int argc, char **argv)
 {
-/*
 	if (argc == 2)
-		strncpy(prefs_path, argv[1], 255);
-*/
-
-	if (argc == 2){
-			strncpy(device_path, argv[1], 255);
-	}	
+		strncpy(device_path, argv[1], 255);
 
 }
 
@@ -175,7 +166,7 @@ void Frodo::ArgvReceived(int argc, char **argv)
 void Frodo::ReadyToRun(void)
 {
 #if defined (__vita__) || defined(__psp__)
-  strcpy(AppDirPath, "/");
+	strcpy(AppDirPath, "/");
 #else
 	getcwd(AppDirPath, 256);
 #endif
@@ -186,7 +177,7 @@ void Frodo::ReadyToRun(void)
 #if  defined(__ANDROID__) || defined(ANDROID)
 		char *home = "/mnt/sdcard";
 #else
- 		char *home = getenv("HOME");
+		char *home = getenv("HOME");
 #endif
 
 		if (home != NULL && strlen(home) < 240) {
@@ -195,8 +186,6 @@ void Frodo::ReadyToRun(void)
 		}
 		strcat(prefs_path, ".frodorc");
 	}
-
-	LOGI("pref:(%s) dev:(%s)\n",prefs_path,device_path);
 
 	ThePrefs.Load(prefs_path);
 
@@ -217,26 +206,6 @@ void Frodo::ReadyToRun(void)
 	delete TheC64;
 #endif
 }
-
-
-
-/*
- *  Run preferences editor
- */
-
-bool Frodo::RunPrefsEditor(void)
-{
-	Prefs *prefs = new Prefs(ThePrefs);
-	//bool result = prefs->ShowEditor(false, prefs_path);
-	bool result = false;
-	if (result) {
-		TheC64->NewPrefs(prefs);
-		ThePrefs = *prefs;
-	}
-	delete prefs;
-	return result;
-}
-
 
 /*
  *  Determine whether path name refers to a directory
