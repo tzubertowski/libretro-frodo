@@ -102,13 +102,11 @@ extern const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #endif
 
 #if defined(VAXC) || defined(VMS)
-#  define OS_CODE  0x02
-#  define F_OPEN(name, mode) \
-     fopen((name), (mode), "mbc=60", "ctx=stm", "rfm=fix", "mrs=512")
+#define OS_CODE  0x02
 #endif
 
 #if defined(ATARI) || defined(atarist)
-#  define OS_CODE  0x05
+#define OS_CODE  0x05
 #endif
 
 #ifdef OS2
@@ -167,23 +165,13 @@ extern const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
   #pragma warn -8066
 #endif
 
-/* provide prototypes for these when building zlib without LFS */
-#if !defined(_WIN32) && (!defined(_LARGEFILE64_SOURCE) || _LFS64_LARGEFILE-0 == 0)
-    ZEXTERN uLong ZEXPORT adler32_combine64 OF((uLong, uLong, z_off_t));
-    ZEXTERN uLong ZEXPORT crc32_combine64 OF((uLong, uLong, z_off_t));
-#endif
-
-        /* common defaults */
+/* common defaults */
 
 #ifndef OS_CODE
 #  define OS_CODE  0x03  /* assume Unix */
 #endif
 
-#ifndef F_OPEN
-#  define F_OPEN(name, mode) fopen((name), (mode))
-#endif
-
-         /* functions */
+/* functions */
 
 #if defined(pyr) || defined(Z_SOLO)
 #  define NO_MEMCPY
