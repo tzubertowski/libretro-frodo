@@ -522,62 +522,6 @@ void File_ShrinkName(char *pDestFileName, const char *pSrcFileName, int maxlen)
 
 /*-----------------------------------------------------------------------*/
 /**
- * Open given filename in given mode and handle "stdout" & "stderr"
- * filenames specially. Return FILE* to the opened file or NULL on error.
- */
-FILE *File_Open(const char *path, const char *mode)
-{
-	int wr = 0, rd = 0;
-	FILE *fp;
-
-	/* empty name signifies file that shouldn't be opened/enabled */
-	if (!*path)
-		return NULL;
-
-	/* special "stdout" and "stderr" files can be used
-	 * for files which are written or appended
-	 */
-	if (strchr(mode, 'w') || strchr(mode, 'a'))
-		wr = 1;
-	if (strchr(mode, 'r'))
-		rd = 1;
-	if (strcmp(path, "stdin") == 0)
-	{
-		assert(rd && !wr);
-		return stdin;
-	}
-	if (strcmp(path, "stdout") == 0)
-	{
-		assert(wr && !rd);
-		return stdout;
-	}
-	if (strcmp(path, "stderr") == 0)
-	{
-		assert(wr && !rd);
-		return stderr;
-	}
-	/* Open a normal log file */
-	return fopen(path, mode);
-}
-
-
-/*-----------------------------------------------------------------------*/
-/**
- * Close given FILE pointer and return the closed pointer
- * as NULL for the idiom "fp = File_Close(fp);"
- */
-FILE *File_Close(FILE *fp)
-{
-	if (fp && fp != stdin && fp != stdout && fp != stderr)
-	{
-		fclose(fp);
-	}
-	return NULL;
-}
-
-
-/*-----------------------------------------------------------------------*/
-/**
  * Wrapper for File_MakeAbsoluteName() which special-cases stdin/out/err
  * named files and empty file name.  The given buffer should be opened
  * with File_Open() and closed with File_Close() if this function is used!
