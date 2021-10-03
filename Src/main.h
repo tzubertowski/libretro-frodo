@@ -36,14 +36,10 @@ public:
 	Frodo();
 	void ArgvReceived(int argc, char **argv);
 	void ReadyToRun();
-
-	static const char *get_prefs_path() { return prefs_path; }
-
 private:
 	void load_rom(const char *which, const char *path, uint8 *where, size_t size, const uint8 *builtin);
 	void load_rom_files();
 
-	static char prefs_path[256];	// Pathname of current preferences file
 	static char device_path[256];	// Pathname of libretro content file
 
 };
