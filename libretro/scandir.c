@@ -214,9 +214,6 @@ error_out:
 #include <windows.h>
 #include <wchar.h>
 
-#define LOG_DEBUG stderr
-#define Log_Printf fprintf
-
 /*-----------------------------------------------------------------------*/
 /**
  * Alphabetic order comparison routine.
@@ -248,7 +245,6 @@ int scandir(const char *dirname, struct dirent ***namelist,
 		return -1;
 
 	strcpy(findIn, dirname);
-	Log_Printf(LOG_DEBUG, "scandir : findIn orign='%s'\n", findIn);
 
 	for (d = findIn; *d; d++)
 		if (*d=='/')
@@ -277,8 +273,6 @@ int scandir(const char *dirname, struct dirent ***namelist,
 		*d = 0;
 	}
 
-	Log_Printf(LOG_DEBUG, "scandir : findIn processed='%s'\n", findIn);
-
 #if defined(__CEGCC__)
 	void *findInW = NULL;
 	findInW = malloc((len+6)*2);
@@ -292,7 +286,6 @@ int scandir(const char *dirname, struct dirent ***namelist,
 
 	if (h == INVALID_HANDLE_VALUE)
 	{
-		Log_Printf(LOG_DEBUG, "scandir : FindFirstFile error\n");
 		ret = GetLastError();
 		if (ret != ERROR_NO_MORE_FILES)
 		{
@@ -310,7 +303,6 @@ int scandir(const char *dirname, struct dirent ***namelist,
 #else
 		strcpy(selectDir->d_name, find.cFileName);
 #endif
-		//Log_Printf(LOG_DEBUG, "scandir : findFile='%s'\n", selectDir->d_name);
 		if (!sdfilter || (*sdfilter)(selectDir))
 		{
 			if (nDir==NDir)
@@ -341,11 +333,6 @@ int scandir(const char *dirname, struct dirent ***namelist,
 	while (ret);
 
 	ret = GetLastError();
-	if (ret != ERROR_NO_MORE_FILES)
-	{
-		// TODO: return some error code
-		Log_Printf(LOG_DEBUG, "scandir: last error = %ld\n", ret);
-	}
 
 	FindClose(h);
 

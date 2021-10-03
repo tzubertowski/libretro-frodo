@@ -188,10 +188,7 @@ Uint8 *File_Read(const char *pszFileName, long *pFileSize, const char * const pp
 				/* Seek through the file until we hit the end... */
 				char tmp[1024];
 				if (gzread(hGzFile, tmp, sizeof(tmp)) < 0)
-				{
-					fprintf(stderr, "Failed to read gzip file!\n");
 					return NULL;
-				}
 			}
 			while (!gzeof(hGzFile));
 			FileSize = gztell(hGzFile);
@@ -363,7 +360,6 @@ bool File_QueryOverwrite(const char *pszFileName)
 		/* File does exist, are we OK to overwrite? */
 		szString = (char*)malloc(strlen(pszFileName) + strlen(fmt) + 1);
 		sprintf(szString, fmt, pszFileName);
-		fprintf(stderr, "%s\n", szString);
 		ret = DlgAlert_Query(szString);
 		free(szString);
 	}
@@ -561,13 +557,7 @@ FILE *File_Open(const char *path, const char *mode)
 		return stderr;
 	}
 	/* Open a normal log file */
-	fp = fopen(path, mode);
-	if (!fp)
-		fprintf(stderr, "Can't open file '%s' (wr=%i, rd=%i):\n  %s\n",
-			path, wr, rd, strerror(errno));
-
-	/* printf("'%s' opened in mode '%s'\n", path, mode, fp); */
-	return fp;
+	return fopen(path, mode);
 }
 
 

@@ -64,13 +64,11 @@ static int DlgAlert_FormatTextToBox(char *text, int max_width, int *text_width)
 {
 	int columns = 0;
 	int lines = 1;
-	int txtlen;
 	char *p;            /* pointer to begin of actual line */
 	char *q;            /* pointer to start of next search */
 	char *llb;          /* pointer to last place suitable for breaking the line */
 	char *txtend;       /* pointer to end of the text */
-
-	txtlen = strlen(text);
+	int txtlen = strlen(text);
 
 	q = p = text;
 	llb = text-1;       /* pointer to last line break */

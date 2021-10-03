@@ -16,10 +16,6 @@ const char DlgFloppy_fileid[] = "Hatari dlgFloppy.c : " __DATE__ " " __TIME__;
 #include "sdlgui.h"
 #include "file.h"
 
-#define Log_AlertDlg printf
-#define LOG_INFO stderr
-#define LOG_ERROR stderr
-
 static const char * const pszDiskImageNameExts[] =
 {
 	".d64",
@@ -135,10 +131,7 @@ const char* Floppy_SetDiskFileName(int Drive, const char *pszFileName, const cha
 	else
 		filename = strdup(pszFileName);
 	if (!filename)
-	{
-		Log_AlertDlg((const char *)LOG_INFO, "Image '%s' not found", pszFileName);
 		return NULL;
-	}
 #if 0
 	/* If we insert a disk into Drive A, should we try to put disk 2 into drive B? */
 	if (Drive == 0 && ConfigureParams.DiskImage.bAutoInsertDiskB)
@@ -162,10 +155,7 @@ const char* Floppy_SetDiskFileName(int Drive, const char *pszFileName, const cha
 			continue;
 		/* prevent inserting same image to multiple drives */
 		if (strcmp(filename, /*ConfigureParams.DiskImage.*/szDiskFileName[i]) == 0)
-		{
-			Log_AlertDlg((const char *)LOG_ERROR, "ERROR: Cannot insert same floppy to multiple drives!");
 			return NULL;
-		}
 	}
 
 	/* do the changes */

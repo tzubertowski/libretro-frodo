@@ -1347,34 +1347,6 @@ local uInt longest_match(s, cur_match)
 
 #endif /* FASTEST */
 
-#ifdef DEBUG
-/* ===========================================================================
- * Check that the match at match_start is indeed a match.
- */
-local void check_match(s, start, match, length)
-    deflate_state *s;
-    IPos start, match;
-    int length;
-{
-    /* check that the match is indeed a match */
-    if (zmemcmp(s->window + match,
-                s->window + start, length) != EQUAL) {
-        fprintf(stderr, " start %u, match %u, length %d\n",
-                start, match, length);
-        do {
-            fprintf(stderr, "%c%c", s->window[match++], s->window[start++]);
-        } while (--length != 0);
-        z_error("invalid match");
-    }
-    if (z_verbose > 1) {
-        fprintf(stderr,"\\[%d,%d]", start-match, length);
-        do { putc(s->window[start++], stderr); } while (--length != 0);
-    }
-}
-#else
-#  define check_match(s, start, match, length)
-#endif /* DEBUG */
-
 /* ===========================================================================
  * Fill the window when the lookahead becomes insufficient.
  * Updates strstart and lookahead.
@@ -1541,7 +1513,6 @@ local void fill_window(s)
                 (last)); \
    s->block_start = s->strstart; \
    flush_pending(s->strm); \
-   Tracev((stderr,"[FLUSH]")); \
 }
 
 /* Same but force premature exit if necessary. */
@@ -1664,7 +1635,6 @@ local block_state deflate_fast(s, flush)
             /* longest_match() sets match_start */
         }
         if (s->match_length >= MIN_MATCH) {
-            check_match(s, s->strstart, s->match_start, s->match_length);
 
             _tr_tally_dist(s, s->strstart - s->match_start,
                            s->match_length - MIN_MATCH, bflush);
@@ -1702,7 +1672,6 @@ local block_state deflate_fast(s, flush)
             }
         } else {
             /* No match, output a literal byte */
-            Tracevv((stderr,"%c", s->window[s->strstart]));
             _tr_tally_lit (s, s->window[s->strstart], bflush);
             s->lookahead--;
             s->strstart++;
@@ -1789,8 +1758,6 @@ local block_state deflate_slow(s, flush)
             uInt max_insert = s->strstart + s->lookahead - MIN_MATCH;
             /* Do not insert strings in hash table beyond this. */
 
-            check_match(s, s->strstart-1, s->prev_match, s->prev_length);
-
             _tr_tally_dist(s, s->strstart -1 - s->prev_match,
                            s->prev_length - MIN_MATCH, bflush);
 
@@ -1817,7 +1784,6 @@ local block_state deflate_slow(s, flush)
              * single literal. If there was a match but the current match
              * is longer, truncate the previous match to a single literal.
              */
-            Tracevv((stderr,"%c", s->window[s->strstart-1]));
             _tr_tally_lit(s, s->window[s->strstart-1], bflush);
             if (bflush) {
                 FLUSH_BLOCK_ONLY(s, 0);
@@ -1836,7 +1802,6 @@ local block_state deflate_slow(s, flush)
     }
     Assert (flush != Z_NO_FLUSH, "no flush?");
     if (s->match_available) {
-        Tracevv((stderr,"%c", s->window[s->strstart-1]));
         _tr_tally_lit(s, s->window[s->strstart-1], bflush);
         s->match_available = 0;
     }
@@ -1899,7 +1864,6 @@ local block_state deflate_rle(s, flush)
 
         /* Emit match if have run of MIN_MATCH or longer, else emit literal */
         if (s->match_length >= MIN_MATCH) {
-            check_match(s, s->strstart, s->strstart - 1, s->match_length);
 
             _tr_tally_dist(s, 1, s->match_length - MIN_MATCH, bflush);
 
@@ -1908,7 +1872,6 @@ local block_state deflate_rle(s, flush)
             s->match_length = 0;
         } else {
             /* No match, output a literal byte */
-            Tracevv((stderr,"%c", s->window[s->strstart]));
             _tr_tally_lit (s, s->window[s->strstart], bflush);
             s->lookahead--;
             s->strstart++;
@@ -1948,7 +1911,6 @@ local block_state deflate_huff(s, flush)
 
         /* Output a literal byte */
         s->match_length = 0;
-        Tracevv((stderr,"%c", s->window[s->strstart]));
         _tr_tally_lit (s, s->window[s->strstart], bflush);
         s->lookahead--;
         s->strstart++;
