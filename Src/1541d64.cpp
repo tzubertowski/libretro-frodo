@@ -151,15 +151,17 @@ ImageDrive::~ImageDrive()
 
 void ImageDrive::close_image(void)
 {
-	if (the_file) {
-		close_all_channels();
-		if (bam_dirty) {
-			write_sector(DIR_TRACK, 0, bam);
-			bam_dirty = false;
-		}
-		fclose(the_file);
-		the_file = NULL;
-	}
+   if (the_file)
+   {
+      close_all_channels();
+      if (bam_dirty)
+      {
+         write_sector(DIR_TRACK, 0, bam);
+         bam_dirty = false;
+      }
+      fclose(the_file);
+      the_file = NULL;
+   }
 }
 
 
@@ -169,31 +171,33 @@ void ImageDrive::close_image(void)
 
 bool ImageDrive::change_image(const char *path)
 {
-	// Close old image file
-	close_image();
+   // Close old image file
+   close_image();
 
-	// Open new image file (try write access first, then read-only)
-	write_protected = false;
-	the_file = open_image_file(path, true);
-	if (the_file == NULL) {
-		write_protected = true;
-		the_file = open_image_file(path, false);
-	}
-	if (the_file) {
+   // Open new image file (try write access first, then read-only)
+   write_protected = false;
+   the_file        = open_image_file(path, true);
+   if (!the_file)
+   {
+      write_protected = true;
+      the_file        = open_image_file(path, false);
+   }
+   if (the_file)
+   {
+      // Determine file type and fill in image_file_desc structure
+      if (!parse_image_file(the_file, desc))
+      {
+         fclose(the_file);
+         the_file = NULL;//false;
+         return false;
+      }
 
-		// Determine file type and fill in image_file_desc structure
-		if (!parse_image_file(the_file, desc)) {
-			fclose(the_file);
-			the_file = NULL;//false;
-			return false;
-		}
-
-		// Read BAM
-		read_sector(DIR_TRACK, 0, bam);
-		bam_dirty = false;
-		return true;
-	} else
-		return false;
+      // Read BAM
+      read_sector(DIR_TRACK, 0, bam);
+      bam_dirty = false;
+      return true;
+   }
+   return false;
 }
 
 
@@ -203,29 +207,29 @@ bool ImageDrive::change_image(const char *path)
 
 uint8 ImageDrive::Open(int channel, const uint8 *name, int name_len)
 {
-	set_error(ERR_OK);
+   set_error(ERR_OK);
 
-	// Channel 15: execute file name as command
-	if (channel == 15) {
-		execute_cmd(name, name_len);
-		return ST_OK;
-	}
+   // Channel 15: execute file name as command
+   if (channel == 15) {
+      execute_cmd(name, name_len);
+      return ST_OK;
+   }
 
-	if (ch[channel].mode != CHMOD_FREE) {
-		set_error(ERR_NOCHANNEL);
-		return ST_OK;
-	}
+   if (ch[channel].mode != CHMOD_FREE) {
+      set_error(ERR_NOCHANNEL);
+      return ST_OK;
+   }
 
-	if (name[0] == '$')
-		if (channel)
-			return open_file_ts(channel, DIR_TRACK, 0);
-		else
-			return open_directory(name + 1, name_len - 1);
+   if (name[0] == '$')
+   {
+      if (channel)
+         return open_file_ts(channel, DIR_TRACK, 0);
+      return open_directory(name + 1, name_len - 1);
+   }
 
-	if (name[0] == '#')
-		return open_direct(channel, name);
-
-	return open_file(channel, name, name_len);
+   if (name[0] == '#')
+      return open_direct(channel, name);
+   return open_file(channel, name, name_len);
 }
 
 
@@ -237,122 +241,124 @@ uint8 ImageDrive::open_file(int channel, const uint8 *name, int name_len)
 {
 	uint8 plain_name[NAMEBUF_LENGTH];
 	int plain_name_len;
-	int mode = FMODE_READ;
-	int type = FTYPE_DEL;
+	int mode    = FMODE_READ;
+	int type    = FTYPE_DEL;
 	int rec_len = 0;
 	parse_file_name(name, name_len, plain_name, plain_name_len, mode, type, rec_len);
 	if (plain_name_len > 16)
 		plain_name_len = 16;
 
 	// Channel 0 is READ, channel 1 is WRITE
-	if (channel == 0 || channel == 1) {
-		mode = channel ? FMODE_WRITE : FMODE_READ;
-		if (type == FTYPE_DEL)
-			type = FTYPE_PRG;
-	}
+	if (channel == 0 || channel == 1)
+   {
+      mode = channel ? FMODE_WRITE : FMODE_READ;
+      if (type == FTYPE_DEL)
+         type = FTYPE_PRG;
+   }
 
 	ch[channel].writing = (mode == FMODE_WRITE || mode == FMODE_APPEND);
 
 	// Wildcards are only allowed on reading
-	if (ch[channel].writing && (strchr((const char *)plain_name, '*') || strchr((const char *)plain_name, '?'))) {
-		set_error(ERR_SYNTAX33);
-		return ST_OK;
-	}
+	if (ch[channel].writing && (strchr((const char *)plain_name, '*') || strchr((const char *)plain_name, '?')))
+   {
+      set_error(ERR_SYNTAX33);
+      return ST_OK;
+   }
 
 	// Check for write-protection if writing
-	if (ch[channel].writing && write_protected) {
-		set_error(ERR_WRITEPROTECT);
-		return ST_OK;
-	}
+	if (ch[channel].writing && write_protected)
+   {
+      set_error(ERR_WRITEPROTECT);
+      return ST_OK;
+   }
 
 	// Relative files are not supported
-	if (type == FTYPE_REL) {
-		set_error(ERR_UNIMPLEMENTED);
-		return ST_OK;
-	}
+	if (type == FTYPE_REL)
+   {
+      set_error(ERR_UNIMPLEMENTED);
+      return ST_OK;
+   }
 
 	// Find file in directory
 	int dir_track, dir_sector, entry;
-	if (find_first_file(plain_name, plain_name_len, dir_track, dir_sector, entry)) {
+	if (find_first_file(plain_name, plain_name_len, dir_track, dir_sector, entry))
+   {
+      // File exists
+      ch[channel].dir_track = dir_track;
+      ch[channel].dir_sector = dir_sector;
+      ch[channel].entry = entry;
+      uint8 *de = dir + DIR_ENTRIES + entry * SIZEOF_DE;
 
-		// File exists
-		ch[channel].dir_track = dir_track;
-		ch[channel].dir_sector = dir_sector;
-		ch[channel].entry = entry;
-		uint8 *de = dir + DIR_ENTRIES + entry * SIZEOF_DE;
+      // Get file type from existing file if not specified in file name
+      if (type == FTYPE_DEL)
+         type = de[DE_TYPE] & 7;
 
-		// Get file type from existing file if not specified in file name
-		if (type == FTYPE_DEL)
-			type = de[DE_TYPE] & 7;
+      if ((de[DE_TYPE] & 7) != type) {
 
-		if ((de[DE_TYPE] & 7) != type) {
+         // File type doesn't match
+         set_error(ERR_FILETYPE);
 
-			// File type doesn't match
-			set_error(ERR_FILETYPE);
+      } else if (mode == FMODE_WRITE) {
 
-		} else if (mode == FMODE_WRITE) {
+         if (name[0] == '@') {
 
-			if (name[0] == '@') {
+            // Open old file for overwriting (save-replace)
+            return create_file(channel, plain_name, plain_name_len, type, true);
 
-				// Open old file for overwriting (save-replace)
-				return create_file(channel, plain_name, plain_name_len, type, true);
+         } else {
 
-			} else {
+            // File to be written already exists, error
+            set_error(ERR_FILEEXISTS);
+         }
 
-				// File to be written already exists, error
-				set_error(ERR_FILEEXISTS);
-			}
+      } else if (mode == FMODE_APPEND) {
 
-		} else if (mode == FMODE_APPEND) {
+         // Open old file for appending
+         open_file_ts(channel, de[DE_TRACK], de[DE_SECTOR]);
 
-			// Open old file for appending
-			open_file_ts(channel, de[DE_TRACK], de[DE_SECTOR]);
+         // Seek to end of file
+         int track = 0, sector = 0, num_blocks = 0;
+         while (ch[channel].buf[0]) {
+            if (!read_sector(track = ch[channel].buf[0], sector = ch[channel].buf[1], ch[channel].buf))
+               return ST_OK;
+            num_blocks++;
+         }
 
-			// Seek to end of file
-			int track = 0, sector = 0, num_blocks = 0;
-			while (ch[channel].buf[0]) {
-				if (!read_sector(track = ch[channel].buf[0], sector = ch[channel].buf[1], ch[channel].buf))
-					return ST_OK;
-				num_blocks++;
-			}
+         // Change channel mode to writing, adjust buffer pointer
+         ch[channel].writing = true;
+         ch[channel].buf_len = ch[channel].buf[1] + 1;
+         ch[channel].buf_ptr = ch[channel].buf + ch[channel].buf_len;
+         ch[channel].track = track;
+         ch[channel].sector = sector;
+         ch[channel].num_blocks = num_blocks;
 
-			// Change channel mode to writing, adjust buffer pointer
-			ch[channel].writing = true;
-			ch[channel].buf_len = ch[channel].buf[1] + 1;
-			ch[channel].buf_ptr = ch[channel].buf + ch[channel].buf_len;
-			ch[channel].track = track;
-			ch[channel].sector = sector;
-			ch[channel].num_blocks = num_blocks;
+      } else if (mode == FMODE_M) {
 
-		} else if (mode == FMODE_M) {
+         // Open old file for reading, even if it is not closed
+         return open_file_ts(channel, de[DE_TRACK], de[DE_SECTOR]);
 
-			// Open old file for reading, even if it is not closed
-			return open_file_ts(channel, de[DE_TRACK], de[DE_SECTOR]);
+      } else {
 
-		} else {
+         // Open old file for reading, error if file is open
+         if (de[DE_TYPE] & 0x80)
+            return open_file_ts(channel, de[DE_TRACK], de[DE_SECTOR]);
+         else
+            set_error(ERR_WRITEFILEOPEN);
+      }
 
-			// Open old file for reading, error if file is open
-			if (de[DE_TYPE] & 0x80)
-				return open_file_ts(channel, de[DE_TRACK], de[DE_SECTOR]);
-			else
-				set_error(ERR_WRITEFILEOPEN);
-		}
+   }
+   else
+   {
+      // File doesn't exist
+      // Set file type to SEQ if not specified in file name
+      if (type == FTYPE_DEL)
+         type = FTYPE_SEQ;
 
-	} else {
-
-		// File doesn't exist
-		// Set file type to SEQ if not specified in file name
-		if (type == FTYPE_DEL)
-			type = FTYPE_SEQ;
-
-		if (mode == FMODE_WRITE) {
-
-			// Create new file for writing
-			return create_file(channel, plain_name, plain_name_len, type);
-
-		} else
-			set_error(ERR_FILENOTFOUND);
-	}
+      // Create new file for writing
+      if (mode == FMODE_WRITE)
+         return create_file(channel, plain_name, plain_name_len, type);
+      set_error(ERR_FILENOTFOUND);
+   }
 	return ST_OK;
 }
 
@@ -363,22 +369,23 @@ uint8 ImageDrive::open_file(int channel, const uint8 *name, int name_len)
 
 uint8 ImageDrive::open_file_ts(int channel, int track, int sector)
 {
-	// Allocate buffer and set channel mode
-	int buf = alloc_buffer(-1);
-	if (buf == -1) {
-		set_error(ERR_NOCHANNEL);
-		return ST_OK;
-	}
-	ch[channel].buf_num = buf;
-	ch[channel].buf = ram + 0x300 + buf * 0x100;
-	ch[channel].mode = CHMOD_FILE;
+   // Allocate buffer and set channel mode
+   int buf = alloc_buffer(-1);
+   if (buf == -1)
+   {
+      set_error(ERR_NOCHANNEL);
+      return ST_OK;
+   }
+   ch[channel].buf_num = buf;
+   ch[channel].buf     = ram + 0x300 + buf * 0x100;
+   ch[channel].mode    = CHMOD_FILE;
 
-	// On the next call to Read, the first block will be read
-	ch[channel].buf[0] = track;
-	ch[channel].buf[1] = sector;
-	ch[channel].buf_len = 0;
+   // On the next call to Read, the first block will be read
+   ch[channel].buf[0]  = track;
+   ch[channel].buf[1]  = sector;
+   ch[channel].buf_len = 0;
 
-	return ST_OK;
+   return ST_OK;
 }
 
 
@@ -388,53 +395,60 @@ uint8 ImageDrive::open_file_ts(int channel, int track, int sector)
 
 uint8 ImageDrive::create_file(int channel, const uint8 *name, int name_len, int type, bool overwrite)
 {
-	// Allocate buffer
-	int buf = alloc_buffer(-1);
-	if (buf == -1) {
-		set_error(ERR_NOCHANNEL);
-		return ST_OK;
-	}
-	ch[channel].buf_num = buf;
-	ch[channel].buf = ram + 0x300 + buf * 0x100;
+   // Allocate buffer
+   int buf = alloc_buffer(-1);
+   if (buf == -1)
+   {
+      set_error(ERR_NOCHANNEL);
+      return ST_OK;
+   }
+   ch[channel].buf_num = buf;
+   ch[channel].buf     = ram + 0x300 + buf * 0x100;
 
-	// Allocate new directory entry if not overwriting
-	if (!overwrite) {
-		if (!alloc_dir_entry(ch[channel].dir_track, ch[channel].dir_sector, ch[channel].entry)) {
-			free_buffer(buf);
-			return ST_OK;
-		}
-	}
-	uint8 *de = dir + DIR_ENTRIES + ch[channel].entry * SIZEOF_DE;
+   // Allocate new directory entry if not overwriting
+   if (!overwrite)
+   {
+      if (!alloc_dir_entry(ch[channel].dir_track, ch[channel].dir_sector, ch[channel].entry))
+      {
+         free_buffer(buf);
+         return ST_OK;
+      }
+   }
+   uint8 *de          = dir + DIR_ENTRIES + ch[channel].entry * SIZEOF_DE;
 
-	// Allocate first data block
-	ch[channel].track = DIR_TRACK - 1;
-	ch[channel].sector = -DATA_INTERLEAVE;
-	if (!alloc_next_block(ch[channel].track, ch[channel].sector, DATA_INTERLEAVE)) {
-		free_buffer(buf);
-		return ST_OK;
-	}
-	ch[channel].num_blocks = 1;
+   // Allocate first data block
+   ch[channel].track  = DIR_TRACK - 1;
+   ch[channel].sector = -DATA_INTERLEAVE;
+   if (!alloc_next_block(ch[channel].track, ch[channel].sector, DATA_INTERLEAVE))
+   {
+      free_buffer(buf);
+      return ST_OK;
+   }
+   ch[channel].num_blocks = 1;
 
-	// Write directory entry
-	memset(de, 0, SIZEOF_DE);
-	de[DE_TYPE] = type;		// bit 7 not set -> open file
-	if (overwrite) {
-		de[DE_OVR_TRACK] = ch[channel].track;
-		de[DE_OVR_SECTOR] = ch[channel].sector;
-	} else {
-		de[DE_TRACK] = ch[channel].track;
-		de[DE_SECTOR] = ch[channel].sector;
-	}
-	memset(de + DE_NAME, 0xa0, 16);
-	memcpy(de + DE_NAME, name, name_len);
-	write_sector(ch[channel].dir_track, ch[channel].dir_sector, dir);
+   // Write directory entry
+   memset(de, 0, SIZEOF_DE);
+   de[DE_TYPE] = type;		// bit 7 not set -> open file
+   if (overwrite)
+   {
+      de[DE_OVR_TRACK]  = ch[channel].track;
+      de[DE_OVR_SECTOR] = ch[channel].sector;
+   }
+   else
+   {
+      de[DE_TRACK] = ch[channel].track;
+      de[DE_SECTOR] = ch[channel].sector;
+   }
+   memset(de + DE_NAME, 0xa0, 16);
+   memcpy(de + DE_NAME, name, name_len);
+   write_sector(ch[channel].dir_track, ch[channel].dir_sector, dir);
 
-	// Set channel descriptor
-	ch[channel].mode = CHMOD_FILE;
-	ch[channel].writing = true;
-	ch[channel].buf_ptr = ch[channel].buf + 2;
-	ch[channel].buf_len = 2;
-	return ST_OK;
+   // Set channel descriptor
+   ch[channel].mode    = CHMOD_FILE;
+   ch[channel].writing = true;
+   ch[channel].buf_ptr = ch[channel].buf + 2;
+   ch[channel].buf_len = 2;
+   return ST_OK;
 }
 
 
@@ -449,10 +463,11 @@ const char type_char_3[] = "LQGRL???";
 uint8 ImageDrive::open_directory(const uint8 *pattern, int pattern_len)
 {
 	// Special treatment for "$0"
-	if (pattern[0] == '0' && pattern_len == 1) {
-		pattern++;
-		pattern_len--;
-	}
+	if (pattern[0] == '0' && pattern_len == 1)
+   {
+      pattern++;
+      pattern_len--;
+   }
 
 	// Skip everything before the ':' in the pattern
 	uint8 *t = (uint8 *)memchr(pattern, ':', pattern_len);
@@ -1775,13 +1790,7 @@ static bool is_x64_file(const uint8 *header, long size)
 
 static bool is_zipcode_file(const char *path)
 {
-#if 0
-	string base, part;
-	SplitPath(path, base, part);
-	return part.length() > 2 && part[0] >= '1' && part[0] <= '4' && part[1] == '!';
-#else
 	return false;
-#endif
 }
 
 bool IsImageFile(const char *path, const uint8 *header, long size)
@@ -1789,160 +1798,13 @@ bool IsImageFile(const char *path, const uint8 *header, long size)
 	return is_d64_file(header, size) || is_x64_file(header, size) || is_zipcode_file(path);
 }
 
-
-#if 0
-/*
- *  Convert zipcode file to extended d64 file (d64 file with header ID)
- */
-
-static FILE *open_zipcode_file(FILE *old, int num, const string &base, string &part, uint8 &id1, uint8 &id2)
-{
-	if (old)
-		fclose(old);
-	part[0] = num + '1';
-	FILE *f = fopen(AddToPath(base, part).c_str(), "rb");
-	if (f == NULL)
-		return NULL;
-	if (fseek(f, 2, SEEK_SET) < 0) {
-		fclose(f);
-		return NULL;
-	}
-	if (num == 0) {
-		id1 = getc(f);
-		id2 = getc(f);
-	}
-	return f;
-}
-
-static FILE *convert_zipcode_to_ed64(const string &path)
-{
-	FILE *in = NULL, *out = NULL;
-	uint8 id1, id2;
-
-	// Split input file name
-	string base, part;
-	SplitPath(path, base, part);
-
-	// Open output file
-	out = tmpfile();
-	if (out == NULL)
-		goto error;
-
-	// Decode all tracks
-	for (int track=1; track<=35; track++) {
-		int max_sect = 17 + ((track < 31) ? 1 : 0) + ((track < 25) ? 1 : 0) + ((track < 18) ? 2 : 0);
-
-		// Select appropriate input file
-		switch (track) {
-			case 1:
-				if ((in = open_zipcode_file(NULL, 0, base, part, id1, id2)) == NULL)
-					goto error;
-				break;
-			case 9:
-				if ((in = open_zipcode_file(in, 1, base, part, id1, id2)) == NULL)
-					goto error;
-				break;
-			case 17:
-				if ((in = open_zipcode_file(in, 2, base, part, id1, id2)) == NULL)
-					goto error;
-				break;
-			case 26:
-				if ((in = open_zipcode_file(in, 3, base, part, id1, id2)) == NULL)
-					goto error;
-				break;
-		}
-
-		// Clear "sector read" flags
-		bool sect_flag[21];
-		for (int i=0; i<max_sect; i++)
-			sect_flag[i] = false;
-
-		// Read track
-		uint8 act_track[21 * 256];
-		for (int i=0; i<max_sect; i++) {
-
-			// Read and verify track/sector number
-			uint8 t = getc(in);
-			uint8 s = getc(in);
-			if ((t & 0x3f) != track || s >= max_sect || sect_flag[s] || feof(in))
-				goto error;
-			sect_flag[s] = true;
-			uint8 *p = act_track + s * 256;
-
-			// Uncompress sector
-			if (t & 0x80) {
-				// Run-length encoded sector
-				uint8 len = getc(in);
-				uint8 rep = getc(in);
-				int count = 0;
-				for (int j=0; j<len; j++) {
-					if (feof(in))
-						goto error;
-					uint8 c = getc(in);
-					if (c != rep)
-						p[count++] = c;
-					else {
-						uint8 repnum = getc(in);
-						if (feof(in))
-							goto error;
-						c = getc(in);
-						j += 2;
-						for (int k=0; k<repnum; k++)
-							p[count++] = c;
-					}
-				}
-			} else if (t & 0x40) {
-				// Sector filled with constant byte
-				if (feof(in))
-					goto error;
-				uint8 c = getc(in);
-				memset(p, c, 256);
-			} else {
-				// Plain sector
-				if (fread(p, 1, 256, in) != 256)
-					goto error;
-			}
-		}
-
-		// Write track
-		if (fwrite(act_track, 256, max_sect, out) != (size_t)max_sect)
-			goto error;
-	}
-
-	// Write header ID
-	putc(id1, out);
-	putc(id2, out);
-
-	// Done
-	fclose(in);
-	fseek(out, 0, SEEK_SET);
-	return out;
-
-error:
-	if (in)
-		fclose(in);
-	if (out)
-		fclose(out);
-	return NULL;
-}
-#endif
-
-
 /*
  *  Open disk image file, return file handle
  */
 
 static FILE *open_image_file(const char *path, bool write_mode)
 {
-#if 0
-	if (is_zipcode_file(path)) {
-		if (write_mode)
-			return NULL;
-		else
-			return convert_zipcode_to_ed64(path);
-	} else
-#endif
-		return fopen(path, write_mode ? "r+b" : "rb");
+	return fopen(path, write_mode ? "r+b" : "rb");
 }
 
 

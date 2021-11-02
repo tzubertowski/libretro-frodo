@@ -177,21 +177,8 @@ void C64::NewPrefs(Prefs *prefs)
 
 	TheDisplay->NewPrefs(prefs);
 
-#ifdef __riscos__
-	// Changed order of calls. If 1541 mode hasn't changed the order is insignificant.
-	if (prefs->Emul1541Proc) {
-		// New prefs have 1541 enabled ==> if old prefs had disabled free drives FIRST
-		TheIEC->NewPrefs(prefs);
-		TheJob1541->NewPrefs(prefs);
-	} else {
-		// New prefs has 1541 disabled ==> if old prefs had enabled free job FIRST
-		TheJob1541->NewPrefs(prefs);
-		TheIEC->NewPrefs(prefs);
-	}
-#else
 	TheIEC->NewPrefs(prefs);
 	TheJob1541->NewPrefs(prefs);
-#endif
 
 	TheREU->NewPrefs(prefs);
 	TheSID->NewPrefs(prefs);
@@ -575,10 +562,6 @@ void C64::SaveSnapshot(char *filename)
 		Save1541JobState(f);
 	}
 	fclose(f);
-
-#ifdef __riscos__
-	TheWIMP->SnapshotSaved(true);
-#endif
 }
 
 
@@ -659,18 +642,12 @@ bool C64::LoadSnapshot(char *filename)
 				}
 #endif
 				Load1541JobState(f);
-#ifdef __riscos__
-				TheWIMP->ThePrefsToWindow();
-#endif
 			} else if (ThePrefs.Emul1541Proc) {	// No emulation in snapshot, but currently active?
 				Prefs *prefs = new Prefs(ThePrefs);
 				prefs->Emul1541Proc = false;
 				NewPrefs(prefs);
 				ThePrefs = *prefs;
 				delete prefs;
-#ifdef __riscos__
-				TheWIMP->ThePrefsToWindow();
-#endif
 			}
 
 #ifndef FRODO_SC
@@ -774,69 +751,39 @@ void C64::Run(void)
 
 void C64::VBlank(bool draw_frame)
 {
-	// Poll keyboard
-	TheDisplay->PollKeyboard(TheCIA1->KeyMatrix, TheCIA1->RevMatrix, &joykey);
-	if (TheDisplay->quit_requested)
-		quit_thyself = true;
+   // Poll keyboard
+   TheDisplay->PollKeyboard(TheCIA1->KeyMatrix, TheCIA1->RevMatrix, &joykey);
+   if (TheDisplay->quit_requested)
+      quit_thyself = true;
 
-	// Poll joysticks
-	TheCIA1->Joystick1 = poll_joystick(0);
-	TheCIA1->Joystick2 = poll_joystick(1);
+   // Poll joysticks
+   TheCIA1->Joystick1 = poll_joystick(0);
+   TheCIA1->Joystick2 = poll_joystick(1);
 
-	if (ThePrefs.JoystickSwap) {
-		uint8 tmp = TheCIA1->Joystick1;
-		TheCIA1->Joystick1 = TheCIA1->Joystick2;
-		TheCIA1->Joystick2 = tmp;
-	}
+   if (ThePrefs.JoystickSwap) {
+      uint8 tmp = TheCIA1->Joystick1;
+      TheCIA1->Joystick1 = TheCIA1->Joystick2;
+      TheCIA1->Joystick2 = tmp;
+   }
 
-	// Joystick keyboard emulation
-	if (TheDisplay->NumLock())
-		TheCIA1->Joystick1 &= joykey;
-	else
-		TheCIA1->Joystick2 &= joykey;
-       
-	// Count TOD clocks
-	TheCIA1->CountTOD();
-	TheCIA2->CountTOD();
+   // Joystick keyboard emulation
+   if (TheDisplay->NumLock())
+      TheCIA1->Joystick1 &= joykey;
+   else
+      TheCIA1->Joystick2 &= joykey;
 
-#if 0 //disable for now
-	// Update window if needed
-	if (draw_frame) {
-    	TheDisplay->Update();
+   // Count TOD clocks
+   TheCIA1->CountTOD();
+   TheCIA2->CountTOD();
 
-		// Calculate time between VBlanks, display speedometer
-		struct timeval tv;
-		gettimeofday(&tv, NULL);
-		if ((tv.tv_usec -= tv_start.tv_usec) < 0) {
-			tv.tv_usec += 1000000;
-			tv.tv_sec -= 1;
-		}
-		tv.tv_sec -= tv_start.tv_sec;
-		double elapsed_time = (double)tv.tv_sec * 1000000 + tv.tv_usec;
-		speed_index = 20000 / (elapsed_time + 1) * ThePrefs.SkipFrames * 100;
+   TheDisplay->Update();
 
-		// Limit speed to 100% if desired
-		if ((speed_index > 100) && ThePrefs.LimitSpeed) {
-			usleep((unsigned long)(ThePrefs.SkipFrames * 20000 - elapsed_time));
-			speed_index = 100;
-		}
-
-		gettimeofday(&tv_start, NULL);
-
-		TheDisplay->Speedometer((int)speed_index);
-	}
-#else
-    	TheDisplay->Update();
-#endif
-
-if(pauseg==1)pause_select();
-if(retro_quit==1)quit_thyself = true;
+   if(pauseg==1)pause_select();
+   if(retro_quit==1)quit_thyself = true;
 #ifndef NO_LIBCO
-co_switch(mainThread);
+   co_switch(mainThread);
 #endif
-
 }
-
 
 /*
  *  Open/close joystick drivers given old and new state of

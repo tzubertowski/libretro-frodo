@@ -342,52 +342,6 @@ static void DlgFileSelect_HandleSdlEvents(int/*SDL_Event*/ *pEvent)
 {
 	int oldypos = ypos;
 
-//RETRO TODO FIX
-#if 0
-	switch (pEvent->type)
-	{
-	 case SDL_MOUSEBUTTONDOWN:
-		if (pEvent->button.button == SDL_BUTTON_WHEELUP)
-			DlgFileSelect_ScrollUp();
-		else if (pEvent->button.button == SDL_BUTTON_WHEELDOWN)
-			DlgFileSelect_ScrollDown();
-		break;
-	 case SDL_KEYDOWN:		
-		switch (pEvent->key.keysym.sym)
-		{
-		 case SDLK_UP:
-			DlgFileSelect_ScrollUp();
-			break;
-		 case SDLK_DOWN:
-			DlgFileSelect_ScrollDown();
-			break;
-		 case SDLK_HOME:
-			ypos = 0; 
-			DlgFileSelect_Convert_ypos_to_scrollbar_Ypos();
-			break;
-		 case SDLK_END:
-		    ypos = entries-SGFS_NUMENTRIES; 
-			DlgFileSelect_Convert_ypos_to_scrollbar_Ypos();
-		    break;
-		 case SDLK_PAGEUP:
-		    ypos -= SGFS_NUMENTRIES;
-			DlgFileSelect_Convert_ypos_to_scrollbar_Ypos();
-		    break;
-		 case SDLK_PAGEDOWN:
-			if (ypos+2*SGFS_NUMENTRIES < entries)
-				ypos += SGFS_NUMENTRIES;
-			else
-				ypos = entries-SGFS_NUMENTRIES;
-			DlgFileSelect_Convert_ypos_to_scrollbar_Ypos();
-			break;
-		 default:
-			break;
-		}
-		break;
-	default:
-		break;
-	}
-#endif
 	if (ypos < 0) {
 		ypos = 0;
 		scrollbar_Ypos = 0.0;
@@ -525,11 +479,6 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 	zipfilename[0] = 0;
 	fname[0] = 0;
 	path[0] = 0;
-#if 0
-	/* Save mouse state and enable cursor */
-	bOldMouseVisibility = SDL_ShowCursor(SDL_QUERY);
-	SDL_ShowCursor(SDL_ENABLE);
-#endif
 	SDLGui_CenterDlg(fsdlg);
 	if (bAllowNew)
 	{
