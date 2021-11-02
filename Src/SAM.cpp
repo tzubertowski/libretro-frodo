@@ -297,17 +297,12 @@ void SAM(C64 *the_c64)
 	TheCPU->ExtConfig = (~R64.ddr | R64.pr) & 7;
 	TheCPU1541->GetState(&R1541);
 
-#ifdef AMIGA
-	if (!(fin = fout = ferr = fopen("CON:0/0/640/480/SAM", "w+")))
-		return;
-#else
-	fin = stdin;
-	fout = stdout;
-	ferr = stdout;
-#endif
+	fin         = stdin;
+	fout        = stdout;
+	ferr        = stdout;
 
 	access_1541 = false;
-	address = R64.pc;
+	address     = R64.pc;
 
 	fprintf(ferr, "\n *** SAM - Simple Assembler and Monitor ***\n ***         Press 'h' for help         ***\n\n");
 	init_abort();
@@ -443,9 +438,6 @@ void SAM(C64 *the_c64)
 
 	exit_abort();
 
-#ifdef AMIGA
-	fclose(fin);
-#endif
 	if (fout != ferr)
 		fclose(fout);
 

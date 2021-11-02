@@ -21,13 +21,6 @@
 #ifndef _C64_H
 #define _C64_H
 
-
-#ifdef AMIGA
-#include <devices/timer.h>
-#include <devices/gameport.h>
-#include <devices/inputevent.h>
-#endif
-
 #ifdef _WIN32
 #include <windef.h>
 #include <windows.h>
@@ -130,18 +123,6 @@ private:
 
 	uint8 orig_kernal_1d84,	// Original contents of kernal locations $1d84 and $1d85
 		  orig_kernal_1d85;	// (for undoing the Fast Reset patch)
-
-#ifdef AMIGA
-	struct MsgPort *timer_port;		// For speed limiter
-	struct timerequest *timer_io;
-	struct timeval start_time;
-	struct MsgPort *game_port;		// For joystick
-	struct IOStdReq *game_io;
-	struct GamePortTrigger game_trigger;
-	struct InputEvent game_event;
-	UBYTE joy_state;				// Current state of joystick
-	bool game_open, port_allocated;	// Flags: gameport.device opened, game port allocated
-#endif
 
 #ifdef __unix
 	void open_close_joystick(int port, int oldjoy, int newjoy);

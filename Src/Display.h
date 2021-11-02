@@ -23,10 +23,6 @@
 
 #include <stdint.h>
 
-#ifdef AMIGA
-#include <graphics/rastport.h>
-#endif
-
 #include "retro_video.h"
 
 #ifdef WIN32
@@ -75,25 +71,6 @@ public:
 private:
 	int led_state[4];
 	int old_led_state[4];
-
-#ifdef AMIGA
-	void draw_led_bar(void);	// Draw LED bar at the bottom of the window
-	void draw_led(int num, int state);	// Draw one LED
-
-	struct Window *the_window;	// Pointer to C64 display window
-	struct Screen *the_screen;	// The window's screen
-	struct RastPort *the_rp;	// The window's RastPort
-	struct VisualInfo *the_visual_info;
-	struct Menu *the_menus;
-	struct TextFont *led_font;
-	struct TextFont *speedo_font;
-	struct RastPort temp_rp;	// For WritePixelArray8()
-	struct BitMap *temp_bm;
-	uint8 *chunky_buf;			// Chunky buffer for drawing into
-	LONG pens[16];				// Pens for C64 colors
-	int xo, yo;					// Window X/Y border size
-	struct FileRequester *open_req, *save_req;	// File requesters for load/save snapshot
-#endif
 
 char speedometer_string[16];		// Speedometer text
 
