@@ -24,9 +24,7 @@
 #include "main.h"
 #include "Prefs.h"
 
-#if defined (__LIBRETRO__)
 #include "retro_video.h"
-#endif
 
 // LED states
 enum {
@@ -103,10 +101,6 @@ static bool num_locked = false;
 
 // For LED error blinking
 static C64Display *c64_disp;
-#if !defined (__LIBRETRO__)
-static struct sigaction pulse_sa;
-static itimerval pulse_tv;
-#endif
 
 // Colors for speedometer/drive LEDs
 enum {
@@ -382,19 +376,7 @@ C64Display::C64Display(C64 *the_c64) : TheC64(the_c64)
 
 	// Start timer for LED error blinking
 	c64_disp = this;
-#if defined (__LIBRETRO__)
 	libretro_pulse_handler((void (*)(int))C64Display::pulse_handler);
-#else
-	pulse_sa.sa_handler = (void (*)(int))C64Display::pulse_handler;
-	pulse_sa.sa_flags = 0;
-	sigemptyset(&pulse_sa.sa_mask);
-	sigaction(SIGALRM, &pulse_sa, NULL);
-	pulse_tv.it_interval.tv_sec = 0;
-	pulse_tv.it_interval.tv_usec = 400000;
-	pulse_tv.it_value.tv_sec = 0;
-	pulse_tv.it_value.tv_usec = 400000;
-	setitimer(ITIMER_REAL, &pulse_tv, NULL);
-#endif
 }
 
 
