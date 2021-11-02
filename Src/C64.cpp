@@ -97,8 +97,6 @@ C64::C64()
 	// Clear 1541 RAM
 	memset(RAM1541, 0, DRIVE_RAM_SIZE);
 
-	// Open joystick drivers if required
-	open_close_joysticks(0, 0, ThePrefs.Joystick1Port, ThePrefs.Joystick2Port);
 	joykey = 0xff;
 
 	CycleCounter = 0;
@@ -114,8 +112,6 @@ C64::C64()
 
 C64::~C64()
 {
-	open_close_joysticks(ThePrefs.Joystick1Port, ThePrefs.Joystick2Port, 0, 0);
-
 	delete TheJob1541;
 	delete TheREU;
 	delete TheIEC;
@@ -172,7 +168,6 @@ void C64::NMI(void)
 
 void C64::NewPrefs(Prefs *prefs)
 {
-	open_close_joysticks(ThePrefs.Joystick1Port, ThePrefs.Joystick2Port, prefs->Joystick1Port, prefs->Joystick2Port);
 	PatchKernal(prefs->FastReset, prefs->Emul1541Proc);
 
 	TheDisplay->NewPrefs(prefs);
@@ -784,17 +779,6 @@ void C64::VBlank(bool draw_frame)
    co_switch(mainThread);
 #endif
 }
-
-/*
- *  Open/close joystick drivers given old and new state of
- *  joystick preferences
- */
-
-void C64::open_close_joysticks(int oldjoy1, int oldjoy2, int newjoy1, int newjoy2)
-{
-
-}
-
 
 /*
  *  Poll joystick port, return CIA mask
