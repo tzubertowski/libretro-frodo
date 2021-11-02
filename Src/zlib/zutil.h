@@ -97,10 +97,6 @@ extern const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #  endif
 #endif
 
-#ifdef AMIGA
-#  define OS_CODE  0x01
-#endif
-
 #if defined(VAXC) || defined(VMS)
 #define OS_CODE  0x02
 #endif
@@ -141,10 +137,6 @@ extern const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 
 #ifdef __50SERIES /* Prime/PRIMOS */
 #  define OS_CODE  0x0f
-#endif
-
-#if defined(_BEOS_) || defined(RISCOS)
-#  define fdopen(fd,mode) NULL /* No fdopen() */
 #endif
 
 #if (defined(_MSC_VER) && (_MSC_VER > 600)) && !defined __INTERIX
