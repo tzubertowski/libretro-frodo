@@ -22,9 +22,6 @@
 #define _DISPLAY_H
 
 #include <stdint.h>
-#ifdef __BEOS__
-#include <InterfaceKit.h>
-#endif
 
 #ifdef AMIGA
 #include <graphics/rastport.h>
@@ -73,24 +70,11 @@ public:
 
 	C64 *TheC64;
 
-#ifdef __BEOS__
-	void Pause(void);
-	void Resume(void);
-#endif
-
 	bool quit_requested;
 
 private:
 	int led_state[4];
 	int old_led_state[4];
-
-#ifdef __BEOS__
-	C64Window *the_window;	// One of these is NULL
-	C64Screen *the_screen;
-	bool using_screen;		// Flag: Using the_screen
-	key_info old_key_info;
-	int draw_bitmap;		// Number of bitmap for the VIC to draw into
-#endif
 
 #ifdef AMIGA
 	void draw_led_bar(void);	// Draw LED bar at the bottom of the window

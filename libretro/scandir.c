@@ -4,7 +4,7 @@
   This file is distributed under the GNU General Public License, version 2
   or at your option any later version. Read the file gpl.txt for details.
 
-  scandir function for BEOS, SunOS etc..
+  scandir function for SunOS etc..
 */
 const char ScanDir_fileid[] = "Hatari scandir.c : " __DATE__ " " __TIME__;
 
@@ -99,8 +99,6 @@ int scandir(const char *dirp, struct dirent ***namelist,
 
 #if (defined(__sun) && defined(__SVR4)) || defined(__CEGCC__)
 # define dirfd(d) ((d)->dd_fd)
-#elif defined(__BEOS__)
-# define dirfd(d) ((d)->fd)
 #endif
 
 

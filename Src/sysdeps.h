@@ -296,7 +296,6 @@ struct utimbuf
 #endif
 
 /* If char has more then 8 bits, good night. */
-#ifndef __BEOS__
 typedef unsigned char uint8;
 typedef signed char int8;
 
@@ -349,7 +348,3 @@ typedef int64 intptr;
 #else
 #error Unsupported size of pointer
 #endif
-
-#else
-#include <support/SupportDefs.h>
-#endif	// __BEOS__

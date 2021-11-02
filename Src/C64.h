@@ -21,9 +21,6 @@
 #ifndef _C64_H
 #define _C64_H
 
-#ifdef __BEOS__
-#include <KernelKit.h>
-#endif
 
 #ifdef AMIGA
 #include <devices/timer.h>
@@ -133,22 +130,6 @@ private:
 
 	uint8 orig_kernal_1d84,	// Original contents of kernal locations $1d84 and $1d85
 		  orig_kernal_1d85;	// (for undoing the Fast Reset patch)
-
-#ifdef __BEOS__
-public:
-	void SoundSync(void);
-
-private:
-	static long thread_invoc(void *obj);
-	void open_close_joystick(int port, int oldjoy, int newjoy);
-
-	void *joy[2];			// Joystick objects (BJoystick or BDigitalPort)
-	bool joy_geek_port[2];	// Flag: joystick on GeekPort?
-	thread_id the_thread;
-	sem_id pause_sem;
-	sem_id sound_sync_sem;
-	bigtime_t start_time;
-#endif
 
 #ifdef AMIGA
 	struct MsgPort *timer_port;		// For speed limiter
