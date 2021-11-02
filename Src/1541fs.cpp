@@ -42,10 +42,6 @@
 #include "main.h"
 #include "Prefs.h"
 
-#ifdef __riscos__
-#include "ROlib.h"
-#endif
-
 #if defined(ANDROID) || defined(__ANDROID__)
 extern FILE* tmpfile2();
 #endif
@@ -93,26 +89,15 @@ FSDrive::~FSDrive()
 
 bool FSDrive::change_dir(char *dirpath)
 {
-#ifndef __riscos__
-	DIR *dir;
-
-	if ((dir = opendir(dirpath)) != NULL) {
-		closedir(dir);
-		strcpy(dir_path, dirpath);
-		strncpy(dir_title, dir_path, 16);
-		return true;
-	} else
-		return false;
-#else
-	int Info[4];
-
-	if ((ReadCatalogueInfo(dirpath,Info) & 2) != 0)	{ // Directory or image file
-		strcpy(dir_path, dirpath);
-		strncpy(dir_title, dir_path, 16);
-		return true;
-	} else
-		return false;
-#endif
+   DIR *dir;
+   if ((dir = opendir(dirpath)) != NULL)
+   {
+      closedir(dir);
+      strcpy(dir_path, dirpath);
+      strncpy(dir_title, dir_path, 16);
+      return true;
+   }
+   return false;
 }
 
 
@@ -197,7 +182,7 @@ uint8 FSDrive::open_file(int channel, const uint8 *name, int name_len)
 	}
 
 	// Open file
-#if !defined (__riscos__) && !defined(__vita__) && !defined(__psp__)
+#if !defined(__vita__) && !defined(__psp__)
 	if (chdir(dir_path))
 		set_error(ERR_NOTREADY);
 	else if ((file[channel] = fopen(plain_name, mode_str)) != NULL) {
@@ -210,12 +195,7 @@ uint8 FSDrive::open_file(int channel, const uint8 *name, int name_len)
 	{
 	  char fullname[NAMEBUF_LENGTH];
 
-  	  // On RISC OS make a full filename
-#ifdef __riscos__
-	  sprintf(fullname,"%s.%s",dir_path, plain_name);
-#else
 	  sprintf(fullname,"%s/%s",dir_path, plain_name);
-#endif	  
 	  if ((file[channel] = fopen(fullname, mode)) != NULL)
 	  {
 	    if (mode == FMODE_READ || mode == FMODE_M)
@@ -257,7 +237,6 @@ static bool match(const char *p, const char *n)
 
 void FSDrive::find_first_file(char *pattern)
 {
-#ifndef __riscos__
 	DIR *dir;
 	struct dirent *de;
 
@@ -282,21 +261,6 @@ void FSDrive::find_first_file(char *pattern)
 	}
 
 	closedir(dir);
-#else
-	dir_env de;
-	char Buffer[NAMEBUF_LENGTH];
-
-	de.offset = 0; de.buffsize = NAMEBUF_LENGTH; de.match = name;
-	do {
-		de.readno = 1;
-		if (ReadDirName(dir_path,Buffer,&de) != NULL)
-			de.offset = -1;
-		else if (de.offset != -1 && match(name,Buffer)) {
-			strncpy(name, Buffer, NAMEBUF_LENGTH);
-			return;
-		}
-	} while (de.readno > 0);
-#endif
 }
 
 
@@ -313,8 +277,6 @@ uint8 FSDrive::open_directory(int channel, const uint8 *pattern, int pattern_len
 	int filemode;
 	int filetype;
 	bool wildflag;
-
-#ifndef __riscos__
 	DIR *dir;
 	struct dirent *de;
 	struct stat statbuf;
@@ -428,61 +390,6 @@ uint8 FSDrive::open_directory(int channel, const uint8 *pattern, int pattern_len
 		// Get next directory entry
 		de = readdir(dir);
 	}
-#else
-	dir_full_info di;
-	dir_env de;
-	unsigned char c;
-
-	// Much of this is very similar to the original
-	if ((pattern[0] == '0') && (pattern[1] == 0)) {pattern++;}
-
-	// Concatenate dir_path and ascii_pattern in buffer ascii_pattern ==> read subdirs!
-	strcpy(ascii_pattern,dir_path); i = strlen(ascii_pattern); ascii_pattern[i++] = '.'; ascii_pattern[i] = 0;
-	convert_filename(pattern, ascii_pattern + i, &filemode, &filetype, &wildflag);
-	p = ascii_pattern + i; q = p;
-	do {c = *q++; if (c == '.') p = q;} while (c >= 32);
-	*(p-1) = 0;  // separate directory-path and ascii_pattern
-	if ((uint8)(*p) < 32) {*p = '*'; *(p+1) = 0;}
-
-	// We don't use tmpfile() -- problems involved!
-	DeleteFile(RO_TEMPFILE);	// first delete it, if it exists
-	if ((file[channel] = fopen(RO_TEMPFILE,"wb+")) == NULL)
-		return(ST_OK);
-	de.offset = 0; de.buffsize = NAMEBUF_LENGTH; de.match = p;
-
-	// Create directory title - copied from above
-	p = &buf[8];
-	for (i=0; i<16 && dir_title[i]; i++)
-		*p++ = conv_to_64(dir_title[i], false);
-	fwrite(buf, 1, 32, file[channel]);
-
-	do {
-		de.readno = 1;
-		if (ReadDirNameInfo(ascii_pattern,&di,&de) != NULL)
-			de.offset = -1;
-		else if (de.readno > 0) {	// don't have to check for match here
-			memset(buf,' ',31); buf[31] = 0;	// most of this: see above
-			p = buf; *p++ = 0x01; *p++ = 0x01;
-			i = (di.length + 254) / 254; *p++ = i & 0xff; *p++ = (i>>8) & 0xff;
-			p++;
-			if (i < 10)
-				*p++ = ' ';
-			if (i < 100)
-				*p++ = ' ';
-			strcpy(str, di.name);
-			*p++ = '\"'; q = p;
-			for (i=0; (i<16 && str[i]); i++)
-				*q++ = conv_to_64(str[i], true);
-			*q++ = '\"'; p += 18;
-			if ((di.otype & 2) == 0) {
-				*p++ = 'P'; *p++ = 'R'; *p++ = 'G';
-			} else {
-				*p++ = 'D'; *p++ = 'I'; *p++ = 'R';
-			}
-			fwrite(buf, 1, 32, file[channel]);
-		}
-	} while (de.offset != -1);
-#endif
 
 	// Final line
 	fwrite("\001\001\0\0BLOCKS FREE.             \0\0", 1, 32, file[channel]);
@@ -491,10 +398,8 @@ uint8 FSDrive::open_directory(int channel, const uint8 *pattern, int pattern_len
 	rewind(file[channel]);
 	read_char[channel] = fgetc(file[channel]);
 
-#ifndef __riscos
 	// Close directory
 	closedir(dir);
-#endif
 
 	return ST_OK;
 }

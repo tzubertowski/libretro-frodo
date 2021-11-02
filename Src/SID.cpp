@@ -57,7 +57,6 @@
  *  Random number generator for noise waveform
  */
 
-static uint8 sid_random(void);
 static uint8 sid_random(void)
 {
 	static uint32 seed = 1;
@@ -775,111 +774,112 @@ void DigitalRenderer::Reset(void)
 
 void DigitalRenderer::WriteRegister(uint16 adr, uint8 byte)
 {
-	if (!ready)
-		return;
+   if (!ready)
+      return;
 
-	int v = adr/7;	// Voice number
+   int v = adr/7;	// Voice number
 
-	switch (adr) {
-		case 0:
-		case 7:
-		case 14:
-			voice[v].freq = (voice[v].freq & 0xff00) | byte;
+   switch (adr)
+   {
+      case 0:
+      case 7:
+      case 14:
+         voice[v].freq = (voice[v].freq & 0xff00) | byte;
 #ifdef USE_FIXPOINT_MATHS
-			voice[v].add = sidquot.imul((int)voice[v].freq);
+         voice[v].add = sidquot.imul((int)voice[v].freq);
 #else
-			voice[v].add = (uint32)((float)voice[v].freq * SID_FREQ / SAMPLE_FREQ);
+         voice[v].add = (uint32)((float)voice[v].freq * SID_FREQ / SAMPLE_FREQ);
 #endif
-			break;
+         break;
 
-		case 1:
-		case 8:
-		case 15:
-			voice[v].freq = (voice[v].freq & 0xff) | (byte << 8);
+      case 1:
+      case 8:
+      case 15:
+         voice[v].freq = (voice[v].freq & 0xff) | (byte << 8);
 #ifdef USE_FIXPOINT_MATHS
-			voice[v].add = sidquot.imul((int)voice[v].freq);
+         voice[v].add = sidquot.imul((int)voice[v].freq);
 #else
-			voice[v].add = (uint32)((float)voice[v].freq * SID_FREQ / SAMPLE_FREQ);
+         voice[v].add = (uint32)((float)voice[v].freq * SID_FREQ / SAMPLE_FREQ);
 #endif
-			break;
+         break;
 
-		case 2:
-		case 9:
-		case 16:
-			voice[v].pw = (voice[v].pw & 0x0f00) | byte;
-			break;
+      case 2:
+      case 9:
+      case 16:
+         voice[v].pw = (voice[v].pw & 0x0f00) | byte;
+         break;
 
-		case 3:
-		case 10:
-		case 17:
-			voice[v].pw = (voice[v].pw & 0xff) | ((byte & 0xf) << 8);
-			break;
+      case 3:
+      case 10:
+      case 17:
+         voice[v].pw = (voice[v].pw & 0xff) | ((byte & 0xf) << 8);
+         break;
 
-		case 4:
-		case 11:
-		case 18:
-			voice[v].wave = (byte >> 4) & 0xf;
-			if ((byte & 1) != voice[v].gate)
-				if (byte & 1)	// Gate turned on
-					voice[v].eg_state = EG_ATTACK;
-				else			// Gate turned off
-					if (voice[v].eg_state != EG_IDLE)
-						voice[v].eg_state = EG_RELEASE;
-			voice[v].gate = byte & 1;
-			voice[v].mod_by->sync = byte & 2;
-			voice[v].ring = byte & 4;
-			if ((voice[v].test = byte & 8) != 0)
-				voice[v].count = 0;
-			break;
+      case 4:
+      case 11:
+      case 18:
+         voice[v].wave = (byte >> 4) & 0xf;
+         if ((byte & 1) != voice[v].gate)
+            if (byte & 1)	// Gate turned on
+               voice[v].eg_state = EG_ATTACK;
+            else			// Gate turned off
+               if (voice[v].eg_state != EG_IDLE)
+                  voice[v].eg_state = EG_RELEASE;
+         voice[v].gate = byte & 1;
+         voice[v].mod_by->sync = byte & 2;
+         voice[v].ring = byte & 4;
+         if ((voice[v].test = byte & 8) != 0)
+            voice[v].count = 0;
+         break;
 
-		case 5:
-		case 12:
-		case 19:
-			voice[v].a_add = EGTable[byte >> 4];
-			voice[v].d_sub = EGTable[byte & 0xf];
-			break;
+      case 5:
+      case 12:
+      case 19:
+         voice[v].a_add = EGTable[byte >> 4];
+         voice[v].d_sub = EGTable[byte & 0xf];
+         break;
 
-		case 6:
-		case 13:
-		case 20:
-			voice[v].s_level = (byte >> 4) * 0x111111;
-			voice[v].r_sub = EGTable[byte & 0xf];
-			break;
+      case 6:
+      case 13:
+      case 20:
+         voice[v].s_level = (byte >> 4) * 0x111111;
+         voice[v].r_sub = EGTable[byte & 0xf];
+         break;
 
-		case 22:
-			if (byte != f_freq) {
-				f_freq = byte;
-				if (ThePrefs.SIDFilters)
-					calc_filter();
-			}
-			break;
+      case 22:
+         if (byte != f_freq) {
+            f_freq = byte;
+            if (ThePrefs.SIDFilters)
+               calc_filter();
+         }
+         break;
 
-		case 23:
-			voice[0].filter = byte & 1;
-			voice[1].filter = byte & 2;
-			voice[2].filter = byte & 4;
-			if ((byte >> 4) != f_res) {
-				f_res = byte >> 4;
-				if (ThePrefs.SIDFilters)
-					calc_filter();
-			}
-			break;
+      case 23:
+         voice[0].filter = byte & 1;
+         voice[1].filter = byte & 2;
+         voice[2].filter = byte & 4;
+         if ((byte >> 4) != f_res) {
+            f_res = byte >> 4;
+            if (ThePrefs.SIDFilters)
+               calc_filter();
+         }
+         break;
 
-		case 24:
-			volume = byte & 0xf;
-			voice[2].mute = byte & 0x80;
-			if (((byte >> 4) & 7) != f_type) {
-				f_type = (byte >> 4) & 7;
+      case 24:
+         volume = byte & 0xf;
+         voice[2].mute = byte & 0x80;
+         if (((byte >> 4) & 7) != f_type) {
+            f_type = (byte >> 4) & 7;
 #ifdef USE_FIXPOINT_MATHS
-				xn1 = xn2 = yn1 = yn2 = 0;
+            xn1 = xn2 = yn1 = yn2 = 0;
 #else
-				xn1 = xn2 = yn1 = yn2 = 0.0;
+            xn1 = xn2 = yn1 = yn2 = 0.0;
 #endif
-				if (ThePrefs.SIDFilters)
-					calc_filter();
-			}
-			break;
-	}
+            if (ThePrefs.SIDFilters)
+               calc_filter();
+         }
+         break;
+   }
 }
 
 
@@ -1037,168 +1037,153 @@ void DigitalRenderer::calc_filter(void)
  *  Fill one audio buffer with calculated SID sound
  */
 
-#ifdef __riscos__
-void DigitalRenderer::calc_buffer(uint8 *buf, long count)
-#else
 void DigitalRenderer::calc_buffer(int16 *buf, long count)
-#endif
 {
-	// Get filter coefficients, so the emulator won't change
-	// them in the middle of our calculations
+   // Get filter coefficients, so the emulator won't change
+   // them in the middle of our calculations
 #ifdef USE_FIXPOINT_MATHS
-	FixPoint cf_ampl = f_ampl;
-	FixPoint cd1 = d1, cd2 = d2, cg1 = g1, cg2 = g2;
+   FixPoint cf_ampl = f_ampl;
+   FixPoint cd1 = d1, cd2 = d2, cg1 = g1, cg2 = g2;
 #else
-	float cf_ampl = f_ampl;
-	float cd1 = d1, cd2 = d2, cg1 = g1, cg2 = g2;
+   float cf_ampl = f_ampl;
+   float cd1 = d1, cd2 = d2, cg1 = g1, cg2 = g2;
 #endif
 
-#ifdef __riscos__
-	uint8 *LinToLog, *LogScale;
-#endif
+   // Index in sample_buf for reading, 16.16 fixed
+   uint32 sample_count = (sample_in_ptr + SAMPLE_BUF_SIZE/2) << 16;
 
-	// Index in sample_buf for reading, 16.16 fixed
-	uint32 sample_count = (sample_in_ptr + SAMPLE_BUF_SIZE/2) << 16;
+   count >>= 1;	// 16 bit mono output, count is in bytes
+   while (count--)
+   {
+      // Get current master volume from sample buffer,
+      // calculate sampled voice
+      uint8 master_volume = sample_buf[(sample_count >> 16) % SAMPLE_BUF_SIZE];
+      sample_count += ((0x138 * 50) << 16) / SAMPLE_FREQ;
+      int32 sum_output = SampleTab[master_volume] << 8;
+      int32 sum_output_filter = 0;
 
-#ifdef __riscos__	// on RISC OS we have 8 bit logarithmic sound
-	DigitalRenderer_GetTables(&LinToLog, &LogScale);	// get translation tables
-#else
-	count >>= 1;	// 16 bit mono output, count is in bytes
-#endif
-	while (count--) {
-		// Get current master volume from sample buffer,
-		// calculate sampled voice
-		uint8 master_volume = sample_buf[(sample_count >> 16) % SAMPLE_BUF_SIZE];
-		sample_count += ((0x138 * 50) << 16) / SAMPLE_FREQ;
-		int32 sum_output = SampleTab[master_volume] << 8;
-		int32 sum_output_filter = 0;
+      // Loop for all three voices
+      for (int j=0; j<3; j++) {
+         DRVoice *v = &voice[j];
 
-		// Loop for all three voices
-		for (int j=0; j<3; j++) {
-			DRVoice *v = &voice[j];
+         // Envelope generators
+         uint16 envelope;
 
-			// Envelope generators
-			uint16 envelope;
+         switch (v->eg_state) {
+            case EG_ATTACK:
+               v->eg_level += v->a_add;
+               if (v->eg_level > 0xffffff) {
+                  v->eg_level = 0xffffff;
+                  v->eg_state = EG_DECAY;
+               }
+               break;
+            case EG_DECAY:
+               if (v->eg_level <= v->s_level || v->eg_level > 0xffffff)
+                  v->eg_level = v->s_level;
+               else {
+                  v->eg_level -= v->d_sub >> EGDRShift[v->eg_level >> 16];
+                  if (v->eg_level <= v->s_level || v->eg_level > 0xffffff)
+                     v->eg_level = v->s_level;
+               }
+               break;
+            case EG_RELEASE:
+               v->eg_level -= v->r_sub >> EGDRShift[v->eg_level >> 16];
+               if (v->eg_level > 0xffffff) {
+                  v->eg_level = 0;
+                  v->eg_state = EG_IDLE;
+               }
+               break;
+            case EG_IDLE:
+               v->eg_level = 0;
+               break;
+         }
+         envelope = (v->eg_level * master_volume) >> 20;
 
-			switch (v->eg_state) {
-				case EG_ATTACK:
-					v->eg_level += v->a_add;
-					if (v->eg_level > 0xffffff) {
-						v->eg_level = 0xffffff;
-						v->eg_state = EG_DECAY;
-					}
-					break;
-				case EG_DECAY:
-					if (v->eg_level <= v->s_level || v->eg_level > 0xffffff)
-						v->eg_level = v->s_level;
-					else {
-						v->eg_level -= v->d_sub >> EGDRShift[v->eg_level >> 16];
-						if (v->eg_level <= v->s_level || v->eg_level > 0xffffff)
-							v->eg_level = v->s_level;
-					}
-					break;
-				case EG_RELEASE:
-					v->eg_level -= v->r_sub >> EGDRShift[v->eg_level >> 16];
-					if (v->eg_level > 0xffffff) {
-						v->eg_level = 0;
-						v->eg_state = EG_IDLE;
-					}
-					break;
-				case EG_IDLE:
-					v->eg_level = 0;
-					break;
-			}
-			envelope = (v->eg_level * master_volume) >> 20;
+         // Waveform generator
+         if (v->mute)
+            continue;
+         uint16 output;
 
-			// Waveform generator
-			if (v->mute)
-				continue;
-			uint16 output;
+         if (!v->test)
+            v->count += v->add;
 
-			if (!v->test)
-				v->count += v->add;
+         if (v->sync && (v->count > 0x1000000))
+            v->mod_to->count = 0;
 
-			if (v->sync && (v->count > 0x1000000))
-				v->mod_to->count = 0;
+         v->count &= 0xffffff;
 
-			v->count &= 0xffffff;
+         switch (v->wave) {
+            case WAVE_TRI:
+               if (v->ring)
+                  output = TriTable[(v->count ^ (v->mod_by->count & 0x800000)) >> 11];
+               else
+                  output = TriTable[v->count >> 11];
+               break;
+            case WAVE_SAW:
+               output = v->count >> 8;
+               break;
+            case WAVE_RECT:
+               if (v->count > (uint32)(v->pw << 12))
+                  output = 0xffff;
+               else
+                  output = 0;
+               break;
+            case WAVE_TRISAW:
+               output = TriSawTable[v->count >> 16];
+               break;
+            case WAVE_TRIRECT:
+               if (v->count > (uint32)(v->pw << 12))
+                  output = TriRectTable[v->count >> 16];
+               else
+                  output = 0;
+               break;
+            case WAVE_SAWRECT:
+               if (v->count > (uint32)(v->pw << 12))
+                  output = SawRectTable[v->count >> 16];
+               else
+                  output = 0;
+               break;
+            case WAVE_TRISAWRECT:
+               if (v->count > (uint32)(v->pw << 12))
+                  output = TriSawRectTable[v->count >> 16];
+               else
+                  output = 0;
+               break;
+            case WAVE_NOISE:
+               if (v->count > 0x100000) {
+                  output = v->noise = sid_random() << 8;
+                  v->count &= 0xfffff;
+               } else
+                  output = v->noise;
+               break;
+            default:
+               output = 0x8000;
+               break;
+         }
+         if (v->filter)
+            sum_output_filter += (int16)(output ^ 0x8000) * envelope;
+         else
+            sum_output += (int16)(output ^ 0x8000) * envelope;
+      }
 
-			switch (v->wave) {
-				case WAVE_TRI:
-					if (v->ring)
-						output = TriTable[(v->count ^ (v->mod_by->count & 0x800000)) >> 11];
-					else
-						output = TriTable[v->count >> 11];
-					break;
-				case WAVE_SAW:
-					output = v->count >> 8;
-					break;
-				case WAVE_RECT:
-					if (v->count > (uint32)(v->pw << 12))
-						output = 0xffff;
-					else
-						output = 0;
-					break;
-				case WAVE_TRISAW:
-					output = TriSawTable[v->count >> 16];
-					break;
-				case WAVE_TRIRECT:
-					if (v->count > (uint32)(v->pw << 12))
-						output = TriRectTable[v->count >> 16];
-					else
-						output = 0;
-					break;
-				case WAVE_SAWRECT:
-					if (v->count > (uint32)(v->pw << 12))
-						output = SawRectTable[v->count >> 16];
-					else
-						output = 0;
-					break;
-				case WAVE_TRISAWRECT:
-					if (v->count > (uint32)(v->pw << 12))
-						output = TriSawRectTable[v->count >> 16];
-					else
-						output = 0;
-					break;
-				case WAVE_NOISE:
-					if (v->count > 0x100000) {
-						output = v->noise = sid_random() << 8;
-						v->count &= 0xfffff;
-					} else
-						output = v->noise;
-					break;
-				default:
-					output = 0x8000;
-					break;
-			}
-			if (v->filter)
-				sum_output_filter += (int16)(output ^ 0x8000) * envelope;
-			else
-				sum_output += (int16)(output ^ 0x8000) * envelope;
-		}
-
-		// Filter
-		if (ThePrefs.SIDFilters) {
+      // Filter
+      if (ThePrefs.SIDFilters) {
 #ifdef USE_FIXPOINT_MATHS
-			int32 xn = cf_ampl.imul(sum_output_filter);
-			int32 yn = xn+cd1.imul(xn1)+cd2.imul(xn2)-cg1.imul(yn1)-cg2.imul(yn2);
-			yn2 = yn1; yn1 = yn; xn2 = xn1; xn1 = xn;
-			sum_output_filter = yn;
+         int32 xn = cf_ampl.imul(sum_output_filter);
+         int32 yn = xn+cd1.imul(xn1)+cd2.imul(xn2)-cg1.imul(yn1)-cg2.imul(yn2);
+         yn2 = yn1; yn1 = yn; xn2 = xn1; xn1 = xn;
+         sum_output_filter = yn;
 #else
-			float xn = (float)sum_output_filter * cf_ampl;
-			float yn = xn + cd1 * xn1 + cd2 * xn2 - cg1 * yn1 - cg2 * yn2;
-			yn2 = yn1; yn1 = yn; xn2 = xn1; xn1 = xn;
-			sum_output_filter = (int32)yn;
+         float xn = (float)sum_output_filter * cf_ampl;
+         float yn = xn + cd1 * xn1 + cd2 * xn2 - cg1 * yn1 - cg2 * yn2;
+         yn2 = yn1; yn1 = yn; xn2 = xn1; xn1 = xn;
+         sum_output_filter = (int32)yn;
 #endif
-		}
+      }
 
-		// Write to buffer
-#if defined(__riscos__)	// lookup in 8k (13bit) translation table
-		*buf++ = LinToLog[((sum_output + sum_output_filter) >> 13) & 0x1fff];
-#else
-		*buf++ = (sum_output + sum_output_filter) >> 10;
-#endif
-	}
+      // Write to buffer
+      *buf++ = (sum_output + sum_output_filter) >> 10;
+   }
 }
 
 /*
@@ -1259,37 +1244,37 @@ extern short signed int SNDBUF[1024*2];
 
 void DigitalRenderer::EmulateLine(void)
 {
-    static int divisor = 0;
-    static int to_output = 0;
-    static int buffer_pos = 0;
+   static int divisor = 0;
+   static int to_output = 0;
+   static int buffer_pos = 0;
 
-    if (!ready)
-	return;
+   if (!ready)
+      return;
 
-	sample_buf[sample_in_ptr] = volume;
-	sample_in_ptr = (sample_in_ptr + 1) % SAMPLE_BUF_SIZE;
+   sample_buf[sample_in_ptr] = volume;
+   sample_in_ptr = (sample_in_ptr + 1) % SAMPLE_BUF_SIZE;
 
-    /*
-     * Now see how many samples have to be added for this line
-     */
-    divisor += SAMPLE_FREQ;
-    while (divisor >= 0)
-	divisor -= TOTAL_RASTERS*SCREEN_FREQ, to_output++;
+   /*
+    * Now see how many samples have to be added for this line
+    */
+   divisor += SAMPLE_FREQ;
+   while (divisor >= 0)
+      divisor -= TOTAL_RASTERS*SCREEN_FREQ, to_output++;
 
-    /*
-     * Calculate the sound data only when we have enough to fill
-     * the buffer entirely.
-     */
-    if ((buffer_pos + to_output) >= sndbufsize) {
-
-	int datalen = sndbufsize - buffer_pos;
-	to_output -= datalen;
-	calc_buffer(sound_buffer + buffer_pos, datalen*2);
-	memcpy(SNDBUF, sound_buffer , sndbufsize*2);
-//	retro_audiocb(sound_buffer, sndbufsize);
-//	write(devfd, sound_buffer, sndbufsize*2);
-	buffer_pos = 0;
-    }    
+   /*
+    * Calculate the sound data only when we have enough to fill
+    * the buffer entirely.
+    */
+   if ((buffer_pos + to_output) >= sndbufsize)
+   {
+      int datalen = sndbufsize - buffer_pos;
+      to_output -= datalen;
+      calc_buffer(sound_buffer + buffer_pos, datalen*2);
+      memcpy(SNDBUF, sound_buffer , sndbufsize*2);
+      //	retro_audiocb(sound_buffer, sndbufsize);
+      //	write(devfd, sound_buffer, sndbufsize*2);
+      buffer_pos = 0;
+   }    
 }
 
 /*
@@ -1298,20 +1283,20 @@ void DigitalRenderer::EmulateLine(void)
 
 void MOS6581::open_close_renderer(int old_type, int new_type)
 {
-	if (old_type == new_type)
-		return;
+   if (old_type == new_type)
+      return;
 
-	// Delete the old renderer
-	delete the_renderer;
+   // Delete the old renderer
+   delete the_renderer;
 
-	// Create new renderer
-	if (new_type == SIDTYPE_DIGITAL)
-		the_renderer = new DigitalRenderer(the_c64);
+   // Create new renderer
+   if (new_type == SIDTYPE_DIGITAL)
+      the_renderer = new DigitalRenderer(the_c64);
    else
-		the_renderer = NULL;
+      the_renderer = NULL;
 
-	// Stuff the current register values into the new renderer
-	if (the_renderer != NULL)
-		for (int i=0; i<25; i++)
-			the_renderer->WriteRegister(i, regs[i]);
+   // Stuff the current register values into the new renderer
+   if (the_renderer != NULL)
+      for (int i=0; i<25; i++)
+         the_renderer->WriteRegister(i, regs[i]);
 }

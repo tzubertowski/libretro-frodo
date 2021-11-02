@@ -64,11 +64,6 @@
 #include "Prefs.h"
 
 
-// Test alignment on run-time for processors that can't access unaligned:
-#ifdef __riscos__
-#define ALIGNMENT_CHECK
-#endif
-
 // First and last displayed line
 const unsigned FIRST_DISP_LINE = 0x10;
 const unsigned LAST_DISP_LINE = 0x11f;
@@ -833,18 +828,18 @@ void MOS6569::ChangedVA(uint16 new_va)
 
 void MOS6569::TriggerLightpen(void)
 {
-	if (!lp_triggered) {	// Lightpen triggers only once per frame
-		lp_triggered = true;
+   if (!lp_triggered) {	// Lightpen triggers only once per frame
+      lp_triggered = true;
 
-		lpx = 0;			// Latch current coordinates
-		lpy = raster_y;
+      lpx = 0;			// Latch current coordinates
+      lpy = raster_y;
 
-		irq_flag |= 0x08;	// Trigger IRQ
-		if (irq_mask & 0x08) {
-			irq_flag |= 0x80;
-			the_cpu->TriggerVICIRQ();
-		}
-	}
+      irq_flag |= 0x08;	// Trigger IRQ
+      if (irq_mask & 0x08) {
+         irq_flag |= 0x80;
+         the_cpu->TriggerVICIRQ();
+      }
+   }
 }
 
 
@@ -858,25 +853,20 @@ static inline void vblank(void)
 inline void MOS6569::vblank(void)
 #endif
 {
-	raster_y = vc_base = 0;
-	lp_triggered = false;
+   raster_y = vc_base = 0;
+   lp_triggered = false;
 
-	if (!(frame_skipped = --skip_counter))
-		skip_counter = ThePrefs.SkipFrames;
+   if (!(frame_skipped = --skip_counter))
+      skip_counter = ThePrefs.SkipFrames;
 
-	the_c64->VBlank(!frame_skipped);
+   the_c64->VBlank(!frame_skipped);
 
-	// Get bitmap pointer for next frame. This must be done
-	// after calling the_c64->VBlank() because the preferences
-	// and screen configuration may have been changed there
-	chunky_line_start = the_display->BitmapBase();
-	xmod = the_display->BitmapXMod();
+   // Get bitmap pointer for next frame. This must be done
+   // after calling the_c64->VBlank() because the preferences
+   // and screen configuration may have been changed there
+   chunky_line_start = the_display->BitmapBase();
+   xmod = the_display->BitmapXMod();
 }
-
-
-#ifdef __riscos__
-#include "el_Acorn.h"
-#else
 
 #ifdef GLOBAL_VARS
 static inline void el_std_text(uint8 *p, uint8 *q, uint8 *r)
@@ -1065,241 +1055,237 @@ inline void MOS6569::el_mc_idle(uint8 *p, uint8 *r)
 	}
 }
 
-#endif //__riscos__
-
-
 #ifdef GLOBAL_VARS
 static inline void el_sprites(uint8 *chunky_ptr)
 #else
 inline void MOS6569::el_sprites(uint8 *chunky_ptr)
 #endif
 {
-	int i;
-	int snum, sbit;		// Sprite number/bit mask
-	int spr_coll=0, gfx_coll=0;
+   int i;
+   int snum, sbit;		// Sprite number/bit mask
+   int spr_coll=0, gfx_coll=0;
 
-	// Draw each active sprite
-	for (snum=0, sbit=1; snum<8; snum++, sbit<<=1)
-		if ((sprite_on & sbit) && mx[snum] < DISPLAY_X-32) {
-			int spr_mask_pos;	// Sprite bit position in fore_mask_buf
-			uint32 sdata, fore_mask;
+   // Draw each active sprite
+   for (snum=0, sbit=1; snum<8; snum++, sbit<<=1)
+      if ((sprite_on & sbit) && mx[snum] < DISPLAY_X-32) {
+         int spr_mask_pos;	// Sprite bit position in fore_mask_buf
+         uint32 sdata, fore_mask;
 
-			uint8 *p = chunky_ptr + mx[snum] + 8;
-			uint8 *q = spr_coll_buf + mx[snum] + 8;
+         uint8 *p = chunky_ptr + mx[snum] + 8;
+         uint8 *q = spr_coll_buf + mx[snum] + 8;
 
-			uint8 *sdatap = get_physical(matrix_base[0x3f8 + snum] << 6 | mc[snum]);
-			sdata = (*sdatap << 24) | (*(sdatap+1) << 16) | (*(sdatap+2) << 8);
+         uint8 *sdatap = get_physical(matrix_base[0x3f8 + snum] << 6 | mc[snum]);
+         sdata = (*sdatap << 24) | (*(sdatap+1) << 16) | (*(sdatap+2) << 8);
 
-			uint8 color = spr_color[snum];
+         uint8 color = spr_color[snum];
 
-			spr_mask_pos = mx[snum] + 8 - x_scroll;
-			
-			uint8 *fmbp = fore_mask_buf + (spr_mask_pos / 8);
-			int sshift = spr_mask_pos & 7;
-			fore_mask = (((*(fmbp+0) << 24) | (*(fmbp+1) << 16) | (*(fmbp+2) << 8)
-				      | (*(fmbp+3))) << sshift) | (*(fmbp+4) >> (8-sshift));
+         spr_mask_pos = mx[snum] + 8 - x_scroll;
 
-			if (mxe & sbit) {		// X-expanded
-				if (mx[snum] >= DISPLAY_X-56)
-					continue;
+         uint8 *fmbp = fore_mask_buf + (spr_mask_pos / 8);
+         int sshift = spr_mask_pos & 7;
+         fore_mask = (((*(fmbp+0) << 24) | (*(fmbp+1) << 16) | (*(fmbp+2) << 8)
+                  | (*(fmbp+3))) << sshift) | (*(fmbp+4) >> (8-sshift));
 
-				uint32 sdata_l = 0, sdata_r = 0, fore_mask_r;
-				fore_mask_r = (((*(fmbp+4) << 24) | (*(fmbp+5) << 16) | (*(fmbp+6) << 8)
-						| (*(fmbp+7))) << sshift) | (*(fmbp+8) >> (8-sshift));
+         if (mxe & sbit) {		// X-expanded
+            if (mx[snum] >= DISPLAY_X-56)
+               continue;
 
-				if (mmc & sbit) {	// Multicolor mode
-					uint32 plane0_l, plane0_r, plane1_l, plane1_r;
+            uint32 sdata_l = 0, sdata_r = 0, fore_mask_r;
+            fore_mask_r = (((*(fmbp+4) << 24) | (*(fmbp+5) << 16) | (*(fmbp+6) << 8)
+                     | (*(fmbp+7))) << sshift) | (*(fmbp+8) >> (8-sshift));
 
-					// Expand sprite data
-					sdata_l = MultiExpTable[sdata >> 24 & 0xff] << 16 | MultiExpTable[sdata >> 16 & 0xff];
-					sdata_r = MultiExpTable[sdata >> 8 & 0xff] << 16;
+            if (mmc & sbit) {	// Multicolor mode
+               uint32 plane0_l, plane0_r, plane1_l, plane1_r;
 
-					// Convert sprite chunky pixels to bitplanes
-					plane0_l = (sdata_l & 0x55555555) | (sdata_l & 0x55555555) << 1;
-					plane1_l = (sdata_l & 0xaaaaaaaa) | (sdata_l & 0xaaaaaaaa) >> 1;
-					plane0_r = (sdata_r & 0x55555555) | (sdata_r & 0x55555555) << 1;
-					plane1_r = (sdata_r & 0xaaaaaaaa) | (sdata_r & 0xaaaaaaaa) >> 1;
+               // Expand sprite data
+               sdata_l = MultiExpTable[sdata >> 24 & 0xff] << 16 | MultiExpTable[sdata >> 16 & 0xff];
+               sdata_r = MultiExpTable[sdata >> 8 & 0xff] << 16;
 
-					// Collision with graphics?
-					if ((fore_mask & (plane0_l | plane1_l)) || (fore_mask_r & (plane0_r | plane1_r))) {
-						gfx_coll |= sbit;
-						if (mdp & sbit)	{
-							plane0_l &= ~fore_mask;	// Mask sprite if in background
-							plane1_l &= ~fore_mask;
-							plane0_r &= ~fore_mask_r;
-							plane1_r &= ~fore_mask_r;
-						}
-					}
+               // Convert sprite chunky pixels to bitplanes
+               plane0_l = (sdata_l & 0x55555555) | (sdata_l & 0x55555555) << 1;
+               plane1_l = (sdata_l & 0xaaaaaaaa) | (sdata_l & 0xaaaaaaaa) >> 1;
+               plane0_r = (sdata_r & 0x55555555) | (sdata_r & 0x55555555) << 1;
+               plane1_r = (sdata_r & 0xaaaaaaaa) | (sdata_r & 0xaaaaaaaa) >> 1;
 
-					// Paint sprite
-					for (i=0; i<32; i++, plane0_l<<=1, plane1_l<<=1) {
-						uint8 col;
-						if (plane1_l & 0x80000000) {
-							if (plane0_l & 0x80000000)
-								col = mm1_color;
-							else
-								col = color;
-						} else {
-							if (plane0_l & 0x80000000)
-								col = mm0_color;
-							else
-								continue;
-						}
-						if (q[i])
-							spr_coll |= q[i] | sbit;
-						else {
-							p[i] = col;
-							q[i] = sbit;
-						}
-					}
-					for (; i<48; i++, plane0_r<<=1, plane1_r<<=1) {
-						uint8 col;
-						if (plane1_r & 0x80000000) {
-							if (plane0_r & 0x80000000)
-								col = mm1_color;
-							else
-								col = color;
-						} else {
-							if (plane0_r & 0x80000000)
-								col = mm0_color;
-							else
-								continue;
-						}
-						if (q[i])
-							spr_coll |= q[i] | sbit;
-						else {
-							p[i] = col;
-							q[i] = sbit;
-						}
-					}
+               // Collision with graphics?
+               if ((fore_mask & (plane0_l | plane1_l)) || (fore_mask_r & (plane0_r | plane1_r))) {
+                  gfx_coll |= sbit;
+                  if (mdp & sbit)	{
+                     plane0_l &= ~fore_mask;	// Mask sprite if in background
+                     plane1_l &= ~fore_mask;
+                     plane0_r &= ~fore_mask_r;
+                     plane1_r &= ~fore_mask_r;
+                  }
+               }
 
-				} else {			// Standard mode
+               // Paint sprite
+               for (i=0; i<32; i++, plane0_l<<=1, plane1_l<<=1) {
+                  uint8 col;
+                  if (plane1_l & 0x80000000) {
+                     if (plane0_l & 0x80000000)
+                        col = mm1_color;
+                     else
+                        col = color;
+                  } else {
+                     if (plane0_l & 0x80000000)
+                        col = mm0_color;
+                     else
+                        continue;
+                  }
+                  if (q[i])
+                     spr_coll |= q[i] | sbit;
+                  else {
+                     p[i] = col;
+                     q[i] = sbit;
+                  }
+               }
+               for (; i<48; i++, plane0_r<<=1, plane1_r<<=1) {
+                  uint8 col;
+                  if (plane1_r & 0x80000000) {
+                     if (plane0_r & 0x80000000)
+                        col = mm1_color;
+                     else
+                        col = color;
+                  } else {
+                     if (plane0_r & 0x80000000)
+                        col = mm0_color;
+                     else
+                        continue;
+                  }
+                  if (q[i])
+                     spr_coll |= q[i] | sbit;
+                  else {
+                     p[i] = col;
+                     q[i] = sbit;
+                  }
+               }
 
-					// Expand sprite data
-					sdata_l = ExpTable[sdata >> 24 & 0xff] << 16 | ExpTable[sdata >> 16 & 0xff];
-					sdata_r = ExpTable[sdata >> 8 & 0xff] << 16;
+            } else {			// Standard mode
 
-					// Collision with graphics?
-					if ((fore_mask & sdata_l) || (fore_mask_r & sdata_r)) {
-						gfx_coll |= sbit;
-						if (mdp & sbit)	{
-							sdata_l &= ~fore_mask;	// Mask sprite if in background
-							sdata_r &= ~fore_mask_r;
-						}
-					}
+               // Expand sprite data
+               sdata_l = ExpTable[sdata >> 24 & 0xff] << 16 | ExpTable[sdata >> 16 & 0xff];
+               sdata_r = ExpTable[sdata >> 8 & 0xff] << 16;
 
-					// Paint sprite
-					for (i=0; i<32; i++, sdata_l<<=1)
-						if (sdata_l & 0x80000000) {
-							if (q[i])	// Collision with sprite?
-								spr_coll |= q[i] | sbit;
-							else {		// Draw pixel if no collision
-								p[i] = color;
-								q[i] = sbit;
-							}
-						}
-					for (; i<48; i++, sdata_r<<=1)
-						if (sdata_r & 0x80000000) {
-							if (q[i]) 	// Collision with sprite?
-								spr_coll |= q[i] | sbit;
-							else {		// Draw pixel if no collision
-								p[i] = color;
-								q[i] = sbit;
-							}
-						}
-				}
+               // Collision with graphics?
+               if ((fore_mask & sdata_l) || (fore_mask_r & sdata_r)) {
+                  gfx_coll |= sbit;
+                  if (mdp & sbit)	{
+                     sdata_l &= ~fore_mask;	// Mask sprite if in background
+                     sdata_r &= ~fore_mask_r;
+                  }
+               }
 
-			} else					// Unexpanded
+               // Paint sprite
+               for (i=0; i<32; i++, sdata_l<<=1)
+                  if (sdata_l & 0x80000000) {
+                     if (q[i])	// Collision with sprite?
+                        spr_coll |= q[i] | sbit;
+                     else {		// Draw pixel if no collision
+                        p[i] = color;
+                        q[i] = sbit;
+                     }
+                  }
+               for (; i<48; i++, sdata_r<<=1)
+                  if (sdata_r & 0x80000000) {
+                     if (q[i]) 	// Collision with sprite?
+                        spr_coll |= q[i] | sbit;
+                     else {		// Draw pixel if no collision
+                        p[i] = color;
+                        q[i] = sbit;
+                     }
+                  }
+            }
 
-				if (mmc & sbit) {	// Multicolor mode
-					uint32 plane0, plane1;
+         } else					// Unexpanded
 
-					// Convert sprite chunky pixels to bitplanes
-					plane0 = (sdata & 0x55555555) | (sdata & 0x55555555) << 1;
-					plane1 = (sdata & 0xaaaaaaaa) | (sdata & 0xaaaaaaaa) >> 1;
+            if (mmc & sbit) {	// Multicolor mode
+               uint32 plane0, plane1;
 
-					// Collision with graphics?
-					if (fore_mask & (plane0 | plane1)) {
-						gfx_coll |= sbit;
-						if (mdp & sbit) {
-							plane0 &= ~fore_mask;	// Mask sprite if in background
-							plane1 &= ~fore_mask;
-						}
-					}
+               // Convert sprite chunky pixels to bitplanes
+               plane0 = (sdata & 0x55555555) | (sdata & 0x55555555) << 1;
+               plane1 = (sdata & 0xaaaaaaaa) | (sdata & 0xaaaaaaaa) >> 1;
 
-					// Paint sprite
-					for (i=0; i<24; i++, plane0<<=1, plane1<<=1) {
-						uint8 col;
-						if (plane1 & 0x80000000) {
-							if (plane0 & 0x80000000)
-								col = mm1_color;
-							else
-								col = color;
-						} else {
-							if (plane0 & 0x80000000)
-								col = mm0_color;
-							else
-								continue;
-						}
-						if (q[i])
-							spr_coll |= q[i] | sbit;
-						else {
-							p[i] = col;
-							q[i] = sbit;
-						}
-					}
+               // Collision with graphics?
+               if (fore_mask & (plane0 | plane1)) {
+                  gfx_coll |= sbit;
+                  if (mdp & sbit) {
+                     plane0 &= ~fore_mask;	// Mask sprite if in background
+                     plane1 &= ~fore_mask;
+                  }
+               }
 
-				} else {			// Standard mode
+               // Paint sprite
+               for (i=0; i<24; i++, plane0<<=1, plane1<<=1) {
+                  uint8 col;
+                  if (plane1 & 0x80000000) {
+                     if (plane0 & 0x80000000)
+                        col = mm1_color;
+                     else
+                        col = color;
+                  } else {
+                     if (plane0 & 0x80000000)
+                        col = mm0_color;
+                     else
+                        continue;
+                  }
+                  if (q[i])
+                     spr_coll |= q[i] | sbit;
+                  else {
+                     p[i] = col;
+                     q[i] = sbit;
+                  }
+               }
 
-					// Collision with graphics?
-					if (fore_mask & sdata) {
-						gfx_coll |= sbit;
-						if (mdp & sbit)
-							sdata &= ~fore_mask;	// Mask sprite if in background
-					}
-	
-					// Paint sprite
-					for (i=0; i<24; i++, sdata<<=1)
-						if (sdata & 0x80000000) {
-							if (q[i]) {		// Collision with sprite?
-								spr_coll |= q[i] | sbit;
-							} else {		// Draw pixel if no collision
-								p[i] = color;
-								q[i] = sbit;
-							}
-						}
+            } else {			// Standard mode
 
-				}
-		}
+               // Collision with graphics?
+               if (fore_mask & sdata) {
+                  gfx_coll |= sbit;
+                  if (mdp & sbit)
+                     sdata &= ~fore_mask;	// Mask sprite if in background
+               }
 
-	if (ThePrefs.SpriteCollisions) {
+               // Paint sprite
+               for (i=0; i<24; i++, sdata<<=1)
+                  if (sdata & 0x80000000) {
+                     if (q[i]) {		// Collision with sprite?
+                        spr_coll |= q[i] | sbit;
+                     } else {		// Draw pixel if no collision
+                        p[i] = color;
+                        q[i] = sbit;
+                     }
+                  }
 
-		// Check sprite-sprite collisions
-		if (clx_spr)
-			clx_spr |= spr_coll;
-		else {
-			clx_spr |= spr_coll;
-			irq_flag |= 0x04;
-			if (irq_mask & 0x04) {
-				irq_flag |= 0x80;
-				the_cpu->TriggerVICIRQ();
-			}
-		}
+            }
+      }
 
-		// Check sprite-background collisions
-		if (clx_bgr)
-			clx_bgr |= gfx_coll;
-		else {
-			clx_bgr |= gfx_coll;
-			irq_flag |= 0x02;
-			if (irq_mask & 0x02) {
-				irq_flag |= 0x80;
-				the_cpu->TriggerVICIRQ();
-			}
-		}
-	}
+   if (ThePrefs.SpriteCollisions) {
+
+      // Check sprite-sprite collisions
+      if (clx_spr)
+         clx_spr |= spr_coll;
+      else {
+         clx_spr |= spr_coll;
+         irq_flag |= 0x04;
+         if (irq_mask & 0x04) {
+            irq_flag |= 0x80;
+            the_cpu->TriggerVICIRQ();
+         }
+      }
+
+      // Check sprite-background collisions
+      if (clx_bgr)
+         clx_bgr |= gfx_coll;
+      else {
+         clx_bgr |= gfx_coll;
+         irq_flag |= 0x02;
+         if (irq_mask & 0x02) {
+            irq_flag |= 0x80;
+            the_cpu->TriggerVICIRQ();
+         }
+      }
+   }
 }
-
 
 #ifdef GLOBAL_VARS
 static inline int el_update_mc(int raster)
@@ -1307,52 +1293,51 @@ static inline int el_update_mc(int raster)
 inline int MOS6569::el_update_mc(int raster)
 #endif
 {
-	int i, j;
-	int cycles_used = 0;
-	uint8 spron = sprite_on;
-	uint8 spren = me;
-	uint8 sprye = mye;
-	uint8 raster8bit = raster;
-	uint16 *mcp = mc;
-	uint8 *myp = my;
+   int i, j;
+   int cycles_used = 0;
+   uint8 spron = sprite_on;
+   uint8 spren = me;
+   uint8 sprye = mye;
+   uint8 raster8bit = raster;
+   uint16 *mcp = mc;
+   uint8 *myp = my;
 
-	// Increment sprite data counters
-	for (i=0, j=1; i<8; i++, j<<=1, mcp++, myp++) {
+   // Increment sprite data counters
+   for (i=0, j=1; i<8; i++, j<<=1, mcp++, myp++) {
 
-		// Sprite enabled?
-		if (spren & j)
+      // Sprite enabled?
+      if (spren & j)
 
-			// Yes, activate if Y position matches raster counter
-			if (*myp == (raster8bit & 0xff)) {
-				*mcp = 0;
-				spron |= j;
-			} else
-				goto spr_off;
-		else
-spr_off:
-			// No, turn sprite off when data counter exceeds 60
-			//  and increment counter
-			if (*mcp != 63) {
-				if (sprye & j) {	// Y expansion
-					if (!((*myp ^ raster8bit) & 1)) {
-						*mcp += 3;
-						cycles_used += 2;
-						if (*mcp == 63)
-							spron &= ~j;
-					}
-				} else {
-					*mcp += 3;
-					cycles_used += 2;
-					if (*mcp == 63)
-						spron &= ~j;
-				}
-			}
-	}
+         // Yes, activate if Y position matches raster counter
+         if (*myp == (raster8bit & 0xff)) {
+            *mcp = 0;
+            spron |= j;
+         } else
+            goto spr_off;
+         else
+            spr_off:
+               // No, turn sprite off when data counter exceeds 60
+               //  and increment counter
+               if (*mcp != 63) {
+                  if (sprye & j) {	// Y expansion
+                     if (!((*myp ^ raster8bit) & 1)) {
+                        *mcp += 3;
+                        cycles_used += 2;
+                        if (*mcp == 63)
+                           spron &= ~j;
+                     }
+                  } else {
+                     *mcp += 3;
+                     cycles_used += 2;
+                     if (*mcp == 63)
+                        spron &= ~j;
+                  }
+               }
+   }
 
-	sprite_on = spron;
-	return cycles_used;
+   sprite_on = spron;
+   return cycles_used;
 }
-
 
 /*
  *  Emulate one raster line
@@ -1360,322 +1345,292 @@ spr_off:
 
 int MOS6569::EmulateLine(void)
 {
-	int cycles_left = ThePrefs.NormalCycles;	// Cycles left for CPU
-	bool is_bad_line = false;
+   int cycles_left = ThePrefs.NormalCycles;	// Cycles left for CPU
+   bool is_bad_line = false;
 
-	// Get raster counter into local variable for faster access and increment
-	unsigned int raster = raster_y+1;
+   // Get raster counter into local variable for faster access and increment
+   unsigned int raster = raster_y+1;
 
-	// End of screen reached?
-	if (raster != TOTAL_RASTERS)
-		raster_y = raster;
-	else {
-		vblank();
-		raster = 0;
-	}
+   // End of screen reached?
+   if (raster != TOTAL_RASTERS)
+      raster_y = raster;
+   else {
+      vblank();
+      raster = 0;
+   }
 
-	// Trigger raster IRQ if IRQ line reached
-	if (raster == irq_raster)
-		raster_irq();
+   // Trigger raster IRQ if IRQ line reached
+   if (raster == irq_raster)
+      raster_irq();
 
-	// In line $30, the DEN bit controls if Bad Lines can occur
-	if (raster == 0x30)
-		bad_lines_enabled = ctrl1 & 0x10;
+   // In line $30, the DEN bit controls if Bad Lines can occur
+   if (raster == 0x30)
+      bad_lines_enabled = ctrl1 & 0x10;
 
-	// Skip frame? Only calculate Bad Lines then
-	if (frame_skipped) {
-		if (raster >= FIRST_DMA_LINE && raster <= LAST_DMA_LINE && ((raster & 7) == y_scroll) && bad_lines_enabled) {
-			is_bad_line = true;
-			cycles_left = ThePrefs.BadLineCycles;
-		}
-		goto VIC_nop;
-	}
+   // Skip frame? Only calculate Bad Lines then
+   if (frame_skipped) {
+      if (raster >= FIRST_DMA_LINE && raster <= LAST_DMA_LINE && ((raster & 7) == y_scroll) && bad_lines_enabled) {
+         is_bad_line = true;
+         cycles_left = ThePrefs.BadLineCycles;
+      }
+      goto VIC_nop;
+   }
 
-	// Within the visible range?
-	if (raster >= FIRST_DISP_LINE && raster <= LAST_DISP_LINE) {
+   // Within the visible range?
+   if (raster >= FIRST_DISP_LINE && raster <= LAST_DISP_LINE) {
 
-		// Our output goes here
-		uint8 *chunky_ptr = chunky_line_start;
+      // Our output goes here
+      uint8 *chunky_ptr = chunky_line_start;
 
-		// Set video counter
-		vc = vc_base;
+      // Set video counter
+      vc = vc_base;
 
-		// Bad Line condition?
-		if (raster >= FIRST_DMA_LINE && raster <= LAST_DMA_LINE && ((raster & 7) == y_scroll) && bad_lines_enabled) {
+      // Bad Line condition?
+      if (raster >= FIRST_DMA_LINE && raster <= LAST_DMA_LINE && ((raster & 7) == y_scroll) && bad_lines_enabled) {
 
-			// Turn on display
-			display_state = is_bad_line = true;
-			cycles_left = ThePrefs.BadLineCycles;
-			rc = 0;
+         // Turn on display
+         display_state = is_bad_line = true;
+         cycles_left = ThePrefs.BadLineCycles;
+         rc = 0;
 
-			// Read and latch 40 bytes from video matrix and color RAM
-			uint8 *mp = matrix_line - 1;
-			uint8 *cp = color_line - 1;
-			int vc1 = vc - 1;
-			uint8 *mbp = matrix_base + vc1;
-			uint8 *crp = color_ram + vc1;
-			for (int i=0; i<40; i++) {
-				*++mp = *++mbp;
-				*++cp = *++crp;
-			}
-		}
+         // Read and latch 40 bytes from video matrix and color RAM
+         uint8 *mp = matrix_line - 1;
+         uint8 *cp = color_line - 1;
+         int vc1 = vc - 1;
+         uint8 *mbp = matrix_base + vc1;
+         uint8 *crp = color_ram + vc1;
+         for (int i=0; i<40; i++) {
+            *++mp = *++mbp;
+            *++cp = *++crp;
+         }
+      }
 
-		// Handler upper/lower border
-		if (raster == dy_stop)
-			border_on = true;
-		if (raster == dy_start && (ctrl1 & 0x10)) // Don't turn off border if DEN bit cleared
-			border_on = false;
+      // Handler upper/lower border
+      if (raster == dy_stop)
+         border_on = true;
+      if (raster == dy_start && (ctrl1 & 0x10)) // Don't turn off border if DEN bit cleared
+         border_on = false;
 
-		if (!border_on) {
+      if (!border_on) {
 
-			// Display window contents
-			uint8 *p = chunky_ptr + COL40_XSTART;		// Pointer in chunky display buffer
-			uint8 *r = fore_mask_buf + COL40_XSTART/8;	// Pointer in foreground mask buffer
+         // Display window contents
+         uint8 *p = chunky_ptr + COL40_XSTART;		// Pointer in chunky display buffer
+         uint8 *r = fore_mask_buf + COL40_XSTART/8;	// Pointer in foreground mask buffer
 #ifdef ALIGNMENT_CHECK
-			uint8 *use_p = ((((int)p) & 3) == 0) ? p : text_chunky_buf;
+         uint8 *use_p = ((((int)p) & 3) == 0) ? p : text_chunky_buf;
 #endif
 
-			{
-				p--;
-				uint8 b0cc = b0c_color;
-				int limit = x_scroll;
-				for (int i=0; i<limit; i++)	// Background on the left if XScroll>0
-					*++p = b0cc;
-				p++;
-			}
+         {
+            p--;
+            uint8 b0cc = b0c_color;
+            int limit = x_scroll;
+            for (int i=0; i<limit; i++)	// Background on the left if XScroll>0
+               *++p = b0cc;
+            p++;
+         }
 
-			if (display_state) {
-				switch (display_idx) {
+         if (display_state) {
+            switch (display_idx) {
 
-					case 0:	// Standard text
+               case 0:	// Standard text
 #ifndef CAN_ACCESS_UNALIGNED
 #ifdef ALIGNMENT_CHECK
-						el_std_text(use_p, char_base + rc, r);
-						if (use_p != p)
-							memcpy(p, use_p, 8*40);
+                  el_std_text(use_p, char_base + rc, r);
+                  if (use_p != p)
+                     memcpy(p, use_p, 8*40);
 #else
-						if (x_scroll) {
-							el_std_text(text_chunky_buf, char_base + rc, r);
-							memcpy(p, text_chunky_buf, 8*40);					        
-						} else
-							el_std_text(p, char_base + rc, r);
+                  if (x_scroll) {
+                     el_std_text(text_chunky_buf, char_base + rc, r);
+                     memcpy(p, text_chunky_buf, 8*40);					        
+                  } else
+                     el_std_text(p, char_base + rc, r);
 #endif
 #else
-						el_std_text(p, char_base + rc, r);
+                  el_std_text(p, char_base + rc, r);
 #endif
-						break;
+                  break;
 
-					case 1:	// Multicolor text
+               case 1:	// Multicolor text
 #ifndef CAN_ACCESS_UNALIGNED
 #ifdef ALIGNMENT_CHECK
-						el_mc_text(use_p, char_base + rc, r);
-						if (use_p != p)
-							memcpy(p, use_p, 8*40);
+                  el_mc_text(use_p, char_base + rc, r);
+                  if (use_p != p)
+                     memcpy(p, use_p, 8*40);
 #else
-						if (x_scroll) {
-							el_mc_text(text_chunky_buf, char_base + rc, r);
-							memcpy(p, text_chunky_buf, 8*40);					        
-						} else
-							el_mc_text(p, char_base + rc, r);
+                  if (x_scroll) {
+                     el_mc_text(text_chunky_buf, char_base + rc, r);
+                     memcpy(p, text_chunky_buf, 8*40);					        
+                  } else
+                     el_mc_text(p, char_base + rc, r);
 #endif
 #else
-						el_mc_text(p, char_base + rc, r);
+                  el_mc_text(p, char_base + rc, r);
 #endif
-						break;
+                  break;
 
-					case 2:	// Standard bitmap
+               case 2:	// Standard bitmap
 #ifndef CAN_ACCESS_UNALIGNED
 #ifdef ALIGNMENT_CHECK
-						el_std_bitmap(use_p, bitmap_base + (vc << 3) + rc, r);
-						if (use_p != p)
-							memcpy(p, use_p, 8*40);
+                  el_std_bitmap(use_p, bitmap_base + (vc << 3) + rc, r);
+                  if (use_p != p)
+                     memcpy(p, use_p, 8*40);
 #else
-						if (x_scroll) {
-							el_std_bitmap(text_chunky_buf, bitmap_base + (vc << 3) + rc, r);
-							memcpy(p, text_chunky_buf, 8*40);					        
-						} else
-							el_std_bitmap(p, bitmap_base + (vc << 3) + rc, r);
+                  if (x_scroll) {
+                     el_std_bitmap(text_chunky_buf, bitmap_base + (vc << 3) + rc, r);
+                     memcpy(p, text_chunky_buf, 8*40);					        
+                  } else
+                     el_std_bitmap(p, bitmap_base + (vc << 3) + rc, r);
 #endif
 #else
-						el_std_bitmap(p, bitmap_base + (vc << 3) + rc, r);
+                  el_std_bitmap(p, bitmap_base + (vc << 3) + rc, r);
 #endif
-						break;
+                  break;
 
-					case 3:	// Multicolor bitmap
+               case 3:	// Multicolor bitmap
 #ifndef CAN_ACCESS_UNALIGNED
 #ifdef ALIGNMENT_CHECK
-						el_mc_bitmap(use_p, bitmap_base + (vc << 3) + rc, r);
-						if (use_p != p)
-							memcpy(p, use_p, 8*40);
+                  el_mc_bitmap(use_p, bitmap_base + (vc << 3) + rc, r);
+                  if (use_p != p)
+                     memcpy(p, use_p, 8*40);
 #else
-						if (x_scroll) {
-							el_mc_bitmap(text_chunky_buf, bitmap_base + (vc << 3) + rc, r);
-							memcpy(p, text_chunky_buf, 8*40);					        
-						} else
-							el_mc_bitmap(p, bitmap_base + (vc << 3) + rc, r);
+                  if (x_scroll) {
+                     el_mc_bitmap(text_chunky_buf, bitmap_base + (vc << 3) + rc, r);
+                     memcpy(p, text_chunky_buf, 8*40);					        
+                  } else
+                     el_mc_bitmap(p, bitmap_base + (vc << 3) + rc, r);
 #endif
 #else
-						el_mc_bitmap(p, bitmap_base + (vc << 3) + rc, r);
+                  el_mc_bitmap(p, bitmap_base + (vc << 3) + rc, r);
 #endif
-						break;
+                  break;
 
-					case 4:	// ECM text
+               case 4:	// ECM text
 #ifndef CAN_ACCESS_UNALIGNED
 #ifdef ALIGNMENT_CHECK
-						el_ecm_text(use_p, char_base + rc, r);
-						if (use_p != p)
-							memcpy(p, use_p, 8*40);
+                  el_ecm_text(use_p, char_base + rc, r);
+                  if (use_p != p)
+                     memcpy(p, use_p, 8*40);
 #else
-						if (x_scroll) {
-							el_ecm_text(text_chunky_buf, char_base + rc, r);
-							memcpy(p, text_chunky_buf, 8*40);					        
-						} else
-							el_ecm_text(p, char_base + rc, r);
+                  if (x_scroll) {
+                     el_ecm_text(text_chunky_buf, char_base + rc, r);
+                     memcpy(p, text_chunky_buf, 8*40);					        
+                  } else
+                     el_ecm_text(p, char_base + rc, r);
 #endif
 #else
-						el_ecm_text(p, char_base + rc, r);
+                  el_ecm_text(p, char_base + rc, r);
 #endif
-						break;
+                  break;
 
-					default:	// Invalid mode (all black)
-						memset(p, colors[0], 320);
-						memset(r, 0, 40);
-						break;
-				}
-				vc += 40;
+               default:	// Invalid mode (all black)
+                  memset(p, colors[0], 320);
+                  memset(r, 0, 40);
+                  break;
+            }
+            vc += 40;
 
-			} else {	// Idle state graphics
-				switch (display_idx) {
+         } else {	// Idle state graphics
+            switch (display_idx) {
 
-					case 0:		// Standard text
-					case 1:		// Multicolor text
-					case 4:		// ECM text
+               case 0:		// Standard text
+               case 1:		// Multicolor text
+               case 4:		// ECM text
 #ifndef CAN_ACCESS_UNALIGNED
 #ifdef ALIGNMENT_CHECK
-						el_std_idle(use_p, r);
-						if (use_p != p) {memcpy(p, use_p, 8*40);}
+                  el_std_idle(use_p, r);
+                  if (use_p != p) {memcpy(p, use_p, 8*40);}
 #else
-						if (x_scroll) {
-							el_std_idle(text_chunky_buf, r);
-							memcpy(p, text_chunky_buf, 8*40);					        
-						} else
-							el_std_idle(p, r);
+                  if (x_scroll) {
+                     el_std_idle(text_chunky_buf, r);
+                     memcpy(p, text_chunky_buf, 8*40);					        
+                  } else
+                     el_std_idle(p, r);
 #endif
 #else
-						el_std_idle(p, r);
+                  el_std_idle(p, r);
 #endif
-						break;
+                  break;
 
-					case 3:		// Multicolor bitmap
+               case 3:		// Multicolor bitmap
 #ifndef CAN_ACCESS_UNALIGNED
 #ifdef ALIGNMENT_CHECK
-						el_mc_idle(use_p, r);
-						if (use_p != p) {memcpy(p, use_p, 8*40);}
+                  el_mc_idle(use_p, r);
+                  if (use_p != p) {memcpy(p, use_p, 8*40);}
 #else
-						if (x_scroll) {
-							el_mc_idle(text_chunky_buf, r);
-							memcpy(p, text_chunky_buf, 8*40);					        
-						} else
-							el_mc_idle(p, r);
+                  if (x_scroll) {
+                     el_mc_idle(text_chunky_buf, r);
+                     memcpy(p, text_chunky_buf, 8*40);					        
+                  } else
+                     el_mc_idle(p, r);
 #endif
 #else
-						el_mc_idle(p, r);
+                  el_mc_idle(p, r);
 #endif
-						break;
+                  break;
 
-					default:	// Invalid mode (all black)
-						memset(p, colors[0], 320);
-						memset(r, 0, 40);
-						break;
-				}
-			}
+               default:	// Invalid mode (all black)
+                  memset(p, colors[0], 320);
+                  memset(r, 0, 40);
+                  break;
+            }
+         }
 
-			// Draw sprites
-			if (sprite_on && ThePrefs.SpritesOn) {
+         // Draw sprites
+         if (sprite_on && ThePrefs.SpritesOn) {
 
-				// Clear sprite collision buffer
-				uint32 *lp = (uint32 *)spr_coll_buf - 1;
-				for (int i=0; i<DISPLAY_X/4; i++)
-					*++lp = 0;
+            // Clear sprite collision buffer
+            uint32 *lp = (uint32 *)spr_coll_buf - 1;
+            for (int i=0; i<DISPLAY_X/4; i++)
+               *++lp = 0;
 
-				el_sprites(chunky_ptr);
-			}
+            el_sprites(chunky_ptr);
+         }
 
-			// Handle left/right border
-			uint32 *lp = (uint32 *)chunky_ptr - 1;
-			uint32 c = ec_color_long;
-			for (int i=0; i<COL40_XSTART/4; i++)
-				*++lp = c;
-			lp = (uint32 *)(chunky_ptr + COL40_XSTOP) - 1;
-			for (int i=0; i<(DISPLAY_X-COL40_XSTOP)/4; i++)
-				*++lp = c;
-			if (!border_40_col) {
-				c = ec_color;
-				p = chunky_ptr + COL40_XSTART - 1;
-				for (int i=0; i<COL38_XSTART-COL40_XSTART; i++)
-					*++p = c;
-				p = chunky_ptr + COL38_XSTOP - 1;
-				for (int i=0; i<COL40_XSTOP-COL38_XSTOP; i++)
-					*++p = c;
-			}
+         // Handle left/right border
+         uint32 *lp = (uint32 *)chunky_ptr - 1;
+         uint32 c = ec_color_long;
+         for (int i=0; i<COL40_XSTART/4; i++)
+            *++lp = c;
+         lp = (uint32 *)(chunky_ptr + COL40_XSTOP) - 1;
+         for (int i=0; i<(DISPLAY_X-COL40_XSTOP)/4; i++)
+            *++lp = c;
+         if (!border_40_col) {
+            c = ec_color;
+            p = chunky_ptr + COL40_XSTART - 1;
+            for (int i=0; i<COL38_XSTART-COL40_XSTART; i++)
+               *++p = c;
+            p = chunky_ptr + COL38_XSTOP - 1;
+            for (int i=0; i<COL40_XSTOP-COL38_XSTOP; i++)
+               *++p = c;
+         }
+      }
+      else
+      {
+         // Display border
+         uint32 *lp = (uint32 *)chunky_ptr - 1;
+         uint32 c = ec_color_long;
+         for (int i=0; i<DISPLAY_X/4; i++)
+            *++lp = c;
+      }
 
-#if 0
-			if (is_bad_line) {
-				chunky_ptr[DISPLAY_X-2] = colors[7];
-				chunky_ptr[DISPLAY_X-3] = colors[7];
-			}
-			if (rc & 1) {
-				chunky_ptr[DISPLAY_X-4] = colors[1];
-				chunky_ptr[DISPLAY_X-5] = colors[1];
-			}
-			if (rc & 2) {
-				chunky_ptr[DISPLAY_X-6] = colors[1];
-				chunky_ptr[DISPLAY_X-7] = colors[1];
-			}
-			if (rc & 4) {
-				chunky_ptr[DISPLAY_X-8] = colors[1];
-				chunky_ptr[DISPLAY_X-9] = colors[1];
-			}
-			if (ctrl1 & 0x40) {
-				chunky_ptr[DISPLAY_X-10] = colors[5];
-				chunky_ptr[DISPLAY_X-11] = colors[5];
-			}
-			if (ctrl1 & 0x20) {
-				chunky_ptr[DISPLAY_X-12] = colors[3];
-				chunky_ptr[DISPLAY_X-13] = colors[3];
-			}
-			if (ctrl2 & 0x10) {
-				chunky_ptr[DISPLAY_X-14] = colors[2];
-				chunky_ptr[DISPLAY_X-15] = colors[2];
-			}
-#endif
-		} else {
+      // Increment pointer in chunky buffer
+      chunky_line_start += xmod;
 
-			// Display border
-			uint32 *lp = (uint32 *)chunky_ptr - 1;
-			uint32 c = ec_color_long;
-			for (int i=0; i<DISPLAY_X/4; i++)
-				*++lp = c;
-		}
+      // Increment row counter, go to idle state on overflow
+      if (rc == 7) {
+         display_state = false;
+         vc_base = vc;
+      } else
+         rc++;
 
-		// Increment pointer in chunky buffer
-		chunky_line_start += xmod;
-
-		// Increment row counter, go to idle state on overflow
-		if (rc == 7) {
-			display_state = false;
-			vc_base = vc;
-		} else
-			rc++;
-
-		if (raster >= FIRST_DMA_LINE-1 && raster <= LAST_DMA_LINE-1 && (((raster+1) & 7) == y_scroll) && bad_lines_enabled)
-			rc = 0;
-	}
+      if (raster >= FIRST_DMA_LINE-1 && raster <= LAST_DMA_LINE-1 && (((raster+1) & 7) == y_scroll) && bad_lines_enabled)
+         rc = 0;
+   }
 
 VIC_nop:
-	// Skip this if all sprites are off
-	if (me | sprite_on)
-		cycles_left -= el_update_mc(raster);
+   // Skip this if all sprites are off
+   if (me | sprite_on)
+      cycles_left -= el_update_mc(raster);
 
-	return cycles_left;
+   return cycles_left;
 }

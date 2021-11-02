@@ -132,21 +132,6 @@ const char* Floppy_SetDiskFileName(int Drive, const char *pszFileName, const cha
 		filename = strdup(pszFileName);
 	if (!filename)
 		return NULL;
-#if 0
-	/* If we insert a disk into Drive A, should we try to put disk 2 into drive B? */
-	if (Drive == 0 && ConfigureParams.DiskImage.bAutoInsertDiskB)
-	{
-		/* Attempt to make up second filename, eg was 'auto_100a' to 'auto_100b' */
-		char *szDiskBFileName = Floppy_CreateDiskBFileName(filename);
-		if (szDiskBFileName)
-		{
-			/* recurse with Drive B */
-			Floppy_SetDiskFileName(1, szDiskBFileName, pszZipPath);
-			free(szDiskBFileName);
-		}
-	}
-#endif
-
 	/* validity checks */
 	assert(Drive >= 0 && Drive < MAX_FLOPPYDRIVES);
 	for (i = 0; i < MAX_FLOPPYDRIVES; i++)

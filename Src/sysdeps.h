@@ -282,10 +282,6 @@ struct utimbuf
 #define bool Boolean
 #endif
 
-#ifdef __riscos
-#define bool int
-#endif
-
 #ifdef WIN32
 #include <windows.h>
 #include <direct.h>

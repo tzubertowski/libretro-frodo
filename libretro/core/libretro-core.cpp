@@ -281,15 +281,6 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
    video_cb = cb;
 }
 
-#if 0
-void retro_audiocb(signed short int *sound_buffer,int sndbufsize)
-{
-   int x;
-   for(x=0;x<sndbufsize;x++)
-      audio_cb(sound_buffer[x],sound_buffer[x]);	
-}
-#endif
-
 #ifdef NO_LIBCO
 /* TODO/FIXME - nolibco Gui endless loop -> no retro_run() call */
 void retro_run_gui(void)
@@ -347,20 +338,6 @@ void retro_run(void)
 
 }
 
-#if 0
-unsigned int lastdown,lastup,lastchar;
-
-static void keyboard_cb(bool down, unsigned keycode,
-      uint32_t character, uint16_t mod)
-{
-   //logging.log(RETRO_LOG_INFO, "Down: %s, Code: %d, Char: %u, Mod: %u.\n",
-   //    down ? "yes" : "no", keycode, character, mod);
-   if(down)lastdown=keycode;
-   else lastup=keycode;
-   lastchar=character;
-}
-#endif
-
 bool retro_load_game(const struct retro_game_info *info)
 {
    const char *full_path;
@@ -375,10 +352,6 @@ bool retro_load_game(const struct retro_game_info *info)
    }
 #endif
 
-#if 0
-   struct retro_keyboard_callback cb = { keyboard_cb };
-   environ_cb(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &cb);
-#endif
    full_path = info ? info->path : NULL;
 
    if (full_path)
