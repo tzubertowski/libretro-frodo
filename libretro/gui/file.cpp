@@ -704,7 +704,7 @@ void File_HandleDotDirs(char *path)
          len          >= 3
 	    && path[len-3] == PATHSEP
 	    && path[len-2] == '.'
-	       path[len-1] == '.')
+	    && path[len-1] == '.')
 	{
 		/* go one dir up */
 		if (len == 3)
