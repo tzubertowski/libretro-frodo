@@ -34,7 +34,7 @@
 
 #include "main.h"
 
-#include "libretro.h"
+#include <libretro.h>
 
 #ifndef NO_LIBCO
 #include "libco.h"

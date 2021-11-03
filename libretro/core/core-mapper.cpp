@@ -1,4 +1,4 @@
-#include "libretro.h"
+#include <libretro.h>
 #include "libretro-core.h"
 #include "retroscreen.h"
 
@@ -17,26 +17,14 @@
 #include "Prefs.h"
 #include "SAM.h"
 
-//CORE VAR
-#ifdef _WIN32
-char slash = '\\';
-#else
-char slash = '/';
-#endif
-extern const char *retro_save_directory;
-extern const char *retro_system_directory;
-extern const char *retro_content_directory;
-char RETRO_DIR[512];
-
 /* forward declarations */
+extern C64 *TheC64;
+
 extern void Screen_SetFullUpdate(int scr);
 extern bool Dialog_DoProperty(void);
-#if 0
-extern void kbd_buf_feed(char *s);
-extern bool autoboot;
+#ifdef NO_LIBCO
+extern void retro_run_gui(void);
 #endif
-
-long frame=0;
 
 //VIDEO
 #ifdef  RENDER16B
@@ -56,7 +44,7 @@ char RPATH[512];
 int NPAGE=-1, KCOL=1, BKGCOLOR=0;
 int SHOWKEY=-1;
 
-int MAXPAS=6,SHIFTON=-1,MOUSE_EMULATED=-1,MOUSEMODE=-1,PAS=4;
+int SHIFTON=-1,MOUSE_EMULATED=-1,PAS=4;
 int SND=1; /* SOUND ON/OFF */
 int pauseg=0; // enter_gui
 int touch=-1; // GUI mouse button
@@ -65,9 +53,9 @@ int al[2][2]; /* Left  analog Stick 1 */
 int ar[2][2]; /* Right analog Stick 1 */
 unsigned char MXjoy[2]; /* joy */
 int NUMjoy=1;
+int slowdown = 0;
 
 //MOUSE
-extern int pushi;  /* GUI mouse button */
 int gmx, gmy;      /* GUI mouse coordinates */
 
 //KEYBOARD
@@ -80,7 +68,7 @@ static int mbt[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 int BOXDEC = 32+2;
 int STAT_BASEY;
 
-/*static*/ retro_input_state_t input_state_cb;
+retro_input_state_t input_state_cb;
 static retro_input_poll_t input_poll_cb;
 
 void retro_set_input_state(retro_input_state_t cb)
@@ -94,7 +82,7 @@ void retro_set_input_poll(retro_input_poll_t cb)
 }
 
 /* in milliseconds */
-long GetTicks(void)
+static long GetTicks(void)
 {
 #ifndef _ANDROID_
 #ifdef __CELLOS_LV2__
@@ -121,24 +109,17 @@ long GetTicks(void)
    clock_gettime(CLOCK_MONOTONIC, &now);
    return (now.tv_sec*1000000 + now.tv_nsec/1000)/1000;
 #endif
-
 } 
-
-#ifdef NO_LIBCO
-extern void retro_run_gui(void);
-#endif
-int slowdown = 0;
 
 //NO SURE FIND BETTER WAY TO COME BACK IN MAIN THREAD IN HATARI GUI
 void gui_poll_events(void)
 {
    static unsigned long Ktime       = 0;
    static unsigned long LastFPSTime = 0;
-   Ktime = GetTicks();
+   Ktime                            = GetTicks();
 
    if(Ktime - LastFPSTime >= 1000/50)
    {
-      frame++; 
       slowdown    = 0;
       LastFPSTime = Ktime;
 #ifndef NO_LIBCO		
@@ -167,70 +148,55 @@ void pause_select(void)
    }
 }
 
-
 void texture_uninit(void)
 {
-
 }
 
 void texture_init(void)
 {
    memset(Retro_Screen, 0, sizeof(Retro_Screen));
 
-   gmx=(retrow/2)-1;
-   gmy=(retroh/2)-1;
+   gmx = (retrow/2)-1;
+   gmy = (retroh/2)-1;
 }
 
-int bitstart = 0;
-int pushi    = 0; //mouse button
-int keydown  = 0;
-int keyup    = 0;
-int KBMOD    = -1;
-
-extern C64 *TheC64;
 
 void Process_key(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 {
    int i;
 
-   keydown=0;keyup=0;
-
-   for(i=0;i<320;i++)
+   for(i = 0; i < 320; i++)
    {
-      Key_Sate[i]=input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0,i) ? 0x80: 0;
+      Key_Sate[i] = input_state_cb(0, RETRO_DEVICE_KEYBOARD, 0, i) 
+	      ? 0x80: 0;
 
-      if(Key_Sate[i]  && Key_Sate2[i]==0)
+      if(Key_Sate[i] && Key_Sate2[i] == 0)
       {
-
-         if(i==RETROK_RALT) /* Modifier pressed? */
+         if(i == RETROK_RALT) /* Modifier pressed? */
          { 
-            KBMOD=-KBMOD;
             Key_Sate2[i]=1;
             continue;
          }
 
-         TheC64->TheDisplay->Keymap_KeyDown(i,key_matrix,rev_matrix,joystick);
+         TheC64->TheDisplay->Keymap_KeyDown(
+               i,key_matrix,rev_matrix,joystick);
 
          /* Key down */
-         Key_Sate2[i]=1;
-         bitstart=1;
-         keydown++;
+         Key_Sate2[i] = 1;
       }
       else if ( !Key_Sate[i] && Key_Sate2[i]==1 )
       {
-
-         if(i==RETROK_RALT) /* Modifier pressed? */
+         if(i == RETROK_RALT) /* Modifier pressed? */
          {
             Key_Sate2[i]=0;
             continue;
          }
 
-         TheC64->TheDisplay->Keymap_KeyUp(i,key_matrix,rev_matrix,joystick);
+         TheC64->TheDisplay->Keymap_KeyUp(
+               i,key_matrix,rev_matrix,joystick);
 
          /* Key up */
-         Key_Sate2[i]=0;
-         bitstart=0;
-         keyup++;
+         Key_Sate2[i] = 0;
       }
    }
 }
@@ -268,24 +234,29 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
          }
        */
 
-      i=1;//show vkbd toggle
-      if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) && mbt[i]==0 )
-         mbt[i]=1;
-      else if ( mbt[i]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) )
+      i = 1; // show vkbd toggle
+
+      if (          mbt[i] == 0
+                && input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i))
+         mbt[i]  = 1;
+      else if (     mbt[i] == 1 
+                && !input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i))
       {
-         mbt[i]=0;
-         SHOWKEY=-SHOWKEY;
+         mbt[i]  = 0;
+         SHOWKEY = -SHOWKEY;
+
          Screen_SetFullUpdate(0);  
       }
    }
-   i=2;//mouse/joy toggle
 
+   i = 2;//mouse/joy toggle
+ 
    if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) && mbt[i]==0 )
-      mbt[i]=1;
+      mbt[i]         = 1;
    else if ( mbt[i]==1 && ! input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) )
    {
-      mbt[i]=0;
-      MOUSE_EMULATED=-MOUSE_EMULATED;
+      mbt[i]         = 0;
+      MOUSE_EMULATED = -MOUSE_EMULATED;
    }
 
    if (MOUSE_EMULATED == 1)
@@ -293,16 +264,22 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
       if (slowdown > 0)
          return 1;
 
-      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))
+      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+               RETRO_DEVICE_ID_JOYPAD_RIGHT))
          mouse_x += PAS;
-      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))
+      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+               RETRO_DEVICE_ID_JOYPAD_LEFT))
          mouse_x -= PAS;
-      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN))
+      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+               RETRO_DEVICE_ID_JOYPAD_DOWN))
          mouse_y += PAS;
-      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP))
+      if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+               RETRO_DEVICE_ID_JOYPAD_UP))
          mouse_y -= PAS;
-      mouse_l    = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A);
-      mouse_r    = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B);
+      mouse_l    = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+            RETRO_DEVICE_ID_JOYPAD_A);
+      mouse_r    = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0,
+            RETRO_DEVICE_ID_JOYPAD_B);
 
       PAS=SAVPAS;
 
@@ -310,22 +287,24 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
    }
    else
    {
-      mouse_x    = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_X);
-      mouse_y    = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_Y);
-      mouse_l    = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_LEFT);
-      mouse_r    = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_RIGHT);
+      mouse_x    = input_state_cb(0, RETRO_DEVICE_MOUSE, 0,
+            RETRO_DEVICE_ID_MOUSE_X);
+      mouse_y    = input_state_cb(0, RETRO_DEVICE_MOUSE, 0,
+            RETRO_DEVICE_ID_MOUSE_Y);
+      mouse_l    = input_state_cb(0, RETRO_DEVICE_MOUSE, 0,
+            RETRO_DEVICE_ID_MOUSE_LEFT);
+      mouse_r    = input_state_cb(0, RETRO_DEVICE_MOUSE, 0,
+            RETRO_DEVICE_ID_MOUSE_RIGHT);
    }
 
    if (mmbL == 0 && mouse_l)
    {
       mmbL  = 1;
-      pushi = 1;
       touch = 1;
    }
    else if (mmbL == 1 && !mouse_l)
    {
       mmbL  = 0;
-      pushi = 0;
       touch = -1;
    }
 
