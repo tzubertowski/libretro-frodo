@@ -21,11 +21,6 @@
 #ifndef _C64_H
 #define _C64_H
 
-#ifdef _WIN32
-#include <windef.h>
-#include <windows.h>
-#endif
-
 // Sizes of memory areas
 const int C64_RAM_SIZE = 0x10000;
 const int COLOR_RAM_SIZE = 0x400;
@@ -120,35 +115,8 @@ private:
 	int joy_minx[2], joy_maxx[2], joy_miny[2], joy_maxy[2]; // For dynamic joystick calibration
 	uint8 joykey;			// Joystick keyboard emulation mask value
 
-	uint8 orig_kernal_1d84,	// Original contents of kernal locations $1d84 and $1d85
-		  orig_kernal_1d85;	// (for undoing the Fast Reset patch)
-
-#ifdef __unix
-	void open_close_joystick(int port, int oldjoy, int newjoy);
-	double speed_index;
-#endif
-
-#ifdef WIN32
-private:
-	void CheckTimerChange();
-	void StartTimer();
-	void StopTimer();
-	static void CALLBACK StaticTimeProc(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2);
-	void TimeProc(UINT id);
-#ifdef FRODO_SC
-	void EmulateCyclesWith1541();
-	void EmulateCyclesWithout1541();
-#endif
-
-	DWORD ref_time;				// when frame count was reset
-	int skipped_frames;			// number of skipped frames
-	int timer_every;			// frequency of timer in frames
-	HANDLE timer_semaphore;		// Timer semaphore for synch
-	MMRESULT timer_id;			// Timer identifier
-	int frame;					// current frame number
-	uint8 joy_state;			// Current state of joystick
-	bool state_change;
-#endif
+	uint8 orig_kernal_1d84;	// Original contents of kernal locations $1d84 and $1d85
+	uint8 orig_kernal_1d85;	// (for undoing the Fast Reset patch)
 };
 
 

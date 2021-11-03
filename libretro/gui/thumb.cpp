@@ -67,11 +67,9 @@ void ScaleRect(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
 void ScaleMinifyByTwo(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight)
 {
    int x, y, x2, y2;
-   int TgtWidth, TgtHeight;
    PIXEL p, q;
-
-   TgtWidth = SrcWidth / 2;
-   TgtHeight = SrcHeight / 2;
+   int TgtWidth = SrcWidth / 2;
+   int TgtHeight = SrcHeight / 2;
    for (y = 0; y < TgtHeight; y++)
    {
       y2 = 2 * y;

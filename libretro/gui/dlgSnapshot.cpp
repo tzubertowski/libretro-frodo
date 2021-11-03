@@ -17,10 +17,10 @@
 static SGOBJ snapshotdlg[] =
 {
 	{ SGBOX, 0, 0, 0,0, 40,6, NULL },
-	{ SGTEXT, 0, 0, 3,1, 30,1, "Snapshot Load & Save :" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 3,4, 10,1,  "Load" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 15,4, 10,1, "Save" },
-	{ SGBUTTON, SG_EXIT/*SG_CANCEL*/, 0, 27,4, 10,1, "Return" },
+	{ SGTEXT, 0, 0, 3,1, 30,1, (char*)"Snapshot Load & Save :" },
+	{ SGBUTTON, SG_EXIT/*0*/, 0, 3,4, 10,1,  (char*)"Load" },
+	{ SGBUTTON, SG_EXIT/*0*/, 0, 15,4, 10,1, (char*)"Save" },
+	{ SGBUTTON, SG_EXIT/*SG_CANCEL*/, 0, 27,4, 10,1, (char*)"Return" },
 	{ -1, 0, 0, 0,0, 0,0, NULL }
 };
 

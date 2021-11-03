@@ -739,23 +739,20 @@ void C64Display:: Keymap_KeyDown(int symkey,uint8 *key_matrix, uint8 *rev_matrix
 
 void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 {
-
-	if(autoboot==true){
-		kbd_buf_update(TheC64);
-	}
-
-	Retro_PollEvent(key_matrix,rev_matrix,joystick);
-
-// VKBD
+   // VKBD
    int i;
    //   RETRO        B    Y    SLT  STA  UP   DWN  LEFT RGT  A    X    L    R    L2   R2   L3   R3
    //   INDEX        0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15
    static int oldi=-1;
+   if(autoboot==true)
+      kbd_buf_update(TheC64);
+
+   Retro_PollEvent(key_matrix,rev_matrix,joystick);
 
    if(oldi!=-1)
    {
-     // IKBD_PressSTKey(oldi,0);
-		validkey(oldi,1,key_matrix,rev_matrix,joystick);
+      // IKBD_PressSTKey(oldi,0);
+      validkey(oldi,1,key_matrix,rev_matrix,joystick);
       oldi=-1;
    }
 
@@ -795,13 +792,20 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
          vkx += 1;
       }
 
-      if(vkx<0)vkx=9;
-      if(vkx>9)vkx=0;
-      if(vky<0)vky=4;
-      if(vky>4)vky=0;
+      if(vkx < 0)
+         vkx = 9;
+      if(vkx > 9)
+         vkx = 0;
 
-   //  virtual_kdb(( char *)Retro_Screen,vkx,vky);
- 
+      if(vky < 0)
+         vky = 4;
+      if(vky > 4)
+         vky = 0;
+
+#if 0
+      virtual_kdb(( char *)Retro_Screen,vkx,vky);
+#endif
+
       i=8;
       if(input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i)  && vkflag[4]==0) 	
          vkflag[4]=1;
@@ -810,9 +814,8 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
          vkflag[4]=0;
          i=check_vkey2(vkx,vky);
 
-         if(i==-1){
+         if(i==-1)
             oldi=-1;
-		 }
          if(i==-2)
          {
             NPAGE=-NPAGE;oldi=-1;
@@ -844,7 +847,7 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
          {
             if(i==-10) //SHIFT
             {
- 			   validkey(MATRIX(6,4),(SHIFTON == 1)?1:0,key_matrix,rev_matrix,joystick);
+               validkey(MATRIX(6,4),(SHIFTON == 1)?1:0,key_matrix,rev_matrix,joystick);
                SHIFTON=-SHIFTON;
                //Screen_SetFullUpdate();
 
@@ -852,29 +855,29 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
             }
             else if(i==-11) //CTRL
             {               
- 			   validkey(MATRIX(7,2),(CTRLON == 1)?1:0,key_matrix,rev_matrix,joystick);
+               validkey(MATRIX(7,2),(CTRLON == 1)?1:0,key_matrix,rev_matrix,joystick);
                CTRLON=-CTRLON;
                //Screen_SetFullUpdate();
 
                oldi=-1;
             }
-			else if(i==-12) //RSTOP
+            else if(i==-12) //RSTOP
             {               
- 			   validkey(MATRIX(7,7),(RSTOPON == 1)?1:0,key_matrix,rev_matrix,joystick);
+               validkey(MATRIX(7,7),(RSTOPON == 1)?1:0,key_matrix,rev_matrix,joystick);
                RSTOPON=-RSTOPON;
                //Screen_SetFullUpdate();
 
                oldi=-1;
             }
-			else if(i==-13) //AUTOBOOT
+            else if(i==-13) //AUTOBOOT
             {     
-          	   kbd_buf_feed("\rLOAD\":*\",8,1:\rRUN\r\0");
-	  		   autoboot=true; 
+               kbd_buf_feed((char*)"\rLOAD\":*\",8,1:\rRUN\r\0");
+               autoboot=true; 
                oldi=-1;
             }
-			else if(i==-14) //GUI
+            else if(i==-14) //GUI
             {    
-				pauseg=1; 
+               pauseg=1; 
                Screen_SetFullUpdate(0);
                SHOWKEY=-SHOWKEY;
                oldi=-1;
@@ -882,21 +885,16 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
             else
             {
                oldi=i;
-		       validkey(oldi,0,key_matrix,rev_matrix,joystick);               
+               validkey(oldi,0,key_matrix,rev_matrix,joystick);               
             }
-
          }
       }
-
-	}
-
+   }
 }
-
 
 /*
  *  Check if NumLock is down (for switching the joystick keyboard emulation)
  */
-
 bool C64Display::NumLock(void)
 {
 	return num_locked;
@@ -909,35 +907,43 @@ bool C64Display::NumLock(void)
 
 void C64Display::InitColors(uint8 *colors)
 {
+   int i;
+	for (i=0; i<16; i++)
+   {
+      palette[i].r        = palette_red[i];
+      palette[i].g        = palette_green[i];
+      palette[i].b        = palette_blue[i];
+      mpal[i]             = palette[i].r<<16|palette[i].g<<8|palette[i].b;
+   }
+	mpal[fill_gray]        = 0xd0d0d0;
+	mpal[shine_gray]       = 0xf0f0f0;
+	mpal[shadow_gray]      = 0x808080;
+	mpal[red]              = 0xff0000;
+	mpal[green]            = 0x00ff00;
 
-	for (int i=0; i<16; i++) {
-		palette[i].r = palette_red[i];
-		palette[i].g = palette_green[i];
-		palette[i].b = palette_blue[i];
-		mpal[i]=palette[i].r<<16|palette[i].g<<8|palette[i].b;
-	}
-	mpal[fill_gray]=0xd0d0d0;
-	mpal[shine_gray]=0xf0f0f0;
-	mpal[shadow_gray]=0x808080;
-	mpal[red]=0xff0000;
-	mpal[green]=0x00ff00;
+	palette[fill_gray].r   = 0xd0;
+   palette[fill_gray].g   = 0xd0;
+   palette[fill_gray].b   = 0xd0;
+	palette[shine_gray].r  = 0xf0;
+   palette[shine_gray].g  = 0xf0;
+   palette[shine_gray].b  = 0xf0;
+	palette[shadow_gray].r = 0x80;
+   palette[shadow_gray].g = 0x80;
+   palette[shadow_gray].b = 0x80;
+	palette[red].r         = 0xf0;
+	palette[red].g         = 0;
+   palette[red].b         = 0;
+	palette[green].r       = 0;
+	palette[green].g       = 0xf0;
+   palette[green].b       = 0;
 
-	palette[fill_gray].r = palette[fill_gray].g = palette[fill_gray].b = 0xd0;
-	palette[shine_gray].r = palette[shine_gray].g = palette[shine_gray].b = 0xf0;
-	palette[shadow_gray].r = palette[shadow_gray].g = palette[shadow_gray].b = 0x80;
-	palette[red].r = 0xf0;
-	palette[red].g = palette[red].b = 0;
-	palette[green].g = 0xf0;
-	palette[green].r = palette[green].b = 0;
-
-	for (int i=0; i<256; i++)
+	for (i = 0; i < 256; i++)
 		colors[i] = i & 0x0f;
 }
  
 /*
  *  Show a requester (error message)
  */
-
 long int ShowRequester(const char *a,const char *b,const char *)
 {
 	printf("%s: %s\n", a, b);

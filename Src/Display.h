@@ -144,7 +144,6 @@ private:
 	DWORD windowed_style;			// style of windowed window
 	DWORD fullscreen_style;			// style of fullscreen window
 	char failure_message[128];		// what when wrong
-	int speed_index;			// look ma, no hands
 	BOOL show_leds;				// cached prefs option
 	BOOL full_screen;			// cached prefs option
 	BOOL in_constructor;			// if we are being contructed 
