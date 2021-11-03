@@ -26,14 +26,67 @@
 
 #include "retro_video.h"
 
+#include "C64.h"
+#include "SAM.h"
+#include "Version.h"
+
+#include "libretro.h"
+#include "libretro-core.h"
+#include "graph.h"
+#include "vkbd_def.h"
+
 // LED states
-enum {
-	LED_OFF,		// LED off
+enum
+{
+	LED_OFF,		   // LED off
 	LED_ON,			// LED on (green)
 	LED_ERROR_ON,	// LED blinking (red), currently on
 	LED_ERROR_OFF	// LED blinking, currently off
 };
 
+// Colors for speedometer/drive LEDs
+enum
+{
+   black        = 0,
+   white        = 1,
+   fill_gray    = 16,
+   shine_gray   = 17,
+   shadow_gray  = 18,
+   red          = 19,
+   green        = 20,
+   PALETTE_SIZE = 21
+};
+
+// Keyboard
+static bool num_locked = false;
+
+// For LED error blinking
+static C64Display *c64_disp = NULL;
+
+retro_Surface *screen; //1bpp depth bitmap surface
+retro_pal palette[PALETTE_SIZE];
+retro_Rect r = {0, DISPLAY_Y, DISPLAY_X, 15}; //384*272+16
+
+int CTRLON=-1;
+int RSTOPON=-1;
+static int vkx=0,vky=0;
+unsigned int mpal[21];
+
+extern int retrow; 
+extern int retroh;
+extern retro_input_state_t input_state_cb;
+extern int CROP_WIDTH;
+extern int CROP_HEIGHT;
+extern int VIRTUAL_WIDTH;
+extern int NPAGE;
+extern int KCOL;
+extern int BKGCOLOR;
+extern int SHIFTON;
+extern int SHOWKEY;
+
+/* forward declarations */
+int Retro_PollEvent(uint8 *key_matrix,
+      uint8 *rev_matrix, uint8 *joystick);
 
 #define USE_PEPTO_COLORS 1
 
@@ -91,58 +144,6 @@ void C64Display::UpdateLEDs(int l0, int l1, int l2, int l3)
  *  Frodo (C) 1994-1997,2002 Christian Bauer
  */
 
-#include "main.h"
-#include "C64.h"
-#include "SAM.h"
-#include "Version.h"
-
-// Keyboard
-static bool num_locked = false;
-
-// For LED error blinking
-static C64Display *c64_disp;
-
-// Colors for speedometer/drive LEDs
-enum {
-	black = 0,
-	white = 1,
-	fill_gray = 16,
-	shine_gray = 17,
-	shadow_gray = 18,
-	red = 19,
-	green = 20,
-	PALETTE_SIZE = 21
-};
-
-
-
-#include "libretro.h"
-#include "libretro-core.h"
-#include "graph.h"
-#include "vkbd_def.h"
-
-extern int retrow ; 
-extern int retroh ;
-retro_Surface *screen; //1bpp depth bitmap surface
-retro_pal palette[PALETTE_SIZE];
-retro_Rect r = {0, DISPLAY_Y, DISPLAY_X, 15}; //384*272+16
-extern void Retro_BlitSurface(retro_Surface *ss);
-extern int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick);
-extern void gui_poll_events(void);
-extern retro_input_state_t input_state_cb;
-extern int CROP_WIDTH;
-extern int CROP_HEIGHT;
-extern int VIRTUAL_WIDTH;
-extern int NPAGE;
-extern int KCOL;
-extern int BKGCOLOR;
-extern int SHIFTON;
-extern int SHOWKEY;
-int CTRLON=-1;
-int RSTOPON=-1;
-static int vkx=0,vky=0;
-unsigned int mpal[21];
-
 /*
   C64 keyboard matrix:
 
@@ -178,7 +179,6 @@ void retro_FillRect(retro_Surface * surf,retro_Rect *rect,unsigned int col)
 	if(rect==NULL)retro_Frect(surf,0,0,surf->w ,surf->h,col); 
 	else retro_Frect(surf,rect->x,rect->y,rect->w ,rect->h,col); 
 }
-
 
 void Retro_BlitSurface(retro_Surface *ss)
 {
@@ -367,11 +367,11 @@ void C64Display::pulse_handler(...)
 
 C64Display::C64Display(C64 *the_c64) : TheC64(the_c64)
 {
+   unsigned i;
 	quit_requested = false;
-	speedometer_string[0] = 0;
 
 	// LEDs off
-	for (int i=0; i<4; i++)
+	for (i = 0; i < 4; i++)
 		led_state[i] = old_led_state[i] = LED_OFF;
 
 	// Start timer for LED error blinking
@@ -379,17 +379,19 @@ C64Display::C64Display(C64 *the_c64) : TheC64(the_c64)
 	libretro_pulse_handler((void (*)(int))C64Display::pulse_handler);
 }
 
-
 /*
  *  Display destructor
  */
 
 C64Display::~C64Display()
 {	
-	if(screen){
-		free(screen->pixels);
-		free(screen);
-	}
+	if(screen)
+   {
+      free(screen->pixels);
+      free(screen);
+      screen->pixels = NULL;
+      screen         = NULL;
+   }
 }
 
 
@@ -401,355 +403,345 @@ void C64Display::NewPrefs(Prefs *prefs)
 {
 }
 
-
 /*
  *  Redraw bitmap
  */
 
 void C64Display::Update(void)
 {
+	int x;
+   unsigned int *pout = NULL;
+   unsigned char *pin = NULL;
 
-if(ThePrefs.ShowLEDs){
+   if(ThePrefs.ShowLEDs)
+   {
+      // Draw speedometer/LEDs
+      r.x   = 0;
+      r.y	= DISPLAY_Y;
+      r.w	= DISPLAY_X;
+      r.h	= 15;
 
-	// Draw speedometer/LEDs
-//	retro_Rect r = {0, DISPLAY_Y, DISPLAY_X, 15};
-	r.x =0;
-	r.y	=DISPLAY_Y;
-	r.w	=DISPLAY_X;
-	r.h	=15;
+      retro_FillRect(screen, &r, fill_gray);
+      r.w = DISPLAY_X; r.h = 1;
+      retro_FillRect(screen, &r, shine_gray);
+      r.y = DISPLAY_Y + 14;
+      retro_FillRect(screen, &r, shadow_gray);
+      r.w = 16;
+      for (int i=2; i<6; i++)
+      {
+         r.x = DISPLAY_X * i/5 - 24; r.y = DISPLAY_Y + 4;
+         retro_FillRect(screen, &r, shadow_gray);
+         r.y = DISPLAY_Y + 10;
+         retro_FillRect(screen, &r, shine_gray);
+      }
+      r.y = DISPLAY_Y; r.w = 1; r.h = 15;
+      for (int i=0; i<5; i++)
+      {
+         r.x = DISPLAY_X * i / 5;
+         retro_FillRect(screen, &r, shine_gray);
+         r.x = DISPLAY_X * (i+1) / 5 - 1;
+         retro_FillRect(screen, &r, shadow_gray);
+      }
+      r.y = DISPLAY_Y + 4; r.h = 7;
+      for (int i=2; i<6; i++)
+      {
+         r.x = DISPLAY_X * i/5 - 24;
+         retro_FillRect(screen, &r, shadow_gray);
+         r.x = DISPLAY_X * i/5 - 9;
+         retro_FillRect(screen, &r, shine_gray);
+      }
+      r.y = DISPLAY_Y + 5; r.w = 14; r.h = 5;
+      for (int i=0; i<4; i++)
+      {
+         int c;
+         r.x = DISPLAY_X * (i+2) / 5 - 23;
+         switch (led_state[i])
+         {
+            case LED_ON:
+               c = green;
+               break;
+            case LED_ERROR_ON:
+               c = red;
+               break;
+            default:
+               c = black;
+               break;
+         }
+         retro_FillRect(screen, &r, c);
+      }
 
-	retro_FillRect(screen, &r, fill_gray);
-	r.w = DISPLAY_X; r.h = 1;
-	retro_FillRect(screen, &r, shine_gray);
-	r.y = DISPLAY_Y + 14;
-	retro_FillRect(screen, &r, shadow_gray);
-	r.w = 16;
-	for (int i=2; i<6; i++) {
-		r.x = DISPLAY_X * i/5 - 24; r.y = DISPLAY_Y + 4;
-		retro_FillRect(screen, &r, shadow_gray);
-		r.y = DISPLAY_Y + 10;
-		retro_FillRect(screen, &r, shine_gray);
-	}
-	r.y = DISPLAY_Y; r.w = 1; r.h = 15;
-	for (int i=0; i<5; i++) {
-		r.x = DISPLAY_X * i / 5;
-		retro_FillRect(screen, &r, shine_gray);
-		r.x = DISPLAY_X * (i+1) / 5 - 1;
-		retro_FillRect(screen, &r, shadow_gray);
-	}
-	r.y = DISPLAY_Y + 4; r.h = 7;
-	for (int i=2; i<6; i++) {
-		r.x = DISPLAY_X * i/5 - 24;
-		retro_FillRect(screen, &r, shadow_gray);
-		r.x = DISPLAY_X * i/5 - 9;
-		retro_FillRect(screen, &r, shine_gray);
-	}
-	r.y = DISPLAY_Y + 5; r.w = 14; r.h = 5;
-	for (int i=0; i<4; i++) {
-		r.x = DISPLAY_X * (i+2) / 5 - 23;
-		int c;
-		switch (led_state[i]) {
-			case LED_ON:
-				c = green;
-				break;
-			case LED_ERROR_ON:
-				c = red;
-				break;
-			default:
-				c = black;
-				break;
-		}
-		retro_FillRect(screen, &r, c);
-	}
-
-	draw_string(screen, DISPLAY_X * 1/5 + 8, DISPLAY_Y + 4, "D\x12 8", black, fill_gray);
-	draw_string(screen, DISPLAY_X * 2/5 + 8, DISPLAY_Y + 4, "D\x12 9", black, fill_gray);
-	draw_string(screen, DISPLAY_X * 3/5 + 8, DISPLAY_Y + 4, "D\x12 10", black, fill_gray);
-	draw_string(screen, DISPLAY_X * 4/5 + 8, DISPLAY_Y + 4, "D\x12 11", black, fill_gray);
-	draw_string(screen, 24, DISPLAY_Y + 4, speedometer_string, black, fill_gray);
-
-} //if showleds
+      draw_string(screen, DISPLAY_X * 1/5 + 8, DISPLAY_Y + 4, "D\x12 8", black, fill_gray);
+      draw_string(screen, DISPLAY_X * 2/5 + 8, DISPLAY_Y + 4, "D\x12 9", black, fill_gray);
+      draw_string(screen, DISPLAY_X * 3/5 + 8, DISPLAY_Y + 4, "D\x12 10", black, fill_gray);
+      draw_string(screen, DISPLAY_X * 4/5 + 8, DISPLAY_Y + 4, "D\x12 11", black, fill_gray);
+   }
 
 	// Update display
-
 	//blit c64 scr 1bit depth to emu scr 4bit depth
-	int x;
+	pout = (unsigned int *)Retro_Screen+((ThePrefs.ShowLEDs?0:8)*retrow);
+	pin  = (unsigned char *)screen->pixels;
 
-	unsigned int * pout =(unsigned int *)Retro_Screen+((ThePrefs.ShowLEDs?0:8)*retrow);
-	unsigned char * pin =(unsigned char *)screen->pixels;
+	for (x = 0; x < screen->w * screen->h; x++)
+		*pout++ = mpal[*pin++];
 
-	for(x=0;x<screen->w*screen->h;x++)
-		*pout++=mpal[*pin++];
-
-	//SHOW VKBD
-	if(SHOWKEY==1)virtual_kdb(( char *)Retro_Screen,vkx,vky);
-
+	if (SHOWKEY==1)
+      virtual_kdb(( char *)Retro_Screen,vkx,vky);
 }
 
-
-
-/*
- *  Draw speedometer
- */
-
-void C64Display::Speedometer(int speed)
-{
-	static int delay = 0;
-
-	if (delay >= 20) {
-		delay = 0;
-		sprintf(speedometer_string, "%d%%", speed);
-	} else
-		delay++;
-}
-
-
-/*
- *  Return pointer to bitmap data
- */
-
+/* Return pointer to bitmap data */
 uint8 *C64Display::BitmapBase(void)
 {
 	return (uint8 *)screen->pixels;
 }
 
-
-/*
- *  Return number of bytes per row
- */
-
+/* Return number of bytes per row */
 int C64Display::BitmapXMod(void)
 {
 	return screen->pitch;
 }
 
-
-/*
- *  Poll the keyboard
- */
-
-static void translate_key(int key, bool key_up, uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
+/*  Poll the keyboard */
+static void translate_key(int key, bool key_up,
+      uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 {
 	int c64_key = -1;
-	switch (key) {
-		case RETROK_a: c64_key = MATRIX(1,2); break;
-		case RETROK_b: c64_key = MATRIX(3,4); break;
-		case RETROK_c: c64_key = MATRIX(2,4); break;
-		case RETROK_d: c64_key = MATRIX(2,2); break;
-		case RETROK_e: c64_key = MATRIX(1,6); break;
-		case RETROK_f: c64_key = MATRIX(2,5); break;
-		case RETROK_g: c64_key = MATRIX(3,2); break;
-		case RETROK_h: c64_key = MATRIX(3,5); break;
-		case RETROK_i: c64_key = MATRIX(4,1); break;
-		case RETROK_j: c64_key = MATRIX(4,2); break;
-		case RETROK_k: c64_key = MATRIX(4,5); break;
-		case RETROK_l: c64_key = MATRIX(5,2); break;
-		case RETROK_m: c64_key = MATRIX(4,4); break;
-		case RETROK_n: c64_key = MATRIX(4,7); break;
-		case RETROK_o: c64_key = MATRIX(4,6); break;
-		case RETROK_p: c64_key = MATRIX(5,1); break;
-		case RETROK_q: c64_key = MATRIX(7,6); break;
-		case RETROK_r: c64_key = MATRIX(2,1); break;
-		case RETROK_s: c64_key = MATRIX(1,5); break;
-		case RETROK_t: c64_key = MATRIX(2,6); break;
-		case RETROK_u: c64_key = MATRIX(3,6); break;
-		case RETROK_v: c64_key = MATRIX(3,7); break;
-		case RETROK_w: c64_key = MATRIX(1,1); break;
-		case RETROK_x: c64_key = MATRIX(2,7); break;
-		case RETROK_y: c64_key = MATRIX(3,1); break;
-		case RETROK_z: c64_key = MATRIX(1,4); break;
+	switch (key)
+   {
+      case RETROK_a: c64_key = MATRIX(1,2); break;
+      case RETROK_b: c64_key = MATRIX(3,4); break;
+      case RETROK_c: c64_key = MATRIX(2,4); break;
+      case RETROK_d: c64_key = MATRIX(2,2); break;
+      case RETROK_e: c64_key = MATRIX(1,6); break;
+      case RETROK_f: c64_key = MATRIX(2,5); break;
+      case RETROK_g: c64_key = MATRIX(3,2); break;
+      case RETROK_h: c64_key = MATRIX(3,5); break;
+      case RETROK_i: c64_key = MATRIX(4,1); break;
+      case RETROK_j: c64_key = MATRIX(4,2); break;
+      case RETROK_k: c64_key = MATRIX(4,5); break;
+      case RETROK_l: c64_key = MATRIX(5,2); break;
+      case RETROK_m: c64_key = MATRIX(4,4); break;
+      case RETROK_n: c64_key = MATRIX(4,7); break;
+      case RETROK_o: c64_key = MATRIX(4,6); break;
+      case RETROK_p: c64_key = MATRIX(5,1); break;
+      case RETROK_q: c64_key = MATRIX(7,6); break;
+      case RETROK_r: c64_key = MATRIX(2,1); break;
+      case RETROK_s: c64_key = MATRIX(1,5); break;
+      case RETROK_t: c64_key = MATRIX(2,6); break;
+      case RETROK_u: c64_key = MATRIX(3,6); break;
+      case RETROK_v: c64_key = MATRIX(3,7); break;
+      case RETROK_w: c64_key = MATRIX(1,1); break;
+      case RETROK_x: c64_key = MATRIX(2,7); break;
+      case RETROK_y: c64_key = MATRIX(3,1); break;
+      case RETROK_z: c64_key = MATRIX(1,4); break;
 
-		case RETROK_0: c64_key = MATRIX(4,3); break;
-		case RETROK_1: c64_key = MATRIX(7,0); break;
-		case RETROK_2: c64_key = MATRIX(7,3); break;
-		case RETROK_3: c64_key = MATRIX(1,0); break;
-		case RETROK_4: c64_key = MATRIX(1,3); break;
-		case RETROK_5: c64_key = MATRIX(2,0); break;
-		case RETROK_6: c64_key = MATRIX(2,3); break;
-		case RETROK_7: c64_key = MATRIX(3,0); break;
-		case RETROK_8: c64_key = MATRIX(3,3); break;
-		case RETROK_9: c64_key = MATRIX(4,0); break;
+      case RETROK_0: c64_key = MATRIX(4,3); break;
+      case RETROK_1: c64_key = MATRIX(7,0); break;
+      case RETROK_2: c64_key = MATRIX(7,3); break;
+      case RETROK_3: c64_key = MATRIX(1,0); break;
+      case RETROK_4: c64_key = MATRIX(1,3); break;
+      case RETROK_5: c64_key = MATRIX(2,0); break;
+      case RETROK_6: c64_key = MATRIX(2,3); break;
+      case RETROK_7: c64_key = MATRIX(3,0); break;
+      case RETROK_8: c64_key = MATRIX(3,3); break;
+      case RETROK_9: c64_key = MATRIX(4,0); break;
 
-		case RETROK_SPACE: c64_key = MATRIX(7,4); break;
-		case RETROK_BACKQUOTE: c64_key = MATRIX(7,1); break;
-		case RETROK_BACKSLASH: c64_key = MATRIX(6,6); break;
-		case RETROK_COMMA: c64_key = MATRIX(5,7); break;
-		case RETROK_PERIOD: c64_key = MATRIX(5,4); break;
-		case RETROK_MINUS: c64_key = MATRIX(5,0); break;
-		case RETROK_EQUALS: c64_key = MATRIX(5,3); break;
-		case RETROK_LEFTBRACKET: c64_key = MATRIX(5,6); break;
-		case RETROK_RIGHTBRACKET: c64_key = MATRIX(6,1); break;
-		case RETROK_SEMICOLON: c64_key = MATRIX(5,5); break;
-		case RETROK_QUOTE: c64_key = MATRIX(6,2); break;
-		case RETROK_SLASH: c64_key = MATRIX(6,7); break;
+      case RETROK_SPACE: c64_key = MATRIX(7,4); break;
+      case RETROK_BACKQUOTE: c64_key = MATRIX(7,1); break;
+      case RETROK_BACKSLASH: c64_key = MATRIX(6,6); break;
+      case RETROK_COMMA: c64_key = MATRIX(5,7); break;
+      case RETROK_PERIOD: c64_key = MATRIX(5,4); break;
+      case RETROK_MINUS: c64_key = MATRIX(5,0); break;
+      case RETROK_EQUALS: c64_key = MATRIX(5,3); break;
+      case RETROK_LEFTBRACKET: c64_key = MATRIX(5,6); break;
+      case RETROK_RIGHTBRACKET: c64_key = MATRIX(6,1); break;
+      case RETROK_SEMICOLON: c64_key = MATRIX(5,5); break;
+      case RETROK_QUOTE: c64_key = MATRIX(6,2); break;
+      case RETROK_SLASH: c64_key = MATRIX(6,7); break;
 
-		case RETROK_ESCAPE: c64_key = MATRIX(7,7); break;
-		case RETROK_RETURN: c64_key = MATRIX(0,1); break;
-		case RETROK_BACKSPACE: case RETROK_DELETE: c64_key = MATRIX(0,0); break;
-		case RETROK_INSERT: c64_key = MATRIX(6,3); break;
-		case RETROK_HOME: c64_key = MATRIX(6,3); break;
-		case RETROK_END: c64_key = MATRIX(6,0); break;
-		case RETROK_PAGEUP: c64_key = MATRIX(6,0); break;
-		case RETROK_PAGEDOWN: c64_key = MATRIX(6,5); break;
+      case RETROK_ESCAPE: c64_key = MATRIX(7,7); break;
+      case RETROK_RETURN: c64_key = MATRIX(0,1); break;
+      case RETROK_BACKSPACE: case RETROK_DELETE: c64_key = MATRIX(0,0); break;
+      case RETROK_INSERT: c64_key = MATRIX(6,3); break;
+      case RETROK_HOME: c64_key = MATRIX(6,3); break;
+      case RETROK_END: c64_key = MATRIX(6,0); break;
+      case RETROK_PAGEUP: c64_key = MATRIX(6,0); break;
+      case RETROK_PAGEDOWN: c64_key = MATRIX(6,5); break;
 
-		case RETROK_LCTRL: case RETROK_TAB: c64_key = MATRIX(7,2); break;
-		case RETROK_RCTRL: c64_key = MATRIX(7,5); break;
-		case RETROK_LSHIFT: c64_key = MATRIX(1,7); break;
-		case RETROK_RSHIFT: c64_key = MATRIX(6,4); break;
-		case RETROK_LALT: case RETROK_LMETA: c64_key = MATRIX(7,5); break;
-		case RETROK_RALT: case RETROK_RMETA: c64_key = MATRIX(7,5); break;
+      case RETROK_LCTRL: case RETROK_TAB: c64_key = MATRIX(7,2); break;
+      case RETROK_RCTRL: c64_key = MATRIX(7,5); break;
+      case RETROK_LSHIFT: c64_key = MATRIX(1,7); break;
+      case RETROK_RSHIFT: c64_key = MATRIX(6,4); break;
+      case RETROK_LALT: case RETROK_LMETA: c64_key = MATRIX(7,5); break;
+      case RETROK_RALT: case RETROK_RMETA: c64_key = MATRIX(7,5); break;
 
-		case RETROK_UP: c64_key = MATRIX(0,7)| 0x80; break;
-		case RETROK_DOWN: c64_key = MATRIX(0,7); break;
-		case RETROK_LEFT: c64_key = MATRIX(0,2) | 0x80; break;
-		case RETROK_RIGHT: c64_key = MATRIX(0,2); break;
+      case RETROK_UP: c64_key = MATRIX(0,7)| 0x80; break;
+      case RETROK_DOWN: c64_key = MATRIX(0,7); break;
+      case RETROK_LEFT: c64_key = MATRIX(0,2) | 0x80; break;
+      case RETROK_RIGHT: c64_key = MATRIX(0,2); break;
 
-		case RETROK_F1: c64_key = MATRIX(0,4); break;
-		case RETROK_F2: c64_key = MATRIX(0,4) | 0x80; break;
-		case RETROK_F3: c64_key = MATRIX(0,5); break;
-		case RETROK_F4: c64_key = MATRIX(0,5) | 0x80; break;
-		case RETROK_F5: c64_key = MATRIX(0,6); break;
-		case RETROK_F6: c64_key = MATRIX(0,6) | 0x80; break;
-		case RETROK_F7: c64_key = MATRIX(0,3); break;
-		case RETROK_F8: c64_key = MATRIX(0,3) | 0x80; break;
+      case RETROK_F1: c64_key = MATRIX(0,4); break;
+      case RETROK_F2: c64_key = MATRIX(0,4) | 0x80; break;
+      case RETROK_F3: c64_key = MATRIX(0,5); break;
+      case RETROK_F4: c64_key = MATRIX(0,5) | 0x80; break;
+      case RETROK_F5: c64_key = MATRIX(0,6); break;
+      case RETROK_F6: c64_key = MATRIX(0,6) | 0x80; break;
+      case RETROK_F7: c64_key = MATRIX(0,3); break;
+      case RETROK_F8: c64_key = MATRIX(0,3) | 0x80; break;
 
-		case RETROK_KP0: case RETROK_KP5: c64_key = 0x10 | 0x40; break;
-		case RETROK_KP1: c64_key = 0x06 | 0x40; break;
-		case RETROK_KP2: c64_key = 0x02 | 0x40; break;
-		case RETROK_KP3: c64_key = 0x0a | 0x40; break;
-		case RETROK_KP4: c64_key = 0x04 | 0x40; break;
-		case RETROK_KP6: c64_key = 0x08 | 0x40; break;
-		case RETROK_KP7: c64_key = 0x05 | 0x40; break;
-		case RETROK_KP8: c64_key = 0x01 | 0x40; break;
-		case RETROK_KP9: c64_key = 0x09 | 0x40; break;
+      case RETROK_KP0: case RETROK_KP5: c64_key = 0x10 | 0x40; break;
+      case RETROK_KP1: c64_key = 0x06 | 0x40; break;
+      case RETROK_KP2: c64_key = 0x02 | 0x40; break;
+      case RETROK_KP3: c64_key = 0x0a | 0x40; break;
+      case RETROK_KP4: c64_key = 0x04 | 0x40; break;
+      case RETROK_KP6: c64_key = 0x08 | 0x40; break;
+      case RETROK_KP7: c64_key = 0x05 | 0x40; break;
+      case RETROK_KP8: c64_key = 0x01 | 0x40; break;
+      case RETROK_KP9: c64_key = 0x09 | 0x40; break;
 
-		case RETROK_KP_DIVIDE: c64_key = MATRIX(6,7); break;
-		case RETROK_KP_ENTER: c64_key = MATRIX(0,1); break;
-	}
+      case RETROK_KP_DIVIDE: c64_key = MATRIX(6,7); break;
+      case RETROK_KP_ENTER: c64_key = MATRIX(0,1); break;
+   }
 
 	if (c64_key < 0)
 		return;
 
 	// Handle joystick emulation
-	if (c64_key & 0x40) {
-		c64_key &= 0x1f;
-		if (key_up)
-			*joystick |= c64_key;
-		else
-			*joystick &= ~c64_key;
-		return;
-	}
+	if (c64_key & 0x40)
+   {
+      c64_key              &= 0x1f;
+      if (key_up)
+         *joystick         |= c64_key;
+      else
+         *joystick         &= ~c64_key;
+      return;
+   }
 
 	// Handle other keys
-	bool shifted = c64_key & 0x80;
-	int c64_byte = (c64_key >> 3) & 7;
-	int c64_bit = c64_key & 7;
-	if (key_up) {
-		if (shifted) {
-			key_matrix[6] |= 0x10;
-			rev_matrix[4] |= 0x40;
-		}
-		key_matrix[c64_byte] |= (1 << c64_bit);
-		rev_matrix[c64_bit] |= (1 << c64_byte);
-	} else {
-		if (shifted) {
-			key_matrix[6] &= 0xef;
-			rev_matrix[4] &= 0xbf;
-		}
-		key_matrix[c64_byte] &= ~(1 << c64_bit);
-		rev_matrix[c64_bit] &= ~(1 << c64_byte);
-	}
+	bool shifted             = c64_key & 0x80;
+	int c64_byte             = (c64_key >> 3) & 7;
+	int c64_bit              = c64_key & 7;
+	if (key_up)
+   {
+      if (shifted)
+      {
+         key_matrix[6]     |= 0x10;
+         rev_matrix[4]     |= 0x40;
+      }
+      key_matrix[c64_byte] |= (1 << c64_bit);
+      rev_matrix[c64_bit]  |= (1 << c64_byte);
+   }
+   else
+   {
+      if (shifted)
+      {
+         key_matrix[6]     &= 0xef;
+         rev_matrix[4]     &= 0xbf;
+      }
+      key_matrix[c64_byte] &= ~(1 << c64_bit);
+      rev_matrix[c64_bit]  &= ~(1 << c64_byte);
+   }
 }
 
-void validkey(int c64_key,int key_up,uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick){
-
+void validkey(int c64_key,int key_up,uint8 *key_matrix,
+      uint8 *rev_matrix, uint8 *joystick)
+{
 	// Handle other keys
-	bool shifted = c64_key & 0x80;
-	int c64_byte = (c64_key >> 3) & 7;
-	int c64_bit = c64_key & 7;
-	if (key_up) {
-		if (shifted) {
-			key_matrix[6] |= 0x10;
-			rev_matrix[4] |= 0x40;
-		}
-		key_matrix[c64_byte] |= (1 << c64_bit);
-		rev_matrix[c64_bit] |= (1 << c64_byte);
-	} else {
-		if (shifted) {
-			key_matrix[6] &= 0xef;
-			rev_matrix[4] &= 0xbf;
-		}
+	bool shifted             = c64_key & 0x80;
+	int c64_byte             = (c64_key >> 3) & 7;
+	int c64_bit              = c64_key & 7;
+	if (key_up)
+   {
+      if (shifted)
+      {
+         key_matrix[6]     |= 0x10;
+         rev_matrix[4]     |= 0x40;
+      }
+      key_matrix[c64_byte] |= (1 << c64_bit);
+      rev_matrix[c64_bit]  |= (1 << c64_byte);
+   }
+   else
+   {
+		if (shifted)
+      {
+         key_matrix[6]     &= 0xef;
+         rev_matrix[4]     &= 0xbf;
+      }
 		key_matrix[c64_byte] &= ~(1 << c64_bit);
-		rev_matrix[c64_bit] &= ~(1 << c64_byte);
+		rev_matrix[c64_bit]  &= ~(1 << c64_byte);
 	}
 
 }
 
 
-void  C64Display::Keymap_KeyUp(int symkey,uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
+void  C64Display::Keymap_KeyUp(int symkey,uint8 *key_matrix,
+      uint8 *rev_matrix, uint8 *joystick)
 {
 	if (symkey == RETROK_NUMLOCK)
 		num_locked = false;
 	else
-			translate_key(symkey, true, key_matrix, rev_matrix, joystick);			
+      translate_key(symkey, true, key_matrix, rev_matrix, joystick);			
 }
 
-void C64Display:: Keymap_KeyDown(int symkey,uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
+void C64Display:: Keymap_KeyDown(int symkey,uint8 *key_matrix,
+      uint8 *rev_matrix, uint8 *joystick)
 {
 
-	switch (symkey){
-		case RETROK_F9:	// F9: Invoke SAM
+	switch (symkey)
+   {
+      case RETROK_F9:	// F9: Invoke SAM
 #ifdef GEKKO
          pauseg = 1;
 #else
-			SAM(TheC64);
+         SAM(TheC64);
 #endif
-			break;
-		case RETROK_F10:	// F10: Quit
-			quit_requested = true;
-			break;
-		case RETROK_F11:	// F11: NMI (Restore)
-			TheC64->NMI();
-			break;
-		case RETROK_F12:	// F12: Reset
-			TheC64->Reset();
-			break;
-		case RETROK_NUMLOCK:
-			num_locked = true;
-			break;
-		case RETROK_KP_PLUS:	// '+' on keypad: Increase SkipFrames
-			ThePrefs.SkipFrames++;
-			break;
-		case RETROK_KP_MINUS:	// '-' on keypad: Decrease SkipFrames
-			if (ThePrefs.SkipFrames > 1)
-				ThePrefs.SkipFrames--;
-			break;
-		case RETROK_KP_MULTIPLY:	// '*' on keypad: Toggle speed limiter
-			ThePrefs.LimitSpeed = !ThePrefs.LimitSpeed;
-			break;
-		case RETROK_KP_DIVIDE:	// '/' on keypad: Toggle GUI 
-			pauseg=1;
-			break;
+         break;
+      case RETROK_F10:	// F10: Quit
+         quit_requested = true;
+         break;
+      case RETROK_F11:	// F11: NMI (Restore)
+         TheC64->NMI();
+         break;
+      case RETROK_F12:	// F12: Reset
+         TheC64->Reset();
+         break;
+      case RETROK_NUMLOCK:
+         num_locked = true;
+         break;
+      case RETROK_KP_PLUS:	// '+' on keypad: Increase SkipFrames
+         ThePrefs.SkipFrames++;
+         break;
+      case RETROK_KP_MINUS:	// '-' on keypad: Decrease SkipFrames
+         if (ThePrefs.SkipFrames > 1)
+            ThePrefs.SkipFrames--;
+         break;
+      case RETROK_KP_MULTIPLY:	// '*' on keypad: Toggle speed limiter
+         ThePrefs.LimitSpeed = !ThePrefs.LimitSpeed;
+         break;
+      case RETROK_KP_DIVIDE:	// '/' on keypad: Toggle GUI 
+         pauseg=1;
+         break;
 
-		default:
-			translate_key(symkey, false, key_matrix, rev_matrix, joystick);
-			break;
-	}
+      default:
+         translate_key(symkey, false, key_matrix, rev_matrix, joystick);
+         break;
+   }
 }
 
-void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
+void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix,
+      uint8 *joystick)
 {
    // VKBD
    int i;
    //   RETRO        B    Y    SLT  STA  UP   DWN  LEFT RGT  A    X    L    R    L2   R2   L3   R3
    //   INDEX        0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15
    static int oldi=-1;
-   if(autoboot==true)
+
+   if (autoboot)
       kbd_buf_update(TheC64);
 
    Retro_PollEvent(key_matrix,rev_matrix,joystick);
 
-   if(oldi!=-1)
+   if (oldi!=-1)
    {
       // IKBD_PressSTKey(oldi,0);
       validkey(oldi,1,key_matrix,rev_matrix,joystick);
@@ -801,10 +793,6 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joyst
          vky = 4;
       if(vky > 4)
          vky = 0;
-
-#if 0
-      virtual_kdb(( char *)Retro_Screen,vkx,vky);
-#endif
 
       i=8;
       if(input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i)  && vkflag[4]==0) 	
@@ -939,13 +927,4 @@ void C64Display::InitColors(uint8 *colors)
 
 	for (i = 0; i < 256; i++)
 		colors[i] = i & 0x0f;
-}
- 
-/*
- *  Show a requester (error message)
- */
-long int ShowRequester(const char *a,const char *b,const char *)
-{
-	printf("%s: %s\n", a, b);
-	return 1;
 }

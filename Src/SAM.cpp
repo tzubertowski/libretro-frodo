@@ -48,8 +48,7 @@ static inline uint8 SAMReadByte(uint16 adr)
 {
 	if (access_1541)
 		return TheCPU1541->ExtReadByte(adr);
-	else
-		return TheCPU->ExtReadByte(adr);
+   return TheCPU->ExtReadByte(adr);
 }
 
 static inline void SAMWriteByte(uint16 adr, uint8 byte)

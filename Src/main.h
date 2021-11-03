@@ -37,7 +37,7 @@ public:
 	void ArgvReceived(int argc, char **argv);
 	void ReadyToRun();
 private:
-	void load_rom(const char *which, const char *path, uint8 *where, size_t size, const uint8 *builtin);
+	bool load_rom(const char *which, const char *path, uint8 *where, size_t size, const uint8 *builtin);
 	void load_rom_files();
 
 	static char device_path[256];	// Pathname of libretro content file
