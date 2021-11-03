@@ -10,7 +10,6 @@
 
   Code to handle our options dialog.
 */
-const char Dialog_fileid[] = "Hatari dialog.c : " __DATE__ " " __TIME__;
 
 #include "dialog.h"
 #include "sdlgui.h"

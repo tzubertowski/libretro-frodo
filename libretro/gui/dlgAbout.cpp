@@ -59,6 +59,8 @@ void Dialog_AboutDlg(void)
       gui_poll_events();
 
    }
-   while (but != DLGABOUT_EXIT && but != SDLGUI_QUIT
-         && but != SDLGUI_ERROR && !bQuitProgram);
+   while (  but != DLGABOUT_EXIT 
+		   && but != SDLGUI_QUIT
+         && but != SDLGUI_ERROR 
+         && !bQuitProgram);
 }

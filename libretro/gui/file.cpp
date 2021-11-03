@@ -10,8 +10,6 @@
 
   Common file access functions.
 */
-const char File_fileid[] = "Hatari file.c : " __DATE__ " " __TIME__;
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -315,14 +313,13 @@ bool File_Exists(const char *filename)
 {
 #ifdef RETRO
    if( access( filename, F_OK ) != -1 )
-      // file exists
       return true;
-   // file doesn't exist
    return false;
 #else
    struct stat buf;
-   if (stat(filename, &buf) == 0 &&
-         (buf.st_mode & (S_IRUSR|S_IWUSR)) && !(buf.st_mode & S_IFDIR))
+   if (     stat(filename, &buf) == 0 
+         &&  (buf.st_mode & (S_IRUSR|S_IWUSR)) 
+         && !(buf.st_mode & S_IFDIR))
    {
       /* file points to user readable regular file */
       return true;
@@ -348,18 +345,18 @@ bool File_DirExists(const char *path)
  */
 bool File_QueryOverwrite(const char *pszFileName)
 {
-	const char *fmt;
-	char *szString;
-	bool ret = true;
+	const char *fmt = NULL;
+	char *szString  = NULL;
+	bool ret        = true;
 
 	/* Try and find if file exists */
 	if (File_Exists(pszFileName))
 	{
-		fmt = "File '%s' exists, overwrite?";
+		fmt      = "File '%s' exists, overwrite?";
 		/* File does exist, are we OK to overwrite? */
 		szString = (char*)malloc(strlen(pszFileName) + strlen(fmt) + 1);
 		sprintf(szString, fmt, pszFileName);
-		ret = DlgAlert_Query(szString);
+		ret      = DlgAlert_Query(szString);
 		free(szString);
 	}
 	return ret;
@@ -376,16 +373,12 @@ char * File_FindPossibleExtFileName(const char *pszFileName, const char * const 
 {
 	char *szSrcName, *szSrcExt;
 	int i;
-
 	/* Allocate temporary memory for strings: */
 	char *szSrcDir = (char*)malloc(3 * FILENAME_MAX);
 	if (!szSrcDir)
-	{
-		perror("File_FindPossibleExtFileName");
 		return NULL;
-	}
 	szSrcName = szSrcDir + FILENAME_MAX;
-	szSrcExt = szSrcName + FILENAME_MAX;
+	szSrcExt  = szSrcName + FILENAME_MAX;
 
 	/* Split filename into parts */
 	File_SplitPath(pszFileName, szSrcDir, szSrcName, szSrcExt);
@@ -422,10 +415,9 @@ char * File_FindPossibleExtFileName(const char *pszFileName, const char * const 
  */
 void File_SplitPath(const char *pSrcFileName, char *pDir, char *pName, char *pExt)
 {
-	char *ptr1, *ptr2;
-
+	char *ptr2;
 	/* Build pathname: */
-	ptr1 = (char *)strrchr(pSrcFileName, PATHSEP);
+	char *ptr1 = (char *)strrchr(pSrcFileName, PATHSEP);
 	if (ptr1)
 	{
 		strcpy(pName, ptr1+1);
@@ -439,7 +431,7 @@ void File_SplitPath(const char *pSrcFileName, char *pDir, char *pName, char *pEx
 	}
 
 	/* Build the raw filename: */
-	if (pExt != NULL)
+	if (pExt)
 	{
 		ptr2 = strrchr(pName+1, '.');
 		if (ptr2)
@@ -463,25 +455,20 @@ void File_SplitPath(const char *pSrcFileName, char *pDir, char *pName, char *pEx
 char * File_MakePath(const char *pDir, const char *pName, const char *pExt)
 {
 	/* dir or "." + "/" + name + "." + ext + \0 */
-	int len = strlen(pDir) + 2 + strlen(pName) + 1 + (pExt ? strlen(pExt) : 0) + 1;
+	int len        = strlen(pDir) + 2 + strlen(pName) + 1 + (pExt ? strlen(pExt) : 0) + 1;
 	char *filepath = (char*)malloc(len);
 	if (!filepath)
-	{
-		perror("File_MakePath");
 		return NULL;
-	}
 	if (!pDir[0])
 	{
 		filepath[0] = '.';
 		filepath[1] = '\0';
-	} else {
-		strcpy(filepath, pDir);
 	}
+   else
+		strcpy(filepath, pDir);
 	len = strlen(filepath);
 	if (filepath[len-1] != PATHSEP)
-	{
 		filepath[len++] = PATHSEP;
-	}
 	strcpy(&filepath[len], pName);
 
 	if (pExt != NULL && pExt[0])
@@ -555,9 +542,7 @@ void File_MakeAbsoluteName(char *pFileName)
 	/* Is it already an absolute name? */
 #if !defined(__psp__) && !defined(__vita__)
 	if (File_IsRootFileName(pFileName))
-	{
 		outpos = 0;
-	}
 	else
 	{
 		if (!getcwd(pTempName, FILENAME_MAX))
@@ -656,11 +641,8 @@ void File_MakeValidPathName(char *pPathName)
 			break;
 
 		pLastSlash = strrchr(pPathName, PATHSEP);
-		if (pLastSlash)
-		{
-			/* Erase the (probably invalid) part after the last slash */
+		if (pLastSlash) /* Erase (probably invalid) part after last slash */
 			*pLastSlash = 0;
-		}
 		else
 		{
 			if (pPathName[0])
@@ -687,20 +669,21 @@ void File_MakeValidPathName(char *pPathName)
  */
 void File_PathShorten(char *path, int dirs)
 {
-	int i, n = 0;
+	int n = 0;
 	/* ignore last char, it may or may not be '/' */
-	i = strlen(path)-1;
-	assert(i >= 0);
-	while(i > 0 && n < dirs) {
-		if (path[--i] == PATHSEP)
-			n++;
-	}
-	if (path[i] == PATHSEP) {
+	int i = strlen(path)-1;
+	while(i > 0 && n < dirs)
+   {
+      if (path[--i] == PATHSEP)
+         n++;
+   }
+	if (path[i] == PATHSEP)
 		path[i+1] = '\0';
-	} else {
-		path[0] = PATHSEP;
-		path[1] = '\0';
-	}
+	else
+   {
+      path[0] = PATHSEP;
+      path[1] = '\0';
+   }
 }
 
 
@@ -713,27 +696,26 @@ void File_PathShorten(char *path, int dirs)
 void File_HandleDotDirs(char *path)
 {
 	int len = strlen(path);
-	if (len >= 2 &&
-	    path[len-2] == PATHSEP &&
-	    path[len-1] == '.')
-	{
-		/* keep in same dir */
+	if (   len         >= 2
+	    && path[len-2] == PATHSEP
+	    && path[len-1] == '.') /* keep in same dir */
 		path[len-1] = '\0';
-	}
-	else if (len >= 3 &&
-	    path[len-3] == PATHSEP &&
-	    path[len-2] == '.' &&
-	    path[len-1] == '.')
+	else if (
+         len          >= 3
+	    && path[len-3] == PATHSEP
+	    && path[len-2] == '.'
+	       path[len-1] == '.')
 	{
 		/* go one dir up */
-		if (len == 3) {
+		if (len == 3)
 			path[1] = 0;		/* already root */
-		} else {
-			char *ptr;
-			path[len-3] = 0;
-			ptr = strrchr(path, PATHSEP);
-			if (ptr)
-				*(ptr+1) = 0;
-		}
+		else
+      {
+         char *ptr;
+         path[len-3] = 0;
+         ptr = strrchr(path, PATHSEP);
+         if (ptr)
+            *(ptr+1) = 0;
+      }
 	}
 }
