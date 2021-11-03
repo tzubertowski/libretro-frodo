@@ -534,95 +534,91 @@ void File_MakeAbsoluteSpecialName(char *path)
  */
 void File_MakeAbsoluteName(char *pFileName)
 {
-	int inpos = 0;
-	int outpos = 0;
-	char *pTempName = (char*)malloc(FILENAME_MAX);
-	if (!pTempName)
-	{
-		perror("File_MakeAbsoluteName - malloc");
-		return;
-	}
+   int inpos = 0;
+   int outpos = 0;
+   char *pTempName = (char*)malloc(FILENAME_MAX);
+   if (!pTempName)
+      return;
 
-	/* Is it already an absolute name? */
+   /* Is it already an absolute name? */
 #if !defined(__psp__) && !defined(__vita__)
-	if (File_IsRootFileName(pFileName))
-		outpos = 0;
-	else
-	{
-		if (!getcwd(pTempName, FILENAME_MAX))
-		{
-			perror("File_MakeAbsoluteName - getcwd");
-			free(pTempName);
-			return;
-		}
-		File_AddSlashToEndFileName(pTempName);
-		outpos = strlen(pTempName);
-	}
+   if (File_IsRootFileName(pFileName))
+      outpos = 0;
+   else
+   {
+      if (!getcwd(pTempName, FILENAME_MAX))
+      {
+         free(pTempName);
+         return;
+      }
+      File_AddSlashToEndFileName(pTempName);
+      outpos = strlen(pTempName);
+   }
 #endif
 
-	/* Now filter out the relative paths "./" and "../" */
-	while (pFileName[inpos] != 0 && outpos < FILENAME_MAX)
-	{
-		if (pFileName[inpos] == '.' && pFileName[inpos+1] == PATHSEP)
-		{
-			/* Ignore "./" */
-			inpos += 2;
-		}
-		else if (pFileName[inpos] == '.' && pFileName[inpos+1] == 0)
-		{
-			inpos += 1;        /* Ignore "." at the end of the path string */
-			if (outpos > 1)
-				pTempName[outpos - 1] = 0;   /* Remove the last slash, too */
-		}
-		else if (pFileName[inpos] == '.' && pFileName[inpos+1] == '.'
-		         && (pFileName[inpos+2] == PATHSEP || pFileName[inpos+2] == 0))
-		{
-			/* Handle "../" */
-			char *pSlashPos;
-			inpos += 2;
-			pTempName[outpos - 1] = 0;
-			pSlashPos = strrchr(pTempName, PATHSEP);
-			if (pSlashPos)
-			{
-				*(pSlashPos + 1) = 0;
-				outpos = strlen(pTempName);
-			}
-			else
-			{
-				pTempName[0] = PATHSEP;
-				outpos = 1;
-			}
-			/* Were we already at the end of the string or is there more to come? */
-			if (pFileName[inpos] == PATHSEP)
-			{
-				/* There was a slash after the '..', so skip slash and
-				 * simply proceed with next part */
-				inpos += 1;
-			}
-			else
-			{
-				/* We were at the end of the string, so let's remove the slash
-				 * from the new string, too */
-				if (outpos > 1)
-					pTempName[outpos - 1] = 0;
-			}
-		}
-		else
-		{
-			/* Copy until next slash or end of input string */
-			while (pFileName[inpos] != 0 && outpos < FILENAME_MAX)
-			{
-				pTempName[outpos++] = pFileName[inpos++];
-				if (pFileName[inpos - 1] == PATHSEP)
-					break;
-			}
-		}
-	}
+   /* Now filter out the relative paths "./" and "../" */
+   while (pFileName[inpos] != 0 && outpos < FILENAME_MAX)
+   {
+      if (pFileName[inpos] == '.' && pFileName[inpos+1] == PATHSEP)
+      {
+         /* Ignore "./" */
+         inpos += 2;
+      }
+      else if (pFileName[inpos] == '.' && pFileName[inpos+1] == 0)
+      {
+         inpos += 1;        /* Ignore "." at the end of the path string */
+         if (outpos > 1)
+            pTempName[outpos - 1] = 0;   /* Remove the last slash, too */
+      }
+      else if (pFileName[inpos] == '.' && pFileName[inpos+1] == '.'
+            && (pFileName[inpos+2] == PATHSEP || pFileName[inpos+2] == 0))
+      {
+         /* Handle "../" */
+         char *pSlashPos;
+         inpos += 2;
+         pTempName[outpos - 1] = 0;
+         pSlashPos = strrchr(pTempName, PATHSEP);
+         if (pSlashPos)
+         {
+            *(pSlashPos + 1) = 0;
+            outpos = strlen(pTempName);
+         }
+         else
+         {
+            pTempName[0] = PATHSEP;
+            outpos = 1;
+         }
+         /* Were we already at the end of the string or is there more to come? */
+         if (pFileName[inpos] == PATHSEP)
+         {
+            /* There was a slash after the '..', so skip slash and
+             * simply proceed with next part */
+            inpos += 1;
+         }
+         else
+         {
+            /* We were at the end of the string, so let's remove the slash
+             * from the new string, too */
+            if (outpos > 1)
+               pTempName[outpos - 1] = 0;
+         }
+      }
+      else
+      {
+         /* Copy until next slash or end of input string */
+         while (pFileName[inpos] != 0 && outpos < FILENAME_MAX)
+         {
+            pTempName[outpos++] = pFileName[inpos++];
+            if (pFileName[inpos - 1] == PATHSEP)
+               break;
+         }
+      }
+   }
 
-	pTempName[outpos] = 0;
+   pTempName[outpos] = 0;
 
-	strcpy(pFileName, pTempName);          /* Copy back */
-	free(pTempName);
+   strcpy(pFileName, pTempName);          /* Copy back */
+   free(pTempName);
 }
 
 

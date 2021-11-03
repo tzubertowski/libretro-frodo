@@ -502,10 +502,7 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 		      || getcwd(path, FILENAME_MAX)
 #endif
 		      ))
-		{
-			perror("SDLGui_FileSelect: non-existing path and CWD failed");
 			goto clean_exit;
-		}
 	}
 
 	File_MakeAbsoluteName(path);
@@ -581,114 +578,109 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 
 		/* Has the user clicked on a file or folder? */
 		if (retbut>=SGFSDLG_ENTRYFIRST && retbut<=SGFSDLG_ENTRYLAST && retbut-SGFSDLG_ENTRYFIRST+ypos<entries)
-		{
-			char *tempstr;
-			
-			tempstr = (char *)malloc(FILENAME_MAX);
-			if (!tempstr)
-			{
-				perror("Error while allocating temporary memory in SDLGui_FileSelect()");
-				goto clean_exit;
-			}
+      {
+         char *tempstr = (char *)malloc(FILENAME_MAX);
+         if (!tempstr)
+            goto clean_exit;
 
-			if (browsingzip == true)
-			{
-				if (!strcat_maxlen(tempstr, FILENAME_MAX,
-						   zipdir, files[retbut-SGFSDLG_ENTRYFIRST+ypos]->d_name))
-					goto clean_exit;
-				/* directory? */
-				if (File_DoesFileNameEndWithSlash(tempstr))
-				{
-					/* handle the ../ directory */
-					if (strcmp(files[retbut-SGFSDLG_ENTRYFIRST+ypos]->d_name, "../") == 0)
-					{
-						/* close the zip file */
-						if (strcmp(tempstr, "../") == 0)
-						{
-							/* free zip file entries */
-							ZIP_FreeZipDir(zipfiles);
-							zipfiles = NULL;
-							/* Copy the path name to the dialog */
-							File_ShrinkName(dlgpath, path, DLGPATH_SIZE);
-							browsingzip = false;
-						}
-						else
-						{
-							/* remove "../" and previous dir from path */
-							File_PathShorten(tempstr, 2);
-							correct_zip_root(tempstr);
-							strcpy(zipdir, tempstr);
-							File_ShrinkName(dlgpath, zipdir, DLGPATH_SIZE);
-						}
-					}
-					else /* not the "../" directory */
-					{
-						strcpy(zipdir, tempstr);
-						File_ShrinkName(dlgpath, zipdir, DLGPATH_SIZE);
-					}
-					reloaddir = true;
-					/* Copy the path name to the dialog */
-					zipfilename[0] = '\0';
-					dlgfname[0] = 0;
-					ypos = 0;
-					scrollbar_Ypos = 0.0;
-				}
-				else
-				{
-					/* not dir, select a file in the zip */
-					selection = retbut-SGFSDLG_ENTRYFIRST+ypos;
-					strcpy(zipfilename, files[selection]->d_name);
-					File_ShrinkName(dlgfname, zipfilename, DLGFNAME_SIZE);
-				}
+         if (browsingzip == true)
+         {
+            if (!strcat_maxlen(tempstr, FILENAME_MAX,
+                     zipdir, files[retbut-SGFSDLG_ENTRYFIRST+ypos]->d_name))
+               goto clean_exit;
+            /* directory? */
+            if (File_DoesFileNameEndWithSlash(tempstr))
+            {
+               /* handle the ../ directory */
+               if (strcmp(files[retbut-SGFSDLG_ENTRYFIRST+ypos]->d_name, "../") == 0)
+               {
+                  /* close the zip file */
+                  if (strcmp(tempstr, "../") == 0)
+                  {
+                     /* free zip file entries */
+                     ZIP_FreeZipDir(zipfiles);
+                     zipfiles = NULL;
+                     /* Copy the path name to the dialog */
+                     File_ShrinkName(dlgpath, path, DLGPATH_SIZE);
+                     browsingzip = false;
+                  }
+                  else
+                  {
+                     /* remove "../" and previous dir from path */
+                     File_PathShorten(tempstr, 2);
+                     correct_zip_root(tempstr);
+                     strcpy(zipdir, tempstr);
+                     File_ShrinkName(dlgpath, zipdir, DLGPATH_SIZE);
+                  }
+               }
+               else /* not the "../" directory */
+               {
+                  strcpy(zipdir, tempstr);
+                  File_ShrinkName(dlgpath, zipdir, DLGPATH_SIZE);
+               }
+               reloaddir = true;
+               /* Copy the path name to the dialog */
+               zipfilename[0] = '\0';
+               dlgfname[0] = 0;
+               ypos = 0;
+               scrollbar_Ypos = 0.0;
+            }
+            else
+            {
+               /* not dir, select a file in the zip */
+               selection = retbut-SGFSDLG_ENTRYFIRST+ypos;
+               strcpy(zipfilename, files[selection]->d_name);
+               File_ShrinkName(dlgfname, zipfilename, DLGFNAME_SIZE);
+            }
 
-			}
-			else /* not browsingzip */
-			{
-				if (!strcat_maxlen(tempstr, FILENAME_MAX,
-						   path, files[retbut-SGFSDLG_ENTRYFIRST+ypos]->d_name))
-					goto clean_exit;
-				if (File_DirExists(tempstr))
-				{
-					File_HandleDotDirs(tempstr);
-					File_AddSlashToEndFileName(tempstr);
-					/* Copy the path name to the dialog */
-					File_ShrinkName(dlgpath, tempstr, DLGPATH_SIZE);
-					strcpy(path, tempstr);
-					reloaddir = true;
-					dlgfname[0] = 0;
-					ypos = 0;
-					scrollbar_Ypos = 0.0;
-				}
-				else if (ZIP_FileNameIsZIP(tempstr) && zip_path != NULL)
-				{
-					/* open a zip file */
-					zipfiles = ZIP_GetFiles(tempstr);
-					if (zipfiles != NULL && browsingzip == false)
-					{
-						selection = retbut-SGFSDLG_ENTRYFIRST+ypos;
-						strcpy(fname, files[selection]->d_name);
-						File_ShrinkName(dlgfname, fname, DLGFNAME_SIZE);
-						browsingzip = true;
-						zipdir[0] = '\0'; /* zip root */
-						File_ShrinkName(dlgpath, zipdir, DLGPATH_SIZE);
-						reloaddir = true;
-						ypos = 0;
-						scrollbar_Ypos = 0.0;
-					}
+         }
+         else /* not browsingzip */
+         {
+            if (!strcat_maxlen(tempstr, FILENAME_MAX,
+                     path, files[retbut-SGFSDLG_ENTRYFIRST+ypos]->d_name))
+               goto clean_exit;
+            if (File_DirExists(tempstr))
+            {
+               File_HandleDotDirs(tempstr);
+               File_AddSlashToEndFileName(tempstr);
+               /* Copy the path name to the dialog */
+               File_ShrinkName(dlgpath, tempstr, DLGPATH_SIZE);
+               strcpy(path, tempstr);
+               reloaddir = true;
+               dlgfname[0] = 0;
+               ypos = 0;
+               scrollbar_Ypos = 0.0;
+            }
+            else if (ZIP_FileNameIsZIP(tempstr) && zip_path != NULL)
+            {
+               /* open a zip file */
+               zipfiles = ZIP_GetFiles(tempstr);
+               if (zipfiles != NULL && browsingzip == false)
+               {
+                  selection = retbut-SGFSDLG_ENTRYFIRST+ypos;
+                  strcpy(fname, files[selection]->d_name);
+                  File_ShrinkName(dlgfname, fname, DLGFNAME_SIZE);
+                  browsingzip = true;
+                  zipdir[0] = '\0'; /* zip root */
+                  File_ShrinkName(dlgpath, zipdir, DLGPATH_SIZE);
+                  reloaddir = true;
+                  ypos = 0;
+                  scrollbar_Ypos = 0.0;
+               }
 
-				}
-				else
-				{
-					/* Select a file */
-					selection = retbut-SGFSDLG_ENTRYFIRST+ypos;
-					strcpy(fname, files[selection]->d_name);
-					File_ShrinkName(dlgfname, fname, DLGFNAME_SIZE);
-				}
+            }
+            else
+            {
+               /* Select a file */
+               selection = retbut-SGFSDLG_ENTRYFIRST+ypos;
+               strcpy(fname, files[selection]->d_name);
+               File_ShrinkName(dlgfname, fname, DLGFNAME_SIZE);
+            }
 
-			} /* not browsingzip */
+         } /* not browsingzip */
 
-			free(tempstr);
-		}
+         free(tempstr);
+      }
 		else    /* Has the user clicked on another button? */
 		{
 			switch(retbut)
