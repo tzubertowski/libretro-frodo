@@ -35,7 +35,6 @@ typedef unsigned int  uint32;
 #ifdef PS3PORT
 #include <sdk_version.h>
 #include <cell.h>
-#include <stdio.h>
 #include <string.h>
 #define	getcwd(a,b)	"/"
 #include <unistd.h> //stat() is defined here

@@ -21,6 +21,8 @@
 #ifndef _1541T64_H
 #define _1541T64_H
 
+#include <stdio.h>
+
 #include "IEC.h"
 
 

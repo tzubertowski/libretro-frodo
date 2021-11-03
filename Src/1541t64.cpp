@@ -44,7 +44,6 @@
 #if defined(ANDROID) || defined(__ANDROID__)
 #include <errno.h>
 #include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>

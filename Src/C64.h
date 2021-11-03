@@ -21,6 +21,8 @@
 #ifndef _C64_H
 #define _C64_H
 
+#include <stdio.h>
+
 // Sizes of memory areas
 const int C64_RAM_SIZE = 0x10000;
 const int COLOR_RAM_SIZE = 0x400;

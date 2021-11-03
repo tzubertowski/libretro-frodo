@@ -10,11 +10,16 @@
 
   Common file access functions.
 */
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <fcntl.h>
+#ifdef _WIN32
+#include <direct.h>
+#else
 #include <unistd.h>
+#endif
 #include <errno.h>
 #include <string.h>
 #include <zlib.h>

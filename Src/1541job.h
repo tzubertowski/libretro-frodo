@@ -21,6 +21,7 @@
 #ifndef _1541JOB_H
 #define _1541JOB_H
 
+#include <stdio.h>
 
 class MOS6502_1541;
 class Prefs;

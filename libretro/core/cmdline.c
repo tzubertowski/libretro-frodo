@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <ctype.h>
 
 //Args for experimental_cmdline
