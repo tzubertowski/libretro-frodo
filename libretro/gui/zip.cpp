@@ -101,10 +101,7 @@ zip_dir *ZIP_GetFiles(const char *pszFileName)
 	/* allocate a file list */
 	filelist = (char **)malloc(gi.number_entry*sizeof(char *));
 	if (!filelist)
-	{
-		perror("ZIP_GetFiles");
 		return NULL;
-	}
 
 	nfiles = gi.number_entry;  /* set the number of files */
 
@@ -120,7 +117,6 @@ zip_dir *ZIP_GetFiles(const char *pszFileName)
 		filelist[i] = (char *)malloc(strlen(filename_inzip) + 1);
 		if (!filelist[i])
 		{
-			perror("ZIP_GetFiles");
 			free(filelist);
 			return NULL;
 		}
@@ -145,7 +141,6 @@ zip_dir *ZIP_GetFiles(const char *pszFileName)
 	zd = (zip_dir *)malloc(sizeof(zip_dir));
 	if (!zd)
 	{
-		perror("ZIP_GetFiles");
 		free(filelist);
 		return NULL;
 	}
@@ -204,15 +199,11 @@ struct dirent **ZIP_GetFilesDir(const zip_dir *zip, const char *dir, int *entrie
    struct dirent **fentries;
    zip_dir *files = (zip_dir *)malloc(sizeof(zip_dir));
    if (!files)
-   {
-      perror("ZIP_GetFilesDir");
       return NULL;
-   }
 
    files->names = (char **)malloc((zip->nfiles + 1) * sizeof(char *));
    if (!files->names)
    {
-      perror("ZIP_GetFilesDir");
       free(files);
       return NULL;
    }
@@ -254,7 +245,6 @@ struct dirent **ZIP_GetFilesDir(const zip_dir *zip, const char *dir, int *entrie
                      files->names[files->nfiles] = (char *)malloc(slash+2);
                      if (!files->names[files->nfiles])
                      {
-                        perror("ZIP_GetFilesDir");
                         ZIP_FreeZipDir(files);
                         return NULL;
                      }
@@ -269,7 +259,6 @@ struct dirent **ZIP_GetFilesDir(const zip_dir *zip, const char *dir, int *entrie
                   files->names[files->nfiles] = (char *)malloc(strlen(temp)+1);
                   if (!files->names[files->nfiles])
                   {
-                     perror("ZIP_GetFilesDir");
                      ZIP_FreeZipDir(files);
                      return NULL;
                   }
@@ -287,7 +276,6 @@ struct dirent **ZIP_GetFilesDir(const zip_dir *zip, const char *dir, int *entrie
    fentries = (struct dirent **)malloc(sizeof(struct dirent *)*files->nfiles);
    if (!fentries)
    {
-      perror("ZIP_GetFilesDir");
       ZIP_FreeZipDir(files);
       return NULL;
    }
@@ -296,7 +284,6 @@ struct dirent **ZIP_GetFilesDir(const zip_dir *zip, const char *dir, int *entrie
       fentries[i] = (struct dirent *)malloc(sizeof(struct dirent));
       if (!fentries[i])
       {
-         perror("ZIP_GetFilesDir");
          ZIP_FreeFentries(fentries, i+1);
          return NULL;
       }
@@ -365,10 +352,7 @@ static char *ZIP_FirstFile(const char *filename, const char * const ppsExts[])
 
 	name = (char *)malloc(ZIP_PATH_MAX);
 	if (!name)
-	{
-		perror("ZIP_FirstFile");
 		return NULL;
-	}
 
 	/* Do we have to scan for a certain extension? */
 	if (ppsExts)
@@ -426,10 +410,7 @@ static void *ZIP_ExtractFile(unzFile uf, const char *filename, uLong size)
 	size_buf = size;
 	buf = (char *)malloc(size_buf);
 	if (!buf)
-	{
-		perror("ZIP_ExtractFile");
 		return NULL;
-	}
 
 	err = unzOpenCurrentFile(uf);
 	if (err != UNZ_OK)
@@ -481,7 +462,6 @@ Uint8 *ZIP_ReadDisk(const char *pszFileName, const char *pszZipPath, long *pImag
 	{
 		if (!(path = (char *)malloc(ZIP_PATH_MAX)))
 		{
-			perror("ZIP_ReadDisk");
 			unzClose(uf);
 			return NULL;
 		}
