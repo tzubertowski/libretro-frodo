@@ -51,8 +51,8 @@ else ifeq ($(platform), osx)
 		LDFLAGS  += $(TARGET_RULE)
    endif
 
-	CFLAGS  += $(ARCHFLAGS)
-	CXXFLAGS  += $(ARCHFLAGS)
+	CFLAGS  += $(ARCHFLAGS) -DHAVE_POSIX_MEMALIGN
+	CXXFLAGS  += $(ARCHFLAGS) -DHAVE_POSIX_MEMALIGN
 	LDFLAGS += $(ARCHFLAGS)
 else ifeq ($(platform), ios-arm64)
    TARGET := $(TARGET_NAME)_libretro_ios.dylib
