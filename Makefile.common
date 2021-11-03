@@ -99,7 +99,6 @@ SOURCES_CXX += \
 	       $(GUI_DIR)/unzip.cpp \
 	       $(GUI_DIR)/thumb.cpp \
 	       $(GUI_DIR)/zip.cpp \
-	       $(GUI_DIR)/str.cpp \
 	       $(GUI_DIR)/dlgFloppy.cpp \
 	       $(GUI_DIR)/dlgFileSelect.cpp \
 	       $(GUI_DIR)/dlgJoystick.cpp \

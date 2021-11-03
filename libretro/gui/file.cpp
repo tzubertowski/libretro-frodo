@@ -29,7 +29,6 @@ const char File_fileid[] = "Hatari file.c : " __DATE__ " " __TIME__;
 
 #include "dialog.h"
 #include "file.h"
-#include "str.h"
 #include "zip.h"
 
 #if defined(WIN32)
