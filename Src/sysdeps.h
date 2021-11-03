@@ -50,11 +50,6 @@
 /* Define if you have the `rmdir' function. */
 #define HAVE_RMDIR 1
 
-/* Define if you have the `select' function. */
-#ifndef _WIN32
-#define HAVE_SELECT 1
-#endif
-
 /* Define if you have the `sigaction' function. */
 #if !defined (__vita__) && !defined(__psp__) && !defined(_3DS) && !defined(_WIN32) && !defined(__SWITCH__)
 #define HAVE_SIGACTION 1
@@ -282,8 +277,7 @@ struct utimbuf
 #define bool Boolean
 #endif
 
-#ifdef WIN32
-#include <windows.h>
+#ifdef _WIN32
 #include <direct.h>
 #if !defined(M_PI)
 #define M_PI 3.14159265358979323846

@@ -32,20 +32,20 @@ static SGOBJ videodlg[] =
 	{ SGBOX, 0, 0, 0,0, 40,25, NULL },				//0
 	{ SGTEXT, 0, 0, 13,1, 12,1, NULL },				//1
 
-	{ SGTEXT, 0, 0, 13,2, 22,1, "Sprites & Collisions:" },			//2
-	{ SGCHECKBOX, 0, 0, 10   ,4, 11,1, "Sprites" },			//3
-	{ SGCHECKBOX, 0, 0, 10   ,5, 12,1, "Collisions" },		//4
+	{ SGTEXT, 0, 0, 13,2, 22,1, (char*)"Sprites & Collisions:" },			//2
+	{ SGCHECKBOX, 0, 0, 10   ,4, 11,1, (char*)"Sprites" },			//3
+	{ SGCHECKBOX, 0, 0, 10   ,5, 12,1, (char*)"Collisions" },		//4
 
-	{ SGTEXT, 0, 0, 13,8, 20,1, "Skip Frames:"},		//5
-	{ SGBUTTON,   SG_EXIT, 0, 15,10,  1,1, "+" },
+	{ SGTEXT, 0, 0, 13,8, 20,1, (char*)"Skip Frames:"},		//5
+	{ SGBUTTON,   SG_EXIT, 0, 15,10,  1,1, (char*)"+" },
 	{ SGTEXT,     0, 0, 17,10,  3,1,mskip },
-	{ SGBUTTON,   SG_EXIT, 0, 23,10,  1,1,  "-" },
+	{ SGBUTTON,   SG_EXIT, 0, 23,10,  1,1,  (char*)"-" },
 
-	{ SGCHECKBOX, 0, 0, 13 ,16, 11,1, "Show Leds" },			//9
+	{ SGCHECKBOX, 0, 0, 13 ,16, 11,1, (char*)"Show Leds" },			//9
 	//{ SGTEXT, 0, 0, 1,16, 38,1, NULL },				//9
 	{ SGTEXT, 0, 0, 1,17, 38,1, NULL },				
 	{ SGTEXT, 0, 0, 1,18, 38,1, NULL },				
-	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 19,23, 8,1, "OK" },	//12
+	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 19,23, 8,1, (char*)"OK" },	//12
 	{ -1, 0, 0, 0,0, 0,0, NULL }
 };
 

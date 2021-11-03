@@ -8,9 +8,6 @@
   This file is distributed under the GNU Public License, version 2 or at
   your option any later version. Read the file gpl.txt for details.
 */
-const char DlgFloppy_fileid[] = "Hatari dlgFloppy.c : " __DATE__ " " __TIME__;
-
-#include <assert.h>
 
 #include "dialog.h"
 #include "sdlgui.h"
@@ -54,32 +51,32 @@ char szDiskImageDirectory[FILENAME_MAX]={'\0'};
 static SGOBJ floppydlg[] =
 {
 	{ SGBOX, 0, 0, 0,0, 64,20, NULL },
-	{ SGTEXT, 0, 0, 25,1, 12,1, "Floppy disks" },
-	{ SGTEXT, 0, 0, 2,3, 8,1, "DF8:" },
-	{ SGBUTTON,  SG_EXIT/*0*/, 0, 46,3, 7,1, "Eject" },
-	{ SGBUTTON,  SG_EXIT/*0*/, 0, 54,3, 8,1, "Browse" },
+	{ SGTEXT, 0, 0, 25,1, 12,1, (char*)"Floppy disks" },
+	{ SGTEXT, 0, 0, 2,3, 8,1, (char*)"DF8:" },
+	{ SGBUTTON,  SG_EXIT/*0*/, 0, 46,3, 7,1, (char*)"Eject" },
+	{ SGBUTTON,  SG_EXIT/*0*/, 0, 54,3, 8,1, (char*)"Browse" },
 	{ SGTEXT, 0, 0, 3,4, 58,1, NULL },
-	{ SGTEXT, 0, 0, 2,6, 8,1, "DF9:" },
-	{ SGBUTTON,  SG_EXIT/*0*/, 0, 46,6, 7,1, "Eject" },
-	{ SGBUTTON,  SG_EXIT/*0*/, 0, 54,6, 8,1, "Browse" }
+	{ SGTEXT, 0, 0, 2,6, 8,1, (char*)"DF9:" },
+	{ SGBUTTON,  SG_EXIT/*0*/, 0, 46,6, 7,1, (char*)"Eject" },
+	{ SGBUTTON,  SG_EXIT/*0*/, 0, 54,6, 8,1, (char*)"Browse" }
 ,
 	{ SGTEXT, 0, 0, 3,7, 58,1, NULL },
-	{ SGTEXT, 0, 0, 2,9, 8,1, "DF10:" },
-	{ SGBUTTON,  SG_EXIT/*0*/, 0, 46,9, 7,1, "Eject" },
-	{ SGBUTTON,  SG_EXIT/*0*/, 0, 54,9, 8,1, "Browse" },
+	{ SGTEXT, 0, 0, 2,9, 8,1, (char*)"DF10:" },
+	{ SGBUTTON,  SG_EXIT/*0*/, 0, 46,9, 7,1, (char*)"Eject" },
+	{ SGBUTTON,  SG_EXIT/*0*/, 0, 54,9, 8,1, (char*)"Browse" },
 	{ SGTEXT, 0, 0, 3,10, 58,1, NULL },
-	{ SGTEXT, 0, 0, 2,12, 8,1, "DF11:" },
-	{ SGBUTTON,  SG_EXIT/*0*/, 0, 46,12, 7,1, "Eject" },
-	{ SGBUTTON,  SG_EXIT/*0*/, 0, 54,12, 8,1, "Browse" },
+	{ SGTEXT, 0, 0, 2,12, 8,1, (char*)"DF11:" },
+	{ SGBUTTON,  SG_EXIT/*0*/, 0, 46,12, 7,1, (char*)"Eject" },
+	{ SGBUTTON,  SG_EXIT/*0*/, 0, 54,12, 8,1, (char*)"Browse" },
 
 	{ SGTEXT, 0, 0, 3,13, 58,1, NULL },
-	{ SGTEXT, 0, 0, 2,14, 32,1, "Default floppy images directory:" },
+	{ SGTEXT, 0, 0, 2,14, 32,1, (char*)"Default floppy images directory:" },
 	{ SGTEXT, 0, 0, 3,15, 58,1, NULL },
-	{ SGBUTTON,  SG_EXIT/*0*/, 0, 54,14, 8,1, "Browse" },
+	{ SGBUTTON,  SG_EXIT/*0*/, 0, 54,14, 8,1, (char*)"Browse" },
 
 	{ SGTEXT, 0, 0, 3,16, 58,1, NULL },	
-	{ SGCHECKBOX, 0, 0, 3,17, 15,1, "Emulate 1541" },
-	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 22,18, 24,1, "Back to main menu" },
+	{ SGCHECKBOX, 0, 0, 3,17, 15,1, (char*)"Emulate 1541" },
+	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 22,18, 24,1, (char*)"Back to main menu" },
 	{ -1, 0, 0, 0,0, 0,0, NULL }
 };
 
@@ -91,10 +88,10 @@ static SGOBJ floppydlg[] =
 static SGOBJ alertdlg[] =
 {
 	{ SGBOX, 0, 0, 0,0, 40,6, NULL },
-	{ SGTEXT, 0, 0, 3,1, 30,1, "Insert last created disk to?" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 3,4, 10,1, "Drive A:" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 15,4, 10,1, "Drive B:" },
-	{ SGBUTTON, SG_EXIT/*SG_CANCEL*/, 0, 27,4, 10,1, "Cancel" },
+	{ SGTEXT, 0, 0, 3,1, 30,1, (char*)"Insert last created disk to?" },
+	{ SGBUTTON, SG_EXIT/*0*/, 0, 3,4, 10,1, (char*)"Drive A:" },
+	{ SGBUTTON, SG_EXIT/*0*/, 0, 15,4, 10,1, (char*)"Drive B:" },
+	{ SGBUTTON, SG_EXIT/*SG_CANCEL*/, 0, 27,4, 10,1, (char*)"Cancel" },
 	{ -1, 0, 0, 0,0, 0,0, NULL }
 };
 
@@ -104,7 +101,6 @@ static SGOBJ alertdlg[] =
  */
 const char* Floppy_SetDiskFileNameNone(int Drive)
 {
-	assert(Drive >= 0 && Drive < MAX_FLOPPYDRIVES);
 	szDiskFileName[Drive][0] = '\0';
 	return szDiskFileName[Drive];
 }
@@ -122,9 +118,7 @@ const char* Floppy_SetDiskFileName(int Drive, const char *pszFileName, const cha
 
 	/* setting to empty or "none" ejects */
 	if (!*pszFileName || strcasecmp(pszFileName, "none") == 0)
-	{
 		return Floppy_SetDiskFileNameNone(Drive);
-	}
 	/* See if file exists, and if not, get/add correct extension */
 	if (!File_Exists(pszFileName))
 		filename = File_FindPossibleExtFileName(pszFileName, pszDiskImageNameExts);
@@ -132,8 +126,6 @@ const char* Floppy_SetDiskFileName(int Drive, const char *pszFileName, const cha
 		filename = strdup(pszFileName);
 	if (!filename)
 		return NULL;
-	/* validity checks */
-	assert(Drive >= 0 && Drive < MAX_FLOPPYDRIVES);
 	for (i = 0; i < MAX_FLOPPYDRIVES; i++)
 	{
 		if (i == Drive)
@@ -154,8 +146,6 @@ const char* Floppy_SetDiskFileName(int Drive, const char *pszFileName, const cha
 	return szDiskFileName[Drive];
 }
 
-
-
 /**
  * Let user browse given disk, insert disk if one selected.
  */
@@ -164,7 +154,6 @@ static void DlgDisk_BrowseDisk(char *dlgname, int drive, int diskid)
 	char *selname, *zip_path;
 	const char *tmpname, *realname;
 
-	assert(drive >= 0 && drive < MAX_FLOPPYDRIVES);
 	if (szDiskFileName[drive][0])
 		tmpname = szDiskFileName[drive];
 	else
@@ -196,9 +185,8 @@ static void DlgDisk_BrowseDisk(char *dlgname, int drive, int diskid)
  */
 static void DlgDisk_BrowseDir(char *dlgname, char *confname, int maxlen)
 {
-	char *str, *selname;
-
-	selname = SDLGui_FileSelect(confname, NULL, false);
+	char *str;
+	char *selname = SDLGui_FileSelect(confname, NULL, false);
 	if (!selname)
 		return;
 
@@ -218,39 +206,37 @@ static void DlgDisk_BrowseDir(char *dlgname, char *confname, int maxlen)
  */
 static void DlgFloppy_QueryInsert(char *namea, int ida, char *nameb, int idb, const char *path)
 {
-	const char *realname;
-	int diskid, dlgid;
-	char *dlgname;
+   const char *realname;
+   int diskid, dlgid;
+   char *dlgname;
 
-	SDLGui_CenterDlg(alertdlg);
+   SDLGui_CenterDlg(alertdlg);
 
-int but;
+   int but;
 
-do{        
-	but=SDLGui_DoDialog(alertdlg, NULL);
+   do
+   {
+      but=SDLGui_DoDialog(alertdlg, NULL);
+      if(but== DLGMOUNT_A)
+      {
+         dlgname = namea;
+         dlgid   = ida;
+         diskid  = 0;
+      }
+      else if(but == DLGMOUNT_B)
+      {
+         dlgname = nameb;
+         dlgid   = idb;
+         diskid  = 1;
+      }
+      gui_poll_events();
+   }
+   while (but != DLGMOUNT_CANCEL && but != DLGMOUNT_A  && but != DLGMOUNT_B && but != SDLGUI_QUIT
+         && but != SDLGUI_ERROR && !bQuitProgram);
 
-	{
-		if(but== DLGMOUNT_A){
-			dlgname = namea;
-			dlgid = ida;
-			diskid = 0;
-                }
-		else if(but == DLGMOUNT_B){
-			dlgname = nameb;
-			dlgid = idb;
-			diskid = 1;
-                }
-		
-	}
-        gui_poll_events();
-}
-while (but != DLGMOUNT_CANCEL && but != DLGMOUNT_A  && but != DLGMOUNT_B && but != SDLGUI_QUIT
-	        && but != SDLGUI_ERROR && !bQuitProgram);
-
-
-	realname = Floppy_SetDiskFileName(diskid, path, NULL);
-	if (realname)
-		File_ShrinkName(dlgname, realname, floppydlg[dlgid].w);
+   realname = Floppy_SetDiskFileName(diskid, path, NULL);
+   if (realname)
+      File_ShrinkName(dlgname, realname, floppydlg[dlgid].w);
 }
 
 /**
@@ -266,37 +252,35 @@ void DlgFloppy_Main(void)
 
 	/* Set up dialog to actual values: */
 
-	if(ThePrefs.Emul1541Proc)floppydlg[FLOPPYDLG_1541].state |= SG_SELECTED ;
-	else floppydlg[FLOPPYDLG_1541].state &= ~SG_SELECTED;
+	if(ThePrefs.Emul1541Proc)
+      floppydlg[FLOPPYDLG_1541].state |= SG_SELECTED ;
+	else
+      floppydlg[FLOPPYDLG_1541].state &= ~SG_SELECTED;
 
 	/* Disk name 0: */	
-	if(ThePrefs.DrivePath[0]!=NULL){
+	if(ThePrefs.DrivePath[0])
 		File_ShrinkName(dlgname[0], prefs->DrivePath[0],floppydlg[FLOPPYDLG_DISKA].w);
-	}
 	else
 		dlgname[0][0] = '\0';
 	floppydlg[FLOPPYDLG_DISKA].txt = dlgname[0];
 
 	/* Disk name 1: */
-	if(ThePrefs.DrivePath[1]!=NULL){
+	if(ThePrefs.DrivePath[1])
 		File_ShrinkName(dlgname[1], prefs->DrivePath[1],floppydlg[FLOPPYDLG_DISKB].w);
-	}
 	else
 		dlgname[1][0] = '\0';
 	floppydlg[FLOPPYDLG_DISKB].txt = dlgname[1];
 
 	/* Disk name 2: */	
-	if(ThePrefs.DrivePath[2]!=NULL){
+	if(ThePrefs.DrivePath[2])
 		File_ShrinkName(dlgname[2], prefs->DrivePath[2],floppydlg[FLOPPYDLG_DISK2].w);
-	}
 	else
 		dlgname[2][0] = '\0';
 	floppydlg[FLOPPYDLG_DISK2].txt = dlgname[2];
 
 	/* Disk name 3: */
-	if(ThePrefs.DrivePath[3]!=NULL){
+	if(ThePrefs.DrivePath[3])
 		File_ShrinkName(dlgname[3], prefs->DrivePath[3],floppydlg[FLOPPYDLG_DISK3].w);
-	}
 	else
 		dlgname[3][0] = '\0';
 	floppydlg[FLOPPYDLG_DISK3].txt = dlgname[3];
@@ -309,95 +293,83 @@ void DlgFloppy_Main(void)
 
 	/* Draw and process the dialog */
 	do
-	{       
-		but = SDLGui_DoDialog(floppydlg, NULL);
-		switch (but)
-		{
-		 case FLOPPYDLG_EJECTA:                         /* Eject disk in drive A: */
-			Floppy_SetDiskFileNameNone(0);
-			dlgname[0][0] = '\0';
+   {
+      but = SDLGui_DoDialog(floppydlg, NULL);
+      switch (but)
+      {
+         case FLOPPYDLG_EJECTA:                         /* Eject disk in drive A: */
+            Floppy_SetDiskFileNameNone(0);
+            dlgname[0][0] = '\0';
 
-			break;
-		 case FLOPPYDLG_BROWSEA:                        /* Choose a new disk A: */
-			DlgDisk_BrowseDisk(dlgname[0], 0, FLOPPYDLG_DISKA);
+            break;
+         case FLOPPYDLG_BROWSEA:                        /* Choose a new disk A: */
+            DlgDisk_BrowseDisk(dlgname[0], 0, FLOPPYDLG_DISKA);
 
-			if (strlen(szDiskFileName[0]) > 0){
-					strcpy(prefs->DrivePath[0], szDiskFileName[0]);
-			}
+            if (strlen(szDiskFileName[0]) > 0)
+               strcpy(prefs->DrivePath[0], szDiskFileName[0]);
+            break;
+         case FLOPPYDLG_EJECTB:                         /* Eject disk in drive B: */
+            Floppy_SetDiskFileNameNone(1);
+            dlgname[1][0] = '\0';
 
-			break;
-		 case FLOPPYDLG_EJECTB:                         /* Eject disk in drive B: */
-			Floppy_SetDiskFileNameNone(1);
-			dlgname[1][0] = '\0';
+            break;
+         case FLOPPYDLG_BROWSEB:                         /* Choose a new disk B: */
+            DlgDisk_BrowseDisk(dlgname[1], 1, FLOPPYDLG_DISKB);
+            if (strlen(szDiskFileName[1]) > 0)
+               strcpy(prefs->DrivePath[1], szDiskFileName[1]);
+            /* fall-through */
+         case FLOPPYDLG_EJECT2:                         /* Eject disk in drive A: */
+            Floppy_SetDiskFileNameNone(2);
+            dlgname[2][0] = '\0';
+            break;
+         case FLOPPYDLG_BROWSE2:                        /* Choose a new disk A: */
+            DlgDisk_BrowseDisk(dlgname[2], 0, FLOPPYDLG_DISK2);
 
-			break;
-		case FLOPPYDLG_BROWSEB:                         /* Choose a new disk B: */
-			DlgDisk_BrowseDisk(dlgname[1], 1, FLOPPYDLG_DISKB);
-			if (strlen(szDiskFileName[1]) > 0){
-					strcpy(prefs->DrivePath[1], szDiskFileName[1]);
-			}
+            if (strlen(szDiskFileName[2]) > 0)
+               strcpy(prefs->DrivePath[2], szDiskFileName[2]);
+            break;
+         case FLOPPYDLG_EJECT3:                         /* Eject disk in drive B: */
+            Floppy_SetDiskFileNameNone(3);
+            dlgname[3][0] = '\0';
 
+            break;
+         case FLOPPYDLG_BROWSE3:                         /* Choose a new disk B: */
+            DlgDisk_BrowseDisk(dlgname[3], 1, FLOPPYDLG_DISKB);
+            if (strlen(szDiskFileName[3]) > 0)
+               strcpy(prefs->DrivePath[3], szDiskFileName[3]);
+            break;
+         case FLOPPYDLG_BROWSEIMG:
+            DlgDisk_BrowseDir(dlgdiskdir,
+                  /*ConfigureParams.DiskImage.*/szDiskImageDirectory,
+                  floppydlg[FLOPPYDLG_IMGDIR].w);
+            break;
+#if 0
+         case FLOPPYDLG_CREATEIMG:
+            newdisk = DlgNewDisk_Main();
+            if (newdisk)
+            {
+               DlgFloppy_QueryInsert(dlgname[0], FLOPPYDLG_DISKA,
+                     dlgname[1], FLOPPYDLG_DISKB,
+                     newdisk);
+               free(newdisk);
+            }
+            break;
 
-		 case FLOPPYDLG_EJECT2:                         /* Eject disk in drive A: */
-			Floppy_SetDiskFileNameNone(2);
-			dlgname[2][0] = '\0';
-
-			break;
-		 case FLOPPYDLG_BROWSE2:                        /* Choose a new disk A: */
-			DlgDisk_BrowseDisk(dlgname[2], 0, FLOPPYDLG_DISK2);
-
-			if (strlen(szDiskFileName[2]) > 0){
-					strcpy(prefs->DrivePath[2], szDiskFileName[2]);
-			}
-
-			break;
-		 case FLOPPYDLG_EJECT3:                         /* Eject disk in drive B: */
-			Floppy_SetDiskFileNameNone(3);
-			dlgname[3][0] = '\0';
-
-			break;
-		case FLOPPYDLG_BROWSE3:                         /* Choose a new disk B: */
-			DlgDisk_BrowseDisk(dlgname[3], 1, FLOPPYDLG_DISKB);
-			if (strlen(szDiskFileName[3]) > 0){
-					strcpy(prefs->DrivePath[3], szDiskFileName[3]);
-			}
-
-			break;
-		 case FLOPPYDLG_BROWSEIMG:
-			DlgDisk_BrowseDir(dlgdiskdir,
-			                 /*ConfigureParams.DiskImage.*/szDiskImageDirectory,
-			                 floppydlg[FLOPPYDLG_IMGDIR].w);
-			break;
-/*
-		 case FLOPPYDLG_CREATEIMG:
-			newdisk = DlgNewDisk_Main();
-			if (newdisk)
-			{
-				DlgFloppy_QueryInsert(dlgname[0], FLOPPYDLG_DISKA,
-						      dlgname[1], FLOPPYDLG_DISKB,
-						      newdisk);
-				free(newdisk);
-			}
-			break;
-*/
-		}
-                gui_poll_events();
-	}
+#endif
+      }
+      gui_poll_events();
+   }
 	while (but != FLOPPYDLG_EXIT && but != SDLGUI_QUIT
 	        && but != SDLGUI_ERROR && !bQuitProgram);
 
-	if (floppydlg[FLOPPYDLG_1541].state & SG_SELECTED){
-
-			if(!ThePrefs.Emul1541Proc){
-					prefs->Emul1541Proc = !prefs->Emul1541Proc;
-			}
-	}
-	else {
-			if(ThePrefs.Emul1541Proc){
-					prefs->Emul1541Proc = !prefs->Emul1541Proc;
-			}	
-
-	}
-
-
+	if (floppydlg[FLOPPYDLG_1541].state & SG_SELECTED)
+   {
+      if(!ThePrefs.Emul1541Proc)
+         prefs->Emul1541Proc = !prefs->Emul1541Proc;
+   }
+	else
+   {
+      if(ThePrefs.Emul1541Proc)
+         prefs->Emul1541Proc = !prefs->Emul1541Proc;
+   }
 }

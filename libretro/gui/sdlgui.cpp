@@ -207,12 +207,11 @@ static void SDLGui_DrawEditField(const SGOBJ *edlg, int objnum)
  */
 static void SDLGui_DrawBox(const SGOBJ *bdlg, int objnum)
 {
-	int x, y, w, h, offset;
+	int w, h, offset;
 	Uint32 grey =  0xffC0C0C0;
 	Uint32 upleftc, downrightc;
-
-	x = bdlg[objnum].x*sdlgui_fontwidth;
-	y = bdlg[objnum].y*sdlgui_fontheight;
+	int x = bdlg[objnum].x*sdlgui_fontwidth;
+	int y = bdlg[objnum].y*sdlgui_fontheight;
 	if (objnum > 0)                 /* Since the root object is a box, too, */
 	{
 		/* we have to look for it now here and only */
@@ -290,10 +289,8 @@ static void SDLGui_DrawButton(const SGOBJ *bdlg, int objnum)
 static void SDLGui_DrawRadioButton(const SGOBJ *rdlg, int objnum)
 {
 	char str[80];
-	int x, y;
-
-	x = (rdlg[0].x + rdlg[objnum].x) * sdlgui_fontwidth;
-	y = (rdlg[0].y + rdlg[objnum].y) * sdlgui_fontheight;
+	int x = (rdlg[0].x + rdlg[objnum].x) * sdlgui_fontwidth;
+	int y = (rdlg[0].y + rdlg[objnum].y) * sdlgui_fontheight;
 
 	if (rdlg[objnum].state & SG_SELECTED)
 		str[0]=SGRADIOBUTTON_SELECTED;
@@ -313,10 +310,8 @@ static void SDLGui_DrawRadioButton(const SGOBJ *rdlg, int objnum)
 static void SDLGui_DrawCheckBox(const SGOBJ *cdlg, int objnum)
 {
 	char str[80];
-	int x, y;
-
-	x = (cdlg[0].x + cdlg[objnum].x) * sdlgui_fontwidth;
-	y = (cdlg[0].y + cdlg[objnum].y) * sdlgui_fontheight;
+	int x = (cdlg[0].x + cdlg[objnum].x) * sdlgui_fontwidth;
+	int y = (cdlg[0].y + cdlg[objnum].y) * sdlgui_fontheight;
 
 	if ( cdlg[objnum].state&SG_SELECTED )
 		str[0]=SGCHECKBOX_SELECTED;
@@ -336,15 +331,15 @@ static void SDLGui_DrawCheckBox(const SGOBJ *cdlg, int objnum)
 static void SDLGui_DrawScrollbar(const SGOBJ *bdlg, int objnum)
 {
 	SDL_Rect rect;
-	int x, y, w, h;
+	int w, h;
         int offset = 0;
 
 	Uint32 grey0 = 0xff808080;//SDL_MapRGB(pSdlGuiScrn->format,128,128,128);
 	Uint32 grey1 = 0xffC4C4C4;//SDL_MapRGB(pSdlGuiScrn->format,196,196,196);
 	Uint32 grey2 = 0xff404040;//SDL_MapRGB(pSdlGuiScrn->format, 64, 64, 64);
 
-	x = bdlg[objnum].x * sdlgui_fontwidth;
-	y = bdlg[objnum].y * sdlgui_fontheight + bdlg[objnum].h;
+	int x = bdlg[objnum].x * sdlgui_fontwidth;
+	int y = bdlg[objnum].y * sdlgui_fontheight + bdlg[objnum].h;
 
 	x += bdlg[0].x*sdlgui_fontwidth;   /* add mainbox absolute coordinates */
 	y += bdlg[0].y*sdlgui_fontheight;  /* add mainbox absolute coordinates */
@@ -450,11 +445,10 @@ void SDLGui_DrawDialog(const SGOBJ *dlg)
  */
 static int SDLGui_FindObj(const SGOBJ *dlg, int fx, int fy)
 {
-	int len, i;
+	int i;
 	int ob = -1;
 	int xpos, ypos;
-
-	len = 0;
+	int len = 0;
 	while (dlg[len].type != -1)   len++;
 
 	xpos = fx / sdlgui_fontwidth;
@@ -522,11 +516,9 @@ int SDLGui_DoDialog(SGOBJ *dlg, int/*SDL_Event */*pEventOut)
 	int i, j, b;
 	int /*SDL_Event*/ sdlEvent;//SDL_Event sdlEvent;
 	SDL_Rect rct;
-	Uint32 grey;
-	
 	SDL_Rect dlgrect, bgrect;
 
-        grey = 0xffC0C0C0;
+        Uint32 grey = 0xffC0C0C0;
 
 	dlgrect.x = dlg[0].x * sdlgui_fontwidth;
 	dlgrect.y = dlg[0].y * sdlgui_fontheight;
@@ -708,4 +700,3 @@ int SDLGui_DoDialog(SGOBJ *dlg, int/*SDL_Event */*pEventOut)
 
 	return retbutton;
 }
-

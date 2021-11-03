@@ -34,19 +34,19 @@ const char DlgMain_fileid[] = "Hatari dlgMain.c : " __DATE__ " " __TIME__;
 static SGOBJ maindlg[] =
 {
 	{ SGBOX, 0, 0, 0,0, 50,19, NULL },
-	{ SGTEXT, 0, 0, 17,1, 16,1, "Frodo main menu" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 2,4, 13,1, "About" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 17,4, 16,1, "Floppy" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 17,8, 16,1, "Video" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 35,4, 13,1, "Misc" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 2,8, 13,1, "Joy" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 35,8, 13,1, "Sound" },
-	{ SGRADIOBUT, 0, 0, 3,15, 15,1, "No Reset" },
-	{ SGRADIOBUT, 0, 0, 3,17, 15,1, "Reset" },
-	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 21,15, 8,3, "OK" },
-	{ SGBUTTON, SG_EXIT/*0*/, 0, 36,15, 10,1, "Quit" },
-	{ SGBUTTON, SG_EXIT/*SG_CANCEL*/, 0, 36,17, 10,1, "Cancel" },
-	{ SGBUTTON, SG_EXIT, 0, 17,12, 16,1, "Snapshot" },
+	{ SGTEXT, 0, 0, 17,1, 16,1, (char*)"Frodo main menu" },
+	{ SGBUTTON, SG_EXIT/*0*/, 0, 2,4, 13,1, (char*)"About" },
+	{ SGBUTTON, SG_EXIT/*0*/, 0, 17,4, 16,1, (char*)"Floppy" },
+	{ SGBUTTON, SG_EXIT/*0*/, 0, 17,8, 16,1, (char*)"Video" },
+	{ SGBUTTON, SG_EXIT/*0*/, 0, 35,4, 13,1, (char*)"Misc" },
+	{ SGBUTTON, SG_EXIT/*0*/, 0, 2,8, 13,1, (char*)"Joy" },
+	{ SGBUTTON, SG_EXIT/*0*/, 0, 35,8, 13,1, (char*)"Sound" },
+	{ SGRADIOBUT, 0, 0, 3,15, 15,1, (char*)"No Reset" },
+	{ SGRADIOBUT, 0, 0, 3,17, 15,1, (char*)"Reset" },
+	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 21,15, 8,3, (char*)"OK" },
+	{ SGBUTTON, SG_EXIT/*0*/, 0, 36,15, 10,1, (char*)"Quit" },
+	{ SGBUTTON, SG_EXIT/*SG_CANCEL*/, 0, 36,17, 10,1, (char*)"Cancel" },
+	{ SGBUTTON, SG_EXIT, 0, 17,12, 16,1, (char*)"Snapshot" },
 	{ -1, 0, 0, 0,0, 0,0, NULL }
 };
 

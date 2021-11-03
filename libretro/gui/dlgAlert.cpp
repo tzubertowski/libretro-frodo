@@ -20,8 +20,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License (gpl.txt) for more details.
  */
-const char DlgAlert_fileid[] = "Hatari dlgAlert.c : " __DATE__ " " __TIME__;
-
 #include <string.h>
 
 #include "dialog.h"
@@ -30,12 +28,6 @@ const char DlgAlert_fileid[] = "Hatari dlgAlert.c : " __DATE__ " " __TIME__;
 #define MAX_LINES 4
 
 static char dlglines[MAX_LINES][50+1];
-
-#ifdef ALERT_HOOKS 
-	// The alert hook functions
-	extern int HookedAlertNotice(const char* szMessage);	// Must return true if OK clicked, false otherwise
-	extern int HookedAlertQuery(const char* szMessage);		// Must return true if OK clicked, false otherwise
-#endif
 
 #define DLGALERT_OK       5
 #define DLGALERT_CANCEL   6
@@ -48,8 +40,8 @@ static SGOBJ alertdlg[] =
 	{ SGTEXT, 0, 0, 1,2, 50,1, dlglines[1] },
 	{ SGTEXT, 0, 0, 1,3, 50,1, dlglines[2] },
 	{ SGTEXT, 0, 0, 1,4, 50,1, dlglines[3] },
-	{ SGBUTTON,SG_EXIT/* SG_DEFAULT*/, 0, 5,5, 8,1, "OK" },
-	{ SGBUTTON,SG_EXIT/* SG_CANCEL*/, 0, 24,5, 8,1, "Cancel" },
+	{ SGBUTTON,SG_EXIT/* SG_DEFAULT*/, 0, 5,5, 8,1, (char*)"OK" },
+	{ SGBUTTON,SG_EXIT/* SG_CANCEL*/, 0, 24,5, 8,1, (char*)"Cancel" },
 	{ -1, 0, 0, 0,0, 0,0, NULL }
 };
 
@@ -62,17 +54,13 @@ static SGOBJ alertdlg[] =
  */
 static int DlgAlert_FormatTextToBox(char *text, int max_width, int *text_width)
 {
-	int columns = 0;
-	int lines = 1;
-	char *p;            /* pointer to begin of actual line */
-	char *q;            /* pointer to start of next search */
-	char *llb;          /* pointer to last place suitable for breaking the line */
-	char *txtend;       /* pointer to end of the text */
-	int txtlen = strlen(text);
-
-	q = p = text;
-	llb = text-1;       /* pointer to last line break */
-	txtend = text + txtlen;
+	int columns   = 0;
+	int lines     = 1;
+	int txtlen    = strlen(text);
+	char *q       = text;          /* pointer to begin of actual line */
+   char *p       = text;          /* pointer to start of next search */
+	char *llb     = text-1;        /* pointer to last place suitable for linebreak */
+	char *txtend  = text + txtlen; /* pointer to end of text */
 
 	if (txtlen <= max_width)
 	{
@@ -123,18 +111,18 @@ static int DlgAlert_FormatTextToBox(char *text, int max_width, int *text_width)
  */
 static int DlgAlert_ShowDlg(const char *text)
 {
-	static int maxlen = sizeof(dlglines[0])-1;
-	char *t = (char *)malloc(strlen(text)+1);
-	char *orig_t = t;
 	int lines, i, len, offset;
 	bool bOldMouseVisibility;
 	int nOldMouseX, nOldMouseY;
+	static int maxlen = sizeof(dlglines[0])-1;
+	char *t           = (char *)malloc(strlen(text)+1);
+	char *orig_t      = t;
 
 	strcpy(t, text);
-	lines = DlgAlert_FormatTextToBox(t, maxlen, &len);
-	offset = (maxlen-len)/2;
+	lines             = DlgAlert_FormatTextToBox(t, maxlen, &len);
+	offset            = (maxlen-len)/2;
 
-	for(i=0; i<MAX_LINES; i++)
+	for(i=0; i < MAX_LINES; i++)
 	{
 		if (i < lines)
 		{
@@ -144,9 +132,7 @@ static int DlgAlert_ShowDlg(const char *text)
 			t += strlen(t)+1;
 		}
 		else
-		{
 			dlglines[i][0] = '\0';
-		}
 	}
 
 	free(orig_t);
@@ -155,13 +141,11 @@ static int DlgAlert_ShowDlg(const char *text)
 		return false;
 	SDLGui_CenterDlg(alertdlg);
 
-        do
+   do
 	{                     
 	       i = SDLGui_DoDialog(alertdlg, NULL);
-               gui_poll_events();
-
-	}
-	while (i != DLGALERT_OK && i != DLGALERT_CANCEL && i != SDLGUI_QUIT
+          gui_poll_events();
+	} while (i != DLGALERT_OK && i != DLGALERT_CANCEL && i != SDLGUI_QUIT
 	        && i != SDLGUI_ERROR && !bQuitProgram);
 
 	return (i == DLGALERT_OK);
@@ -174,20 +158,16 @@ static int DlgAlert_ShowDlg(const char *text)
  */
 int DlgAlert_Notice(const char *text)
 {
-#ifdef ALERT_HOOKS 
-	return HookedAlertNotice(text);
-#endif
+   /* Hide "cancel" button: */
+   alertdlg[DLGALERT_CANCEL].type = SGTEXT;
+   alertdlg[DLGALERT_CANCEL].txt  = (char*)"";
+   alertdlg[DLGALERT_CANCEL].w    = 0;
+   alertdlg[DLGALERT_CANCEL].h    = 0;
 
-	/* Hide "cancel" button: */
-	alertdlg[DLGALERT_CANCEL].type = SGTEXT;
-	alertdlg[DLGALERT_CANCEL].txt = "";
-	alertdlg[DLGALERT_CANCEL].w = 0;
-	alertdlg[DLGALERT_CANCEL].h = 0;
+   /* Adjust button position: */
+   alertdlg[DLGALERT_OK].x        = (alertdlg[0].w - alertdlg[DLGALERT_OK].w) / 2;
 
-	/* Adjust button position: */
-	alertdlg[DLGALERT_OK].x = (alertdlg[0].w - alertdlg[DLGALERT_OK].w) / 2;
-
-	return DlgAlert_ShowDlg(text);
+   return DlgAlert_ShowDlg(text);
 }
 
 
@@ -197,19 +177,15 @@ int DlgAlert_Notice(const char *text)
  */
 int DlgAlert_Query(const char *text)
 {
-#ifdef ALERT_HOOKS
-	return HookedAlertQuery(text);
-#endif
-
 	/* Show "cancel" button: */
 	alertdlg[DLGALERT_CANCEL].type = SGBUTTON;
-	alertdlg[DLGALERT_CANCEL].txt = "Cancel";
-	alertdlg[DLGALERT_CANCEL].w = 8;
-	alertdlg[DLGALERT_CANCEL].h = 1;
+	alertdlg[DLGALERT_CANCEL].txt  = (char*)"Cancel";
+	alertdlg[DLGALERT_CANCEL].w    = 8;
+	alertdlg[DLGALERT_CANCEL].h    = 1;
 
 	/* Adjust buttons positions: */
-	alertdlg[DLGALERT_OK].x = (alertdlg[0].w - alertdlg[DLGALERT_OK].w - alertdlg[DLGALERT_CANCEL].w) / 3;
-	alertdlg[DLGALERT_CANCEL].x = alertdlg[DLGALERT_OK].x * 2 + alertdlg[DLGALERT_OK].w;
+	alertdlg[DLGALERT_OK].x        = (alertdlg[0].w - alertdlg[DLGALERT_OK].w - alertdlg[DLGALERT_CANCEL].w) / 3;
+	alertdlg[DLGALERT_CANCEL].x    = alertdlg[DLGALERT_OK].x * 2 + alertdlg[DLGALERT_OK].w;
 
 	return DlgAlert_ShowDlg(text);
 }

@@ -10,13 +10,10 @@
 
   Show information about the program and its license.
 */
-const char DlgAbout_fileid[] = "Hatari dlgAbout.c : " __DATE__ " " __TIME__;
 
 #include "dialog.h"
 #include "sdlgui.h"
 #include <string.h>
-
-#define PROG_NAME "Frodo V4.2"
 
 #define DLGABOUT_EXIT       17
 
@@ -24,23 +21,23 @@ const char DlgAbout_fileid[] = "Hatari dlgAbout.c : " __DATE__ " " __TIME__;
 static SGOBJ aboutdlg[] =
 {
 	{ SGBOX, 0, 0, 0,0, 48,25, NULL },
-	{ SGTEXT, 0, 0, 13,1, 12,1, PROG_NAME },
-	{ SGTEXT, 0, 0, 13,2, 12,1, "=============" },
-	{ SGTEXT, 0, 0, 1,4, 46,1, "The free, portable Commodore 64 emulator" },
-	{ SGTEXT, 0, 0, 1,5, 46,1, "Copyright © Christian Bauer et al. " },
-	{ SGTEXT, 0, 0, 2,7, 46,1, "" },
-	{ SGTEXT, 0, 0, 1,9, 46,1, "http://frodo.cebix.net/" },
-	{ SGTEXT, 0, 0, 1,10, 46,1,"----------------------------------" },
-	{ SGTEXT, 0, 0, 1,11, 46,1, "" },
-	{ SGTEXT, 0, 0, 1,12, 46,1, "" },
-	{ SGTEXT, 0, 0, 1,13, 46,1, "" },
-	{ SGTEXT, 0, 0, 1,14, 46,1, "" },
-	{ SGTEXT, 0, 0, 1,15, 46,1, "" },
-	{ SGTEXT, 0, 0, 1,17, 46,1, "" },
-	{ SGTEXT, 0, 0, 1,18, 46,1, "Port of Frodo to LIBRETRO" },
-	{ SGTEXT, 0, 0, 1,19, 46,1, "Gui code taken from the great HATARI emulator" },
-	{ SGTEXT, 0, 0, 1,20, 46,1, "http://hatari.tuxfamily.org/"},
-	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 16,23, 8,1, "OK" },
+	{ SGTEXT, 0, 0, 13,1, 12,1, (char*)"Frodo" },
+	{ SGTEXT, 0, 0, 13,2, 12,1, (char*)"=============" },
+	{ SGTEXT, 0, 0, 1,4, 46,1, (char*)"The free, portable Commodore 64 emulator" },
+	{ SGTEXT, 0, 0, 1,5, 46,1, (char*)"Copyright © Christian Bauer et al. " },
+	{ SGTEXT, 0, 0, 2,7, 46,1, (char*)"" },
+	{ SGTEXT, 0, 0, 1,9, 46,1, (char*)"http://frodo.cebix.net/" },
+	{ SGTEXT, 0, 0, 1,10, 46,1, (char*)"----------------------------------" },
+	{ SGTEXT, 0, 0, 1,11, 46,1, (char*)"" },
+	{ SGTEXT, 0, 0, 1,12, 46,1, (char*)"" },
+	{ SGTEXT, 0, 0, 1,13, 46,1, (char*)"" },
+	{ SGTEXT, 0, 0, 1,14, 46,1, (char*)"" },
+	{ SGTEXT, 0, 0, 1,15, 46,1, (char*)"" },
+	{ SGTEXT, 0, 0, 1,17, 46,1, (char*)"" },
+	{ SGTEXT, 0, 0, 1,18, 46,1, (char*)"Port of Frodo to Libretro" },
+	{ SGTEXT, 0, 0, 1,19, 46,1, (char*)"GUI code taken from the great HATARI emulator" },
+	{ SGTEXT, 0, 0, 1,20, 46,1, (char*)"http://hatari.tuxfamily.org/"},
+	{ SGBUTTON, SG_EXIT/*SG_DEFAULT*/, 0, 16,23, 8,1, (char*)"OK" },
 	{ -1, 0, 0, 0,0, 0,0, NULL }
 };
 
@@ -52,8 +49,7 @@ static SGOBJ aboutdlg[] =
 void Dialog_AboutDlg(void)
 {
    int but;
-   /* Center PROG_NAME title string */
-   aboutdlg[1].x = (aboutdlg[0].w - strlen(PROG_NAME)) / 2;
+   aboutdlg[1].x = (aboutdlg[0].w - strlen("Frodo")) / 2;
 
    SDLGui_CenterDlg(aboutdlg);
 

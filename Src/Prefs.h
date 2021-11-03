@@ -100,25 +100,6 @@ public:
 	bool ShowLEDs;			// Show LEDs (Win32)
 
 	void set_drive8(char *filename,int type);
-
-#ifdef __mac__
-	void ChangeDisks(void);
-#endif
-
-#ifdef WIN32
-private:
-	static BOOL CALLBACK StandardDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-	static BOOL CALLBACK WIN32DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-	BOOL DialogProc(int page, HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-	void SetupControls(int page);
-	void SetValues(int page);
-	void GetValues(int page);
-	void BrowseForDevice(int id);
-
-	static Prefs *edit_prefs;
-	static char *edit_prefs_name;
-	static HWND hDlg;
-#endif
 };
 
 
