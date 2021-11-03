@@ -1,43 +1,39 @@
-#include "libretro.h"
+#include <stdarg.h>
+#include <libretro.h>
 
 #include "libretro-core.h"
 #include "libretro_core_options.h"
 
-#include <stdarg.h>
-
-#ifndef NO_LIBCO
-cothread_t mainThread;
-cothread_t emuThread;
-#else
+#ifdef NO_LIBCO
 #include "main.h"
 #include "C64.h"
 #include "Display.h"
 #include "Prefs.h"
 #include "SAM.h"
-extern C64 *TheC64;
-extern void quit_frodo_emu();
+#else
+cothread_t mainThread;
+cothread_t emuThread;
 #endif
-
 
 int CROP_WIDTH;
 int CROP_HEIGHT;
-int VIRTUAL_WIDTH ;
+int VIRTUAL_WIDTH;
 int retrow=1024; 
 int retroh=1024;
+
+#ifdef NO_LIBCO
+extern C64 *TheC64;
+extern void quit_frodo_emu(void);
+#endif
 
 extern int SHIFTON,pauseg,SND ,snd_sampler;
 extern short signed int SNDBUF[1024*2];
 extern char RPATH[512];
-extern char RETRO_DIR[512];
 
 #include "cmdline.c"
 
-extern void update_input(void);
 extern void texture_init(void);
 extern void texture_uninit(void);
-extern void Emu_init(void);
-extern void Emu_uninit(void);
-extern void input_gui(void);
 
 const char *retro_save_directory;
 const char *retro_system_directory;
@@ -55,15 +51,16 @@ static void RETRO_CALLCONV fallback_log(
 
 void retro_set_environment(retro_environment_t cb)
 {
+   struct retro_log_callback log;
+   bool no_rom = true;
+
    environ_cb = cb;
 
-   struct retro_log_callback log;
    if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log))
      log_cb = log.log;
 
    libretro_set_core_options(environ_cb);
 
-   bool no_rom = true;
    cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_rom);
 }
 
@@ -86,7 +83,7 @@ static void update_variables(void)
       if (pch)
          retroh = strtoul(pch, NULL, 0);
 
-//FIXME remove force 384x288
+      //FIXME remove force 384x288
       retrow        = WINDOW_WIDTH;
       retroh        = WINDOW_HEIGHT;
       CROP_WIDTH    = retrow;
@@ -95,7 +92,6 @@ static void update_variables(void)
       texture_init();
       //reset_screen();
    }
-
 }
 
 static void retro_wrap_emulator(void)
@@ -117,10 +113,6 @@ static void retro_wrap_emulator(void)
 
 void Emu_init(void)
 {
-#ifdef RETRO_AND
-   MOUSEMODE=1;
-#endif
-
    update_variables();
 
    memset(Key_Sate,0,512);
@@ -185,11 +177,6 @@ void retro_init(void)
       // make retro_save_directory the same in case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY is not implemented by the frontend
       retro_save_directory=retro_system_directory;
    }
-
-   if (retro_system_directory)
-      sprintf(RETRO_DIR, "%s\0", retro_system_directory);
-   else
-      sprintf(RETRO_DIR, "%s\0",".");
 
    environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt);
 

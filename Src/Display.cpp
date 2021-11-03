@@ -30,7 +30,7 @@
 #include "SAM.h"
 #include "Version.h"
 
-#include "libretro.h"
+#include <libretro.h>
 #include "libretro-core.h"
 #include "graph.h"
 #include "vkbd_def.h"

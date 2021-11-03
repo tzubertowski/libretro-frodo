@@ -22,6 +22,7 @@ SOURCES_C := \
 	     $(LIBRETRO_COMM_DIR)/streams/trans_stream_zlib.c \
 	     $(LIBRETRO_COMM_DIR)/streams/file_stream.c \
 	     $(LIBRETRO_COMM_DIR)/file/file_path.c \
+	     $(LIBRETRO_COMM_DIR)/time/rtime.c \
 	     $(LIBRETRO_COMM_DIR)/compat/fopen_utf8.c
 
 SOURCES_C += $(CORE_DIR)/libretro/scandir.c
