@@ -15,8 +15,8 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <assert.h>
 #include <errno.h>
+#include <string.h>
 #include <zlib.h>
 
 #include "utype.h"
@@ -494,7 +494,6 @@ void File_ShrinkName(char *pDestFileName, const char *pSrcFileName, int maxlen)
 		strcpy(pDestFileName, pSrcFileName);  /* It fits! */
 	else
 	{
-		assert(maxlen > 6);
 		strncpy(pDestFileName, pSrcFileName, maxlen/2);
 		if (maxlen&1)  /* even or uneven? */
 			pDestFileName[maxlen/2-1] = 0;
