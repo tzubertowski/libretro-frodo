@@ -659,11 +659,7 @@ void MOS6502_1541::Reset(void)
 
 void MOS6502_1541::illegal_op(uint8 op, uint16 at)
 {
-	char illop_msg[80];
-
-	sprintf(illop_msg, "1541: Illegal opcode %02x at %04x.", op, at);
-	if (ShowRequester(illop_msg, "Reset 1541", "Reset C64"))
-		the_c64->Reset();
+   the_c64->Reset();
 	Reset();
 }
 
@@ -674,11 +670,7 @@ void MOS6502_1541::illegal_op(uint8 op, uint16 at)
 
 void MOS6502_1541::illegal_jump(uint16 at, uint16 to)
 {
-	char illop_msg[80];
-
-	sprintf(illop_msg, "1541: Jump to I/O space at %04x to %04x.", at, to);
-	if (ShowRequester(illop_msg, "Reset 1541", "Reset C64"))
-		the_c64->Reset();
+   the_c64->Reset();
 	Reset();
 }
 
