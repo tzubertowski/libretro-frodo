@@ -10,7 +10,6 @@
 
   Zipped disk support, uses zlib
 */
-const char ZIP_fileid[] = "Hatari zip.c : " __DATE__ " " __TIME__;
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +19,6 @@ const char ZIP_fileid[] = "Hatari zip.c : " __DATE__ " " __TIME__;
 #include <zlib.h>
 
 #include "file.h"
-#include "str.h"
 #include "unzip.h"
 #include "zip.h"
 
@@ -94,12 +92,10 @@ zip_dir *ZIP_GetFiles(const char *pszFileName)
 	char filename_inzip[ZIP_PATH_MAX];
 	zip_dir *zd;
 
-	uf = unzOpen(pszFileName);
-	if (uf == NULL)
+	if (!(uf = unzOpen(pszFileName)))
 		return NULL;
 
-	err = unzGetGlobalInfo(uf,&gi);
-	if (err != UNZ_OK)
+	if ((err = unzGetGlobalInfo(uf,&gi)) != UNZ_OK)
 		return NULL;
 
 	/* allocate a file list */
@@ -201,117 +197,115 @@ static void ZIP_FreeFentries(struct dirent **fentries, int entries)
  */
 struct dirent **ZIP_GetFilesDir(const zip_dir *zip, const char *dir, int *entries)
 {
-	int i,j;
-	zip_dir *files;
-	char *temp;
-	bool flag;
-	int slash;
-	struct dirent **fentries;
+   int i,j;
+   char *temp;
+   bool flag;
+   int slash;
+   struct dirent **fentries;
+   zip_dir *files = (zip_dir *)malloc(sizeof(zip_dir));
+   if (!files)
+   {
+      perror("ZIP_GetFilesDir");
+      return NULL;
+   }
 
-	files = (zip_dir *)malloc(sizeof(zip_dir));
-	if (!files)
-	{
-		perror("ZIP_GetFilesDir");
-		return NULL;
-	}
+   files->names = (char **)malloc((zip->nfiles + 1) * sizeof(char *));
+   if (!files->names)
+   {
+      perror("ZIP_GetFilesDir");
+      free(files);
+      return NULL;
+   }
 
-	files->names = (char **)malloc((zip->nfiles + 1) * sizeof(char *));
-	if (!files->names)
-	{
-		perror("ZIP_GetFilesDir");
-		free(files);
-		return NULL;
-	}
+   /* add ".." directory */
+   files->nfiles = 1;
+   temp = (char *)malloc(4);
+   if (!temp)
+   {
+      ZIP_FreeZipDir(files);
+      return NULL;
+   }
+   temp[0] = temp[1] = '.';
+   temp[2] = '/';
+   temp[3] = '\0';
+   files->names[0] = temp;
 
-	/* add ".." directory */
-	files->nfiles = 1;
-	temp = (char *)malloc(4);
-	if (!temp)
-	{
-		ZIP_FreeZipDir(files);
-		return NULL;
-	}
-	temp[0] = temp[1] = '.';
-	temp[2] = '/';
-	temp[3] = '\0';
-	files->names[0] = temp;
+   for (i = 0; i < zip->nfiles; i++)
+   {
+      if (strlen(zip->names[i]) > strlen(dir))
+      {
+         if (strncasecmp(zip->names[i], dir, strlen(dir)) == 0)
+         {
+            temp = zip->names[i];
+            temp = (char *)(temp + strlen(dir));
+            if (temp[0] != '\0')
+            {
+               if ((slash=Zip_FileNameHasSlash(temp)) > 0)
+               {
+                  /* file is in a subdirectory, add this subdirectory if it doesn't exist in the list */
+                  flag = false;
+                  for (j = files->nfiles-1; j > 0; j--)
+                  {
+                     if (strncasecmp(temp, files->names[j], slash+1) == 0)
+                        flag = true;
+                  }
+                  if (flag == false)
+                  {
+                     files->names[files->nfiles] = (char *)malloc(slash+2);
+                     if (!files->names[files->nfiles])
+                     {
+                        perror("ZIP_GetFilesDir");
+                        ZIP_FreeZipDir(files);
+                        return NULL;
+                     }
+                     strncpy(files->names[files->nfiles], temp, slash+1);
+                     ((char *)files->names[files->nfiles])[slash+1] = '\0';
+                     files->nfiles++;
+                  }
+               }
+               else
+               {
+                  /* add a filename */
+                  files->names[files->nfiles] = (char *)malloc(strlen(temp)+1);
+                  if (!files->names[files->nfiles])
+                  {
+                     perror("ZIP_GetFilesDir");
+                     ZIP_FreeZipDir(files);
+                     return NULL;
+                  }
+                  strncpy(files->names[files->nfiles], temp, strlen(temp));
+                  ((char *)files->names[files->nfiles])[strlen(temp)] = '\0';
+                  files->nfiles++;
+               }
+            }
+         }
+      }
+   }
 
-	for (i = 0; i < zip->nfiles; i++)
-	{
-		if (strlen(zip->names[i]) > strlen(dir))
-		{
-			if (strncasecmp(zip->names[i], dir, strlen(dir)) == 0)
-			{
-				temp = zip->names[i];
-				temp = (char *)(temp + strlen(dir));
-				if (temp[0] != '\0')
-				{
-					if ((slash=Zip_FileNameHasSlash(temp)) > 0)
-					{
-						/* file is in a subdirectory, add this subdirectory if it doesn't exist in the list */
-						flag = false;
-						for (j = files->nfiles-1; j > 0; j--)
-						{
-							if (strncasecmp(temp, files->names[j], slash+1) == 0)
-								flag = true;
-						}
-						if (flag == false)
-						{
-							files->names[files->nfiles] = (char *)malloc(slash+2);
-							if (!files->names[files->nfiles])
-							{
-								perror("ZIP_GetFilesDir");
-								ZIP_FreeZipDir(files);
-								return NULL;
-							}
-							strncpy(files->names[files->nfiles], temp, slash+1);
-							((char *)files->names[files->nfiles])[slash+1] = '\0';
-							files->nfiles++;
-						}
-					}
-					else
-					{
-						/* add a filename */
-						files->names[files->nfiles] = (char *)malloc(strlen(temp)+1);
-						if (!files->names[files->nfiles])
-						{
-							perror("ZIP_GetFilesDir");
-							ZIP_FreeZipDir(files);
-							return NULL;
-						}
-						strncpy(files->names[files->nfiles], temp, strlen(temp));
-						((char *)files->names[files->nfiles])[strlen(temp)] = '\0';
-						files->nfiles++;
-					}
-				}
-			}
-		}
-	}
+   /* copy to a dirent structure */
+   *entries = files->nfiles;
+   fentries = (struct dirent **)malloc(sizeof(struct dirent *)*files->nfiles);
+   if (!fentries)
+   {
+      perror("ZIP_GetFilesDir");
+      ZIP_FreeZipDir(files);
+      return NULL;
+   }
+   for (i = 0; i < files->nfiles; i++)
+   {
+      fentries[i] = (struct dirent *)malloc(sizeof(struct dirent));
+      if (!fentries[i])
+      {
+         perror("ZIP_GetFilesDir");
+         ZIP_FreeFentries(fentries, i+1);
+         return NULL;
+      }
+      strcpy(fentries[i]->d_name, files->names[i]);
+   }
 
-	/* copy to a dirent structure */
-	*entries = files->nfiles;
-	fentries = (struct dirent **)malloc(sizeof(struct dirent *)*files->nfiles);
-	if (!fentries)
-	{
-		perror("ZIP_GetFilesDir");
-		ZIP_FreeZipDir(files);
-		return NULL;
-	}
-	for (i = 0; i < files->nfiles; i++)
-	{
-		fentries[i] = (struct dirent *)malloc(sizeof(struct dirent));
-		if (!fentries[i])
-		{
-			perror("ZIP_GetFilesDir");
-			ZIP_FreeFentries(fentries, i+1);
-			return NULL;
-		}
-		strcpy(fentries[i]->d_name, files->names[i]);
-	}
+   ZIP_FreeZipDir(files);
 
-	ZIP_FreeZipDir(files);
-
-	return fentries;
+   return fentries;
 }
 
 
@@ -366,8 +360,7 @@ static char *ZIP_FirstFile(const char *filename, const char * const ppsExts[])
 	int i, j;
 	char *name;
 
-	files = ZIP_GetFiles(filename);
-	if (files == NULL)
+	if (!(files = ZIP_GetFiles(filename)))
 		return NULL;
 
 	name = (char *)malloc(ZIP_PATH_MAX);
@@ -422,7 +415,6 @@ static void *ZIP_ExtractFile(unzFile uf, const char *filename, uLong size)
 	uInt size_buf;
 	unz_file_info file_info;
 
-
 	if (unzLocateFile(uf,filename, 0) != UNZ_OK)
 		return NULL;
 
@@ -474,14 +466,12 @@ Uint8 *ZIP_ReadDisk(const char *pszFileName, const char *pszZipPath, long *pImag
 
 	*pImageSize = 0;
 
-	uf = unzOpen(pszFileName);
-	if (uf == NULL)
+	if (!(uf = unzOpen(pszFileName)))
 		return NULL;
 
-	if (pszZipPath == NULL || pszZipPath[0] == 0)
+	if (!pszZipPath || pszZipPath[0] == 0)
 	{
-		path = ZIP_FirstFile(pszFileName, pszDiskNameExts);
-		if (path == NULL)
+		if (!(path = ZIP_FirstFile(pszFileName, pszDiskNameExts)))
 		{
 			unzClose(uf);
 			return NULL;
@@ -489,8 +479,7 @@ Uint8 *ZIP_ReadDisk(const char *pszFileName, const char *pszZipPath, long *pImag
 	}
 	else
 	{
-		path = (char *)malloc(ZIP_PATH_MAX);
-		if (path == NULL)
+		if (!(path = (char *)malloc(ZIP_PATH_MAX)))
 		{
 			perror("ZIP_ReadDisk");
 			unzClose(uf);
@@ -516,23 +505,20 @@ Uint8 *ZIP_ReadDisk(const char *pszFileName, const char *pszZipPath, long *pImag
 	free(path);
 	path = NULL;
 
-	if (buf == NULL)
-	{
+	if (!buf)
 		return NULL;  /* failed extraction, return error */
-	}
 
-	switch(nDiskType) {
-	default:
-//	case ZIP_FILE_ST:
-		/* ST image => return buffer directly */
-		pDiskBuffer = buf;
-		break;
-	}
+	switch(nDiskType)
+   {
+      default:
+         //	case ZIP_FILE_ST:
+         /* ST image => return buffer directly */
+         pDiskBuffer = buf;
+         break;
+   }
 	
 	if (pDiskBuffer)
-	{
 		*pImageSize = ImageSize;
-	}
 	return pDiskBuffer;
 }
 
@@ -547,7 +533,6 @@ bool ZIP_WriteDisk(const char *pszFileName,unsigned char *pBuffer,int ImageSize)
 {
 	return false;
 }
-
 
 /*-----------------------------------------------------------------------*/
 /**
@@ -564,30 +549,24 @@ Uint8 *ZIP_ReadFirstFile(const char *pszFileName, long *pImageSize, const char *
 	*pImageSize = 0;
 
 	/* Open the ZIP file */
-	uf = unzOpen(pszFileName);
-	if (uf == NULL)
+	if (!(uf = unzOpen(pszFileName)))
 		return NULL;
 
 	/* Locate the first file in the ZIP archive */
 	pszZipPath = ZIP_FirstFile(pszFileName, ppszExts);
-	if (pszZipPath == NULL)
+	if (!pszZipPath)
 	{
 		unzClose(uf);
 		return NULL;
 	}
 
 	if (unzLocateFile(uf, pszZipPath, 0) != UNZ_OK)
-	{
-		free(pszZipPath);
-		return NULL;
-	}
+      goto error;
 
 	/* Get file information (file size!) */
-	if (unzGetCurrentFileInfo(uf, &file_info, pszZipPath, ZIP_PATH_MAX, NULL, 0, NULL, 0) != UNZ_OK)
-	{
-		free(pszZipPath);
-		return NULL;
-	}
+	if (unzGetCurrentFileInfo(uf, &file_info,
+            pszZipPath, ZIP_PATH_MAX, NULL, 0, NULL, 0) != UNZ_OK)
+      goto error;
 
 	/* Extract to buffer */
 	pBuffer = (Uint8 *)ZIP_ExtractFile(uf, pszZipPath, file_info.uncompressed_size);
@@ -602,4 +581,8 @@ Uint8 *ZIP_ReadFirstFile(const char *pszFileName, long *pImageSize, const char *
 		*pImageSize = file_info.uncompressed_size;
 
 	return pBuffer;
+
+error:
+   free(pszZipPath);
+   return NULL;
 }

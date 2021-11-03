@@ -10,7 +10,6 @@
 
   Set up the various path strings.
 */
-const char Paths_fileid[] = "Hatari paths.c : " __DATE__ " " __TIME__;
 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -125,65 +124,63 @@ static void Paths_GetExecDirFromPATH(const char *argv0, char *pExecDir, int nMax
 	free(pTmpName);
 }
 
-
 /**
  * Locate the directory where the hatari executable resides
  */
 static char *Paths_InitExecDir(const char *argv0)
 {
-	/* Allocate memory for storing the path string of the executable */
-	char *psExecDir = (char*)malloc(FILENAME_MAX);
-	if (!psExecDir)
-		exit(-1);
+   /* Allocate memory for storing the path string of the executable */
+   char *psExecDir = (char*)malloc(FILENAME_MAX);
+   if (!psExecDir)
+      exit(-1);
 
-	/* Determine the bindir...
-	 * Start with empty string, then try to use OS specific functions,
-	 * and finally analyze the PATH variable if it has not been found yet. */
-	psExecDir[0] = '\0';
+   /* Determine the bindir...
+    * Start with empty string, then try to use OS specific functions,
+    * and finally analyze the PATH variable if it has not been found yet. */
+   psExecDir[0] = '\0';
 
 #if defined(__linux__)
-	{
-		int i;
-		/* On Linux, we can analyze the symlink /proc/self/exe */
-		i = readlink("/proc/self/exe", psExecDir, FILENAME_MAX);
-		if (i > 0)
-		{
-			char *p;
-			psExecDir[i] = '\0';
-			p = strrchr(psExecDir, '/');    /* Search last slash */
-			if (p)
-				*p = 0;                     /* Strip file name from path */
-		}
-	}
-//#elif defined(WIN32) || defined(__CEGCC__)
-//	/* On Windows we can use GetModuleFileName for getting the exe path */
-//	GetModuleFileName(NULL, psExecDir, FILENAME_MAX);
+   {
+      int i;
+      /* On Linux, we can analyze the symlink /proc/self/exe */
+      i = readlink("/proc/self/exe", psExecDir, FILENAME_MAX);
+      if (i > 0)
+      {
+         char *p;
+         psExecDir[i] = '\0';
+         p = strrchr(psExecDir, '/');    /* Search last slash */
+         if (p)
+            *p = 0;                     /* Strip file name from path */
+      }
+   }
+   //#elif defined(WIN32) || defined(__CEGCC__)
+   //	/* On Windows we can use GetModuleFileName for getting the exe path */
+   //	GetModuleFileName(NULL, psExecDir, FILENAME_MAX);
 #endif
 
-	/* If we do not have the execdir yet, analyze argv[0] and the PATH: */
-	if (psExecDir[0] == 0)
-	{
-		if (strchr(argv0, PATHSEP) == 0)
-		{
-			/* No separator in argv[0], we have to explore PATH... */
-			Paths_GetExecDirFromPATH(argv0, psExecDir, FILENAME_MAX);
-		}
-		else
-		{
-			/* There was a path separator in argv[0], so let's assume a
-			 * relative or absolute path to the current directory in argv[0] */
-			char *p;
-			strncpy(psExecDir, argv0, FILENAME_MAX);
-			psExecDir[FILENAME_MAX-1] = 0;
-			p = strrchr(psExecDir, PATHSEP);  /* Search last slash */
-			if (p)
-				*p = 0;                       /* Strip file name from path */
-		}
-	}
+   /* If we do not have the execdir yet, analyze argv[0] and the PATH: */
+   if (psExecDir[0] == 0)
+   {
+      if (strchr(argv0, PATHSEP) == 0)
+      {
+         /* No separator in argv[0], we have to explore PATH... */
+         Paths_GetExecDirFromPATH(argv0, psExecDir, FILENAME_MAX);
+      }
+      else
+      {
+         /* There was a path separator in argv[0], so let's assume a
+          * relative or absolute path to the current directory in argv[0] */
+         char *p;
+         strncpy(psExecDir, argv0, FILENAME_MAX);
+         psExecDir[FILENAME_MAX-1] = 0;
+         p = strrchr(psExecDir, PATHSEP);  /* Search last slash */
+         if (p)
+            *p = 0;                       /* Strip file name from path */
+      }
+   }
 
-	return psExecDir;
+   return psExecDir;
 }
-
 
 /**
  * Initialize the users home directory string
@@ -191,55 +188,52 @@ static char *Paths_InitExecDir(const char *argv0)
  */
 static void Paths_InitHomeDirs(void)
 {
-	char *psHome;
-
-	psHome = getenv("HOME");
-	if (psHome)
-		strncpy(sUserHomeDir, psHome, FILENAME_MAX);
+   char *psHome = getenv("HOME");
+   if (psHome)
+      strncpy(sUserHomeDir, psHome, FILENAME_MAX);
 #if defined(WIN32)
-	else
-	{
-		char *psDrive;
-		int len = 0;
-		/* Windows home path? */
-		psHome = getenv("HOMEPATH");
-		psDrive = getenv("HOMEDRIVE");
-		if (psDrive)
-		{
-			len = strlen(psDrive);
-			len = len < FILENAME_MAX ? len : FILENAME_MAX;
-			strncpy(sUserHomeDir, psDrive, len);
-		}
-		if (psHome)
-			strncpy(sUserHomeDir+len, psHome, FILENAME_MAX-len);
-	}
+   else
+   {
+      char *psDrive;
+      int len = 0;
+      /* Windows home path? */
+      psHome = getenv("HOMEPATH");
+      psDrive = getenv("HOMEDRIVE");
+      if (psDrive)
+      {
+         len = strlen(psDrive);
+         len = len < FILENAME_MAX ? len : FILENAME_MAX;
+         strncpy(sUserHomeDir, psDrive, len);
+      }
+      if (psHome)
+         strncpy(sUserHomeDir+len, psHome, FILENAME_MAX-len);
+   }
 #endif
-	if (!psHome)
-	{
-		/* $HOME not set, so let's use current working dir as home */
-		strcpy(sUserHomeDir, sWorkingDir);
-		strcpy(sHatariHomeDir, sWorkingDir);
-	}
-	else
-	{
-		sUserHomeDir[FILENAME_MAX-1] = 0;
+   if (!psHome)
+   {
+      /* $HOME not set, so let's use current working dir as home */
+      strcpy(sUserHomeDir, sWorkingDir);
+      strcpy(sHatariHomeDir, sWorkingDir);
+   }
+   else
+   {
+      sUserHomeDir[FILENAME_MAX-1] = 0;
 
-		/* Try to use a .hatari directory in the users home directory */
-		snprintf(sHatariHomeDir, FILENAME_MAX, "%s%c.hatari",
-		         sUserHomeDir, PATHSEP);
-		if (!File_DirExists(sHatariHomeDir))
-		{
-			/* Hatari home directory does not exists yet...
-			 * ...so let's try to create it: */
-			if (mkdir(sHatariHomeDir, 0755) != 0)
-			{
-				/* Failed to create, so use user's home dir instead */
-				strcpy(sHatariHomeDir, sUserHomeDir);
-			}
-		}
-	}
+      /* Try to use a .hatari directory in the users home directory */
+      snprintf(sHatariHomeDir, FILENAME_MAX, "%s%c.hatari",
+            sUserHomeDir, PATHSEP);
+      if (!File_DirExists(sHatariHomeDir))
+      {
+         /* Hatari home directory does not exists yet...
+          * ...so let's try to create it: */
+         if (mkdir(sHatariHomeDir, 0755) != 0)
+         {
+            /* Failed to create, so use user's home dir instead */
+            strcpy(sHatariHomeDir, sUserHomeDir);
+         }
+      }
+   }
 }
-
 
 /**
  * Initialize directory names
@@ -251,42 +245,42 @@ static void Paths_InitHomeDirs(void)
  */
 void Paths_Init(const char *argv0)
 {
-	char *psExecDir;  /* Path string where the hatari executable can be found */
+   char *psExecDir;  /* Path string where the hatari executable can be found */
 
-	/* Init working directory string */
+   /* Init working directory string */
 #ifdef VITA
-	strcpy(sWorkingDir, "ux0:/");
+   strcpy(sWorkingDir, "ux0:/");
 #elif defined(PSP)
-	strcpy(sWorkingDir, "ms0:/");
+   strcpy(sWorkingDir, "ms0:/");
 #else
-	if (getcwd(sWorkingDir, FILENAME_MAX) == NULL)
-	{
-		/* This should never happen... just in case... */
-		strcpy(sWorkingDir, ".");
-	}
+   if (getcwd(sWorkingDir, FILENAME_MAX) == NULL)
+   {
+      /* This should never happen... just in case... */
+      strcpy(sWorkingDir, ".");
+   }
 #endif
 
-	/* Init the user's home directory string */
-	Paths_InitHomeDirs();
+   /* Init the user's home directory string */
+   Paths_InitHomeDirs();
 
-	/* Get the directory where the executable resides */
-	psExecDir = Paths_InitExecDir(argv0);
+   /* Get the directory where the executable resides */
+   psExecDir = Paths_InitExecDir(argv0);
 
-	/* Now create the datadir path name from the bindir path name: */
-	if (psExecDir && strlen(psExecDir) > 0)
-	{
-		snprintf(sDataDir, sizeof(sDataDir), "%s%c%s",
-		         psExecDir, PATHSEP, BIN2DATADIR);
-	}
-	else
-	{
-		/* bindir could not be determined, let's assume datadir is relative
-		 * to current working directory... */
-		strcpy(sDataDir, BIN2DATADIR);
-	}
+   /* Now create the datadir path name from the bindir path name: */
+   if (psExecDir && strlen(psExecDir) > 0)
+   {
+      snprintf(sDataDir, sizeof(sDataDir), "%s%c%s",
+            psExecDir, PATHSEP, BIN2DATADIR);
+   }
+   else
+   {
+      /* bindir could not be determined, let's assume datadir is relative
+       * to current working directory... */
+      strcpy(sDataDir, BIN2DATADIR);
+   }
 
-	/* And finally make a proper absolute path out of datadir: */
-	File_MakeAbsoluteName(sDataDir);
+   /* And finally make a proper absolute path out of datadir: */
+   File_MakeAbsoluteName(sDataDir);
 
-	free(psExecDir);
+   free(psExecDir);
 }
