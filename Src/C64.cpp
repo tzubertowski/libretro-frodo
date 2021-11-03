@@ -66,10 +66,7 @@ C64::C64()
    unsigned i, j;
 	uint8 *p;
 
-	// The thread is not yet running
-	thread_running = false;
 	quit_thyself   = false;
-	have_a_break   = false;
 
 	// System-dependent things
 	c64_ctor1();

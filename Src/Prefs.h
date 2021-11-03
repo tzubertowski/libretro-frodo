@@ -50,8 +50,6 @@ enum {
 class Prefs {
 public:
 	Prefs();
-	bool ShowEditor(bool startup, char *prefs_name);
-	void Check(void);
 
 	bool operator==(const Prefs &rhs) const;
 	bool operator!=(const Prefs &rhs) const;
@@ -105,8 +103,5 @@ public:
 
 // These are the active preferences
 extern Prefs ThePrefs;
-
-// Theses are the preferences on disk
-extern Prefs ThePrefsOnDisk;
 
 #endif

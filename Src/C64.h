@@ -34,7 +34,6 @@ const int DRIVE_ROM_SIZE = 0x4000;
 // false: Frodo, true: FrodoSC
 extern bool IsFrodoSC;
 
-
 class Prefs;
 class C64Display;
 class MOS6510;
@@ -46,7 +45,6 @@ class IEC;
 class REU;
 class MOS6502_1541;
 class Job1541;
-class CmdPipe;
 
 class C64 {
 public:
@@ -54,9 +52,6 @@ public:
 	~C64();
 
 	void Run(void);
-	void Quit(void);
-	void Pause(void);
-	void Resume(void);
 	void Reset(void);
 	void NMI(void);
 	void VBlank(bool draw_frame);
@@ -108,11 +103,8 @@ private:
 #ifndef NO_LIBCO
 	void thread_func(void);
 #endif
-	bool thread_running;	// Emulation thread is running
 	bool quit_thyself;		// Emulation thread shall quit
-	bool have_a_break;		// Emulation thread shall pause
 
-	int joy_minx[2], joy_maxx[2], joy_miny[2], joy_maxy[2]; // For dynamic joystick calibration
 	uint8 joykey;			// Joystick keyboard emulation mask value
 
 	uint8 orig_kernal_1d84;	// Original contents of kernal locations $1d84 and $1d85

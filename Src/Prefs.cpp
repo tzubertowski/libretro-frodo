@@ -25,13 +25,8 @@
 #include "C64.h"
 #include "main.h"
 
-
 // These are the active preferences
 Prefs ThePrefs;
-
-// These are the preferences on disk
-Prefs ThePrefsOnDisk;
-
 
 /*
  *  Constructor: Set up preferences with defaults
@@ -139,25 +134,6 @@ bool Prefs::operator==(const Prefs &rhs) const
 bool Prefs::operator!=(const Prefs &rhs) const
 {
 	return !operator==(rhs);
-}
-
-
-/*
- *  Check preferences for validity and correct if necessary
- */
-
-void Prefs::Check(void)
-{
-	if (SkipFrames <= 0) SkipFrames = 1;
-
-	if (SIDType < SIDTYPE_NONE || SIDType > SIDTYPE_SIDCARD)
-		SIDType = SIDTYPE_NONE;
-
-	if (REUSize < REU_NONE || REUSize > REU_512K)
-		REUSize = REU_NONE;
-
-	if (DisplayType < DISPTYPE_WINDOW || DisplayType > DISPTYPE_SCREEN)
-		DisplayType = DISPTYPE_WINDOW;
 }
 
 void Prefs::set_drive8(char *filename,int type)
