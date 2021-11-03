@@ -11,11 +11,11 @@
   Zipped disk support, uses zlib
 */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/types.h>
+#include <string.h>
 #include <zlib.h>
 
 #include "file.h"
