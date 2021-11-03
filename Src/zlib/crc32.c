@@ -11,16 +11,6 @@
 
 /* @(#) $Id$ */
 
-/*
-  Note on the use of DYNAMIC_CRC_TABLE: there is no mutex or semaphore
-  protection on the static variables used to control the first-use generation
-  of the crc tables.  Therefore, if you #define DYNAMIC_CRC_TABLE, you should
-  first call get_crc_table() to initialize the tables before allowing more than
-  one thread to use crc32().
-
-  DYNAMIC_CRC_TABLE and MAKECRCH can be #defined to write out crc32.h.
- */
-
 #include "zutil.h"      /* for STDC and FAR definitions */
 
 #define local static
@@ -38,10 +28,6 @@
  */
 const z_crc_t FAR * ZEXPORT get_crc_table()
 {
-#ifdef DYNAMIC_CRC_TABLE
-    if (crc_table_empty)
-        make_crc_table();
-#endif /* DYNAMIC_CRC_TABLE */
     return (const z_crc_t FAR *)crc_table;
 }
 
@@ -57,22 +43,6 @@ unsigned long ZEXPORT crc32(crc, buf, len)
 {
     if (buf == Z_NULL) return 0UL;
 
-#ifdef DYNAMIC_CRC_TABLE
-    if (crc_table_empty)
-        make_crc_table();
-#endif /* DYNAMIC_CRC_TABLE */
-
-#ifdef BYFOUR
-    if (sizeof(void *) == sizeof(ptrdiff_t)) {
-        z_crc_t endian;
-
-        endian = 1;
-        if (*((unsigned char *)(&endian)))
-            return crc32_little(crc, buf, len);
-        else
-            return crc32_big(crc, buf, len);
-    }
-#endif /* BYFOUR */
     crc = crc ^ 0xffffffffUL;
     while (len >= 8) {
         DO8;
