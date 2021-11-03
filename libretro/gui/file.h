@@ -11,8 +11,7 @@
 
 #ifndef HATARI_FILE_H
 #define HATARI_FILE_H
-#include "stdbool.h"
-#include "stdio.h"
+#include <boolean.h>
 #include "utype.h"
 
 extern void File_CleanFileName(char *pszFileName);

@@ -11,7 +11,12 @@
   Set up the various path strings.
 */
 
+#include <stdio.h>
+#ifdef _WIN32
+#include <direct.h>
+#else
 #include <unistd.h>
+#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 

@@ -2,12 +2,11 @@
 #define LIBRETRO_CORE_H 1
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 
-#include <stdbool.h>
+#include <boolean.h>
 
 #define UINT16 uint16_t
 #define UINT32 uint32_t

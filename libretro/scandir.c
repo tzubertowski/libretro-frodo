@@ -6,15 +6,17 @@
 
   scandir function for SunOS etc..
 */
-const char ScanDir_fileid[] = "Hatari scandir.c : " __DATE__ " " __TIME__;
 
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef _WIN32
+#include <direct.h>
+#else
 #include <unistd.h>
+#endif
 
 #include "scandir.h"
 

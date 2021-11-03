@@ -12,8 +12,11 @@
 */
 
 #include <sys/stat.h>
+#ifdef _WIN32
+#include <direct.h>
+#else
 #include <unistd.h>
-#include <stdio.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 

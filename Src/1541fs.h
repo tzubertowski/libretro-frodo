@@ -21,8 +21,9 @@
 #ifndef _1541FS_H
 #define _1541FS_H
 
-#include "IEC.h"
+#include <stdio.h>
 
+#include "IEC.h"
 
 class FSDrive : public Drive {
 public:

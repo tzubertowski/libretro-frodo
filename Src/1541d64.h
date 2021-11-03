@@ -21,8 +21,9 @@
 #ifndef _1541D64_H
 #define _1541D64_H
 
-#include "IEC.h"
+#include <stdio.h>
 
+#include "IEC.h"
 
 /*
  *  Definitions

@@ -12,7 +12,6 @@
 #ifndef HATARI_PATHS_H
 #define HATARI_PATHS_H
 
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
