@@ -40,21 +40,24 @@
 // Multiplies two fixpoint numbers, result is a fixpoint number.
 static inline int fixmult(int x, int y)
 {
-  register unsigned int a,b;
-  register bool sign;
-
-  sign = (x ^ y) < 0;
-  if (x < 0) {x = -x;}
-  if (y < 0) {y = -y;}
-  // a, b : integer part; x, y : fractional part. All unsigned now (for shift right)!!!
+  unsigned int a,b;
+  bool sign = (x ^ y) < 0;
+  if (x < 0)
+     x = -x;
+  if (y < 0)
+     y = -y;
+  /* a, b : integer part; x, y : fractional part. All unsigned now 
+     (for shift right)!!! */
   a = (((unsigned int)x) >> FIXPOINT_PREC); x &= ~(a << FIXPOINT_PREC);
   b = (((unsigned int)y) >> FIXPOINT_PREC); y &= ~(b << FIXPOINT_PREC);
   x = ((a*b) << FIXPOINT_PREC) + (a*y + b*x) +
       ((unsigned int)((x*y) + (1 << (FIXPOINT_PREC-1))) >> FIXPOINT_PREC);
 #ifdef FIXPOINT_SIGN
-  if (x < 0) {x ^= FIXPOINT_SIGN;}
+  if (x < 0)
+     x ^= FIXPOINT_SIGN;
 #endif
-  if (sign) {x = -x;}
+  if (sign)
+     x = -x;
   return(x);
 }
 
@@ -64,10 +67,8 @@ static inline int fixmult(int x, int y)
 // valid bits.
 static inline int intmult(int x, int y)	// x is fixpoint, y integer
 {
-  register unsigned int i,j;
-  register bool sign;
-
-  sign = (x ^ y) < 0;
+  unsigned int i,j;
+  bool sign = (x ^ y) < 0;
   if (x < 0) {x = -x;}
   if (y < 0) {y = -y;}
   i = (((unsigned int)x) >> 16); x &= ~(i << 16);	// split both into 16.16 parts
@@ -78,7 +79,7 @@ static inline int intmult(int x, int y)	// x is fixpoint, y integer
       ((unsigned int)(x*y + (1 << (FIXPOINT_PREC - 1))) >> FIXPOINT_PREC);
 #else
   {
-    register unsigned int h;
+    unsigned int h;
 
     h = (i*y + j*x);
     i = ((i*j) << (32 - FIXPOINT_PREC)) + (h >> (FIXPOINT_PREC - 16));
@@ -98,14 +99,15 @@ static inline int intmult(int x, int y)	// x is fixpoint, y integer
 // Computes the product of a fixpoint number with itself.
 static inline int fixsquare(int x)
 {
-  register unsigned int a;
-
-  if (x < 0) {x = -x;}
+  unsigned int a;
+  if (x < 0)
+     x = -x;
   a = (((unsigned int)x) >> FIXPOINT_PREC); x &= ~(a << FIXPOINT_PREC);
   x = ((a*a) << FIXPOINT_PREC) + ((a*x) << 1) +
       ((unsigned int)((x*x) + (1 << (FIXPOINT_PREC-1))) >> FIXPOINT_PREC);
 #ifdef FIXPOINT_SIGN
-  if (x < 0) {x ^= FIXPOINT_SIGN;}
+  if (x < 0)
+     x ^= FIXPOINT_SIGN;
 #endif
   return(x);
 }
@@ -114,18 +116,20 @@ static inline int fixsquare(int x)
 // Computes the square root of a fixpoint number.
 static inline int fixsqrt(int x)
 {
-  register int test, step;
-
-  if (x < 0) return(-1); if (x == 0) return(0);
+  int test, step;
+  if (x < 0)
+     return(-1);
+  if (x == 0)
+     return(0);
   step = (x <= (1<<FIXPOINT_PREC)) ? (1<<FIXPOINT_PREC) : (1<<((FIXPOINT_BITS - 2 + FIXPOINT_PREC)>>1));
   test = 0;
   while (step != 0)
   {
-    register int h;
-
-    h = fixsquare(test + step);
-    if (h <= x) {test += step;}
-    if (h == x) break;
+    int h = fixsquare(test + step);
+    if (h <= x)
+       test += step;
+    if (h == x)
+       break;
     step >>= 1;
   }
   return(test);
@@ -135,24 +139,36 @@ static inline int fixsqrt(int x)
 // Divides a fixpoint number by another fixpoint number, yielding a fixpoint result.
 static inline int fixdiv(int x, int y)
 {
-  register int res, mask;
-  register bool sign;
-
-  sign = (x ^ y) < 0;
-  if (x < 0) {x = -x;}
-  if (y < 0) {y = -y;}
-  mask = (1<<FIXPOINT_PREC); res = 0;
-  while (x > y) {y <<= 1; mask <<= 1;}
+  int res, mask;
+  bool sign = (x ^ y) < 0;
+  if (x < 0)
+     x = -x;
+  if (y < 0)
+     y = -y;
+  mask = (1<<FIXPOINT_PREC);
+  res = 0;
+  while (x > y)
+  {
+     y    <<= 1;
+     mask <<= 1;
+  }
   while (mask != 0)
   {
-    if (x >= y) {res |= mask; x -= y;}
-    mask >>= 1; y >>= 1;
+    if (x >= y)
+    {
+       res |= mask;
+       x -= y;
+    }
+    mask >>= 1;
+    y    >>= 1;
   }
 #ifdef FIXPOINT_SIGN
-  if (res < 0) {res ^= FIXPOINT_SIGN;}
+  if (res < 0)
+     res ^= FIXPOINT_SIGN;
 #endif
-  if (sign) {res = -res;}
-  return(res);
+  if (sign)
+     res = -res;
+  return res;
 }
 
 
