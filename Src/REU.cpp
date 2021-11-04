@@ -40,20 +40,21 @@
 
 REU::REU(MOS6510 *CPU) : the_cpu(CPU)
 {
-	int i;
+   int i;
 
-	// Init registers
-	regs[0] = 0x40;
-	for (i=1; i<11; i++)
-		regs[i] = 0;
-	for (i=11; i<16; i++)
-		regs[i] = 0xff;
+   // Init registers
+   regs[0] = 0x40;
+   for (i=1; i<11; i++)
+      regs[i] = 0;
+   for (i=11; i<16; i++)
+      regs[i] = 0xff;
 
-	ex_ram = NULL;
-	ram_size = ram_mask = 0;
+   ex_ram   = NULL;
+   ram_size = 0;
+   ram_mask = 0;
 
-	// Allocate RAM
-	open_close_reu(REU_NONE, ThePrefs.REUSize);
+   // Allocate RAM
+   open_close_reu(REU_NONE, ThePrefs.REUSize);
 }
 
 
@@ -88,33 +89,36 @@ void REU::open_close_reu(int old_size, int new_size)
 		return;
 
 	// Free old RAM
-	if (old_size != REU_NONE) {
-		delete[] ex_ram;
-		ex_ram = NULL;
-	}
+	if (old_size != REU_NONE)
+   {
+      delete[] ex_ram;
+      ex_ram = NULL;
+   }
 
 	// Allocate new RAM
-	if (new_size != REU_NONE) {
-		switch (new_size) {
-			case REU_128K:
-				ram_size = 0x20000;
-				break;
-			case REU_256K:
-				ram_size = 0x40000;
-				break;
-			case REU_512K:
-				ram_size = 0x80000;
-				break;
-		}
-		ram_mask = ram_size - 1;
-		ex_ram = new uint8[ram_size];
+	if (new_size != REU_NONE)
+   {
+      switch (new_size)
+      {
+         case REU_128K:
+            ram_size = 0x20000;
+            break;
+         case REU_256K:
+            ram_size = 0x40000;
+            break;
+         case REU_512K:
+            ram_size = 0x80000;
+            break;
+      }
+      ram_mask = ram_size - 1;
+      ex_ram   = new uint8[ram_size];
 
-		// Set size bit in status register
-		if (ram_size > 0x20000)
-			regs[0] |= 0x10;
-		else
-			regs[0] &= 0xef;
-	}
+      // Set size bit in status register
+      if (ram_size > 0x20000)
+         regs[0] |= 0x10;
+      else
+         regs[0] &= 0xef;
+   }
 }
 
 
@@ -144,24 +148,28 @@ void REU::Reset(void)
 
 uint8 REU::ReadRegister(uint16 adr)
 {
-	if (ex_ram == NULL)
+	if (!ex_ram)
 		return rand();
 
-	switch (adr) {
-		case 0:{
-			uint8 ret = regs[0];
-			regs[0] &= 0x1f;
-			return ret;
-		}
-		case 6:
-			return regs[6] | 0xf8;
-		case 9:
-			return regs[9] | 0x1f;
-		case 10:
-			return regs[10] | 0x3f;
-		default:
-			return regs[adr];
-	}
+	switch (adr)
+   {
+      case 0:
+         {
+            uint8 ret = regs[0];
+            regs[0] &= 0x1f;
+            return ret;
+         }
+      case 6:
+         return regs[6] | 0xf8;
+      case 9:
+         return regs[9] | 0x1f;
+      case 10:
+         return regs[10] | 0x3f;
+      default:
+         break;
+   }
+
+   return regs[adr];
 }
 
 
@@ -171,26 +179,27 @@ uint8 REU::ReadRegister(uint16 adr)
 
 void REU::WriteRegister(uint16 adr, uint8 byte)
 {
-	if (ex_ram == NULL)
+	if (!ex_ram)
 		return;
 
-	switch (adr) {
-		case 0:		// Status register is read-only
-		case 11:	// Unconnected registers
-		case 12:
-		case 13:
-		case 14:
-		case 15:
-			break;
-		case 1:		// Command register
-			regs[1] = byte;
-			if ((byte & 0x90) == 0x90)
-				execute_dma();
-			break;
-		default:
-			regs[adr] = byte;
-			break;
-	}
+	switch (adr)
+   {
+      case 0:	// Status register is read-only
+      case 11:	// Unconnected registers
+      case 12:
+      case 13:
+      case 14:
+      case 15:
+         break;
+      case 1:		// Command register
+         regs[1] = byte;
+         if ((byte & 0x90) == 0x90)
+            execute_dma();
+         break;
+      default:
+         regs[adr] = byte;
+         break;
+   }
 }
 
 
@@ -200,7 +209,7 @@ void REU::WriteRegister(uint16 adr, uint8 byte)
 
 void REU::FF00Trigger(void)
 {
-	if (ex_ram == NULL)
+	if (!ex_ram)
 		return;
 
 	if ((regs[1] & 0x90) == 0x80)
@@ -219,54 +228,55 @@ void REU::execute_dma(void)
 	uint32 reu_adr = regs[4] | (regs[5] << 8) | (regs[6] << 16);
 
 	// Calculate transfer length
-	int length = regs[7] | (regs[8] << 8);
+	int length     = regs[7] | (regs[8] << 8);
 	if (!length)
-		length = 0x10000;
+		length      = 0x10000;
 
 	// Calculate address increments
 	uint32 c64_inc = (regs[10] & 0x80) ? 0 : 1;
 	uint32 reu_inc = (regs[10] & 0x40) ? 0 : 1;
 
 	// Do transfer
-	switch (regs[1] & 3) {
+	switch (regs[1] & 3)
+   {
+      case 0:		// C64 -> REU
+         for (; length--; c64_adr+=c64_inc, reu_adr+=reu_inc)
+            ex_ram[reu_adr & ram_mask] = the_cpu->REUReadByte(c64_adr);
+         break;
 
-		case 0:		// C64 -> REU
-			for (; length--; c64_adr+=c64_inc, reu_adr+=reu_inc)
-				ex_ram[reu_adr & ram_mask] = the_cpu->REUReadByte(c64_adr);
-			break;
+      case 1:		// C64 <- REU
+         for (; length--; c64_adr+=c64_inc, reu_adr+=reu_inc)
+            the_cpu->REUWriteByte(c64_adr, ex_ram[reu_adr & ram_mask]);
+         break;
 
-		case 1:		// C64 <- REU
-			for (; length--; c64_adr+=c64_inc, reu_adr+=reu_inc)
-				the_cpu->REUWriteByte(c64_adr, ex_ram[reu_adr & ram_mask]);
-			break;
+      case 2:		// C64 <-> REU
+         for (; length--; c64_adr+=c64_inc, reu_adr+=reu_inc) {
+            uint8 tmp = the_cpu->REUReadByte(c64_adr);
+            the_cpu->REUWriteByte(c64_adr, ex_ram[reu_adr & ram_mask]);
+            ex_ram[reu_adr & ram_mask] = tmp;
+         }
+         break;
 
-		case 2:		// C64 <-> REU
-			for (; length--; c64_adr+=c64_inc, reu_adr+=reu_inc) {
-				uint8 tmp = the_cpu->REUReadByte(c64_adr);
-				the_cpu->REUWriteByte(c64_adr, ex_ram[reu_adr & ram_mask]);
-				ex_ram[reu_adr & ram_mask] = tmp;
-			}
-			break;
-
-		case 3:		// Compare
-			for (; length--; c64_adr+=c64_inc, reu_adr+=reu_inc)
-				if (ex_ram[reu_adr & ram_mask] != the_cpu->REUReadByte(c64_adr)) {
-					regs[0] |= 0x20;
-					break;
-				}
-			break;
-	}
+      case 3:		// Compare
+         for (; length--; c64_adr+=c64_inc, reu_adr+=reu_inc)
+            if (ex_ram[reu_adr & ram_mask] != the_cpu->REUReadByte(c64_adr)) {
+               regs[0] |= 0x20;
+               break;
+            }
+         break;
+   }
 
 	// Update address and length registers if autoload is off
-	if (!(regs[1] & 0x20)) {
-		regs[2] = c64_adr;
-		regs[3] = c64_adr >> 8;
-		regs[4] = reu_adr;
-		regs[5] = reu_adr >> 8;
-		regs[6] = reu_adr >> 16;
-		regs[7] = length + 1;
-		regs[8] = (length + 1) >> 8;
-	}
+	if (!(regs[1] & 0x20))
+   {
+      regs[2] = c64_adr;
+      regs[3] = c64_adr >> 8;
+      regs[4] = reu_adr;
+      regs[5] = reu_adr >> 8;
+      regs[6] = reu_adr >> 16;
+      regs[7] = length + 1;
+      regs[8] = (length + 1) >> 8;
+   }
 
 	// Set complete bit in status register
 	regs[0] |= 0x40;

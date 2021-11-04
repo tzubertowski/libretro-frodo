@@ -78,8 +78,8 @@ void DrawHlineBmp(char  *buffer,int x,int y,int dx,int dy,unsigned    color){
 
    for(i=x;i<x+dx;i++)
    {
-      idx=i+y*VIRTUAL_WIDTH;
-      mbuffer[idx]=color;		
+      idx          = i + y * VIRTUAL_WIDTH;
+      mbuffer[idx] = color;		
    }
 }
 
@@ -91,10 +91,10 @@ void DrawVlineBmp(char *buffer,int x,int y,int dx,int dy,unsigned color)
 #else
    uint16_t *mbuffer = (uint16_t*)buffer;
 #endif
-   for(j=y;j<y+dy;j++)
+   for (j = y; j < y + dy; j++)
    {
-      idx=x+j*VIRTUAL_WIDTH;
-      mbuffer[idx]=color;		
+      idx            = x + j * VIRTUAL_WIDTH;
+      mbuffer[idx]   = color;		
    }	
 }
 
@@ -175,7 +175,6 @@ void DrawlineBmp(char  *buffer,int x1,int y1,int x2,int y2,unsigned color)
          idx += pixy;
       }
    }
-
 }
 
 const float DEG2RAD = 3.14159/180;
@@ -202,7 +201,6 @@ void DrawCircle(char *buf,int x, int y, int radius,unsigned rgba, int full)
       else
          mbuffer[x1+y1*VIRTUAL_WIDTH]=rgba;
    }
-
 }
 
 #ifdef FILTER16X2
@@ -320,8 +318,8 @@ void Draw_text(char *buffer,int x,int y,unsigned    fgcol,unsigned   int bgcol ,
    int boucle=0;  
    char text[256];	   	
    va_list	ap;	
-
-   if (string == NULL)return;		
+   if (!string)
+      return;
 
    va_start(ap, string);		
    vsprintf(text, string, ap);	

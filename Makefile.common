@@ -91,7 +91,7 @@ CPPFLAGS +=  -DFRODO_HPUX_REV=0 -DKBD_LANG=0 -fpermissive
 CXXFLAGS += $(CPPFLAGS)
 
 SOURCES_CXX += \
-	       $(CORE_DIR)/libretro/core/libretro-core.cpp \
+	       $(CORE_DIR)/libretro/core/libretro.cpp \
 	       $(CORE_DIR)/libretro/core/core-mapper.cpp \
 	       $(CORE_DIR)/libretro/core/graph.cpp  \
 	       $(GUI_DIR)/dialog.cpp\

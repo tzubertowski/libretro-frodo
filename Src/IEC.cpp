@@ -51,20 +51,21 @@
 #include "Display.h"
 #include "main.h"
 
-
 // IEC command codes
-enum {
-	CMD_DATA = 0x60,	// Data transfer
-	CMD_CLOSE = 0xe0,	// Close channel
-	CMD_OPEN = 0xf0		// Open channel
+enum
+{
+   CMD_DATA     = 0x60,	// Data transfer
+   CMD_CLOSE    = 0xe0,	// Close channel
+   CMD_OPEN     = 0xf0		// Open channel
 };
 
 // IEC ATN codes
-enum {
-	ATN_LISTEN = 0x20,
-	ATN_UNLISTEN = 0x30,
-	ATN_TALK = 0x40,
-	ATN_UNTALK = 0x50
+enum
+{
+   ATN_LISTEN   = 0x20,
+   ATN_UNLISTEN = 0x30,
+   ATN_TALK     = 0x40,
+   ATN_UNTALK   = 0x50
 };
 
 
@@ -100,13 +101,14 @@ IEC::IEC(C64Display *display) : the_display(display)
 	for (i=0; i<4; i++)
 		drive[i] = NULL;	// Important because UpdateLEDs is called from the drive constructors (via set_error)
 
-	if (!ThePrefs.Emul1541Proc) {
-		for (i=0; i<4; i++)
-			drive[i] = create_drive(ThePrefs.DrivePath[i]);
-	}
+	if (!ThePrefs.Emul1541Proc)
+   {
+      for (i=0; i<4; i++)
+         drive[i] = create_drive(ThePrefs.DrivePath[i]);
+   }
 
 	listener_active = talker_active = false;
-	listening = false;
+	listening       = false;
 }
 
 
@@ -144,14 +146,16 @@ void IEC::Reset(void)
 void IEC::NewPrefs(Prefs *prefs)
 {
 	// Delete and recreate all changed drives
-	for (int i=0; i<4; i++) {
-		if (strcmp(ThePrefs.DrivePath[i], prefs->DrivePath[i]) || ThePrefs.Emul1541Proc != prefs->Emul1541Proc) {
-			delete drive[i];
-			drive[i] = NULL;	// Important because UpdateLEDs is called from drive constructors (via set_error())
-			if (!prefs->Emul1541Proc)
-				drive[i] = create_drive(prefs->DrivePath[i]);
-		}
-	}
+	for (int i=0; i<4; i++)
+   {
+      if (strcmp(ThePrefs.DrivePath[i], prefs->DrivePath[i]) || ThePrefs.Emul1541Proc != prefs->Emul1541Proc)
+      {
+         delete drive[i];
+         drive[i] = NULL;	// Important because UpdateLEDs is called from drive constructors (via set_error())
+         if (!prefs->Emul1541Proc)
+            drive[i] = create_drive(prefs->DrivePath[i]);
+      }
+   }
 
 	UpdateLEDs();
 }
@@ -163,10 +167,8 @@ void IEC::NewPrefs(Prefs *prefs)
 
 void IEC::UpdateLEDs(void)
 {
-	if (drive[0] != NULL && drive[1] != NULL && drive[2] != NULL && drive[3] != NULL)
-{
-		the_display->UpdateLEDs(drive[0]->LED, drive[1]->LED, drive[2]->LED, drive[3]->LED);
-}
+   if (drive[0] != NULL && drive[1] != NULL && drive[2] != NULL && drive[3] != NULL)
+      the_display->UpdateLEDs(drive[0]->LED, drive[1]->LED, drive[2]->LED, drive[3]->LED);
 }
 
 
@@ -176,14 +178,14 @@ void IEC::UpdateLEDs(void)
 
 uint8 IEC::Out(uint8 byte, bool eoi)
 {
-	if (listener_active) {
-		if (received_cmd == CMD_OPEN)
-			return open_out(byte, eoi);
-		if (received_cmd == CMD_DATA)
-			return data_out(byte, eoi);
-		return ST_TIMEOUT;
-	} else
-		return ST_TIMEOUT;
+	if (listener_active)
+   {
+      if (received_cmd == CMD_OPEN)
+         return open_out(byte, eoi);
+      if (received_cmd == CMD_DATA)
+         return data_out(byte, eoi);
+   }
+   return ST_TIMEOUT;
 }
 
 
@@ -194,20 +196,21 @@ uint8 IEC::Out(uint8 byte, bool eoi)
 uint8 IEC::OutATN(uint8 byte)
 {
 	received_cmd = sec_addr = 0;	// Command is sent with secondary address
-	switch (byte & 0xf0) {
-		case ATN_LISTEN:
-			listening = true;
-			return listen(byte & 0x0f);
-		case ATN_UNLISTEN:
-			listening = false;
-			return unlisten();
-		case ATN_TALK:
-			listening = false;
-			return talk(byte & 0x0f);
-		case ATN_UNTALK:
-			listening = false;
-			return untalk();
-	}
+	switch (byte & 0xf0)
+   {
+      case ATN_LISTEN:
+         listening = true;
+         return listen(byte & 0x0f);
+      case ATN_UNLISTEN:
+         listening = false;
+         return unlisten();
+      case ATN_TALK:
+         listening = false;
+         return talk(byte & 0x0f);
+      case ATN_UNTALK:
+         listening = false;
+         return untalk();
+   }
 	return ST_TIMEOUT;
 }
 
@@ -218,19 +221,24 @@ uint8 IEC::OutATN(uint8 byte)
 
 uint8 IEC::OutSec(uint8 byte)
 {
-	if (listening) {
-		if (listener_active) {
-			sec_addr = byte & 0x0f;
-			received_cmd = byte & 0xf0;
-			return sec_listen();
-		}
-	} else {
-		if (talker_active) {
-			sec_addr = byte & 0x0f;
-			received_cmd = byte & 0xf0;
-			return sec_talk();
-		}
-	}
+	if (listening)
+   {
+      if (listener_active)
+      {
+         sec_addr     = byte & 0x0f;
+         received_cmd = byte & 0xf0;
+         return sec_listen();
+      }
+   }
+   else
+   {
+      if (talker_active)
+      {
+         sec_addr     = byte & 0x0f;
+         received_cmd = byte & 0xf0;
+         return sec_talk();
+      }
+   }
 	return ST_TIMEOUT;
 }
 
@@ -295,12 +303,14 @@ void IEC::Release(void)
 
 uint8 IEC::listen(int device)
 {
-	if ((device >= 8) && (device <= 11)) {
-		if ((listener = drive[device-8]) != NULL && listener->Ready) {
-			listener_active = true;
-			return ST_OK;
-		}
-	}
+	if ((device >= 8) && (device <= 11))
+   {
+      if ((listener = drive[device-8]) != NULL && listener->Ready)
+      {
+         listener_active = true;
+         return ST_OK;
+      }
+   }
 
 	listener_active = false;
 	return ST_NOTPRESENT;
@@ -313,12 +323,14 @@ uint8 IEC::listen(int device)
 
 uint8 IEC::talk(int device)
 {
-	if ((device >= 8) && (device <= 11)) {
-		if ((talker = drive[device-8]) != NULL && talker->Ready) {
-			talker_active = true;
-			return ST_OK;
-		}
-	}
+	if ((device >= 8) && (device <= 11))
+   {
+      if ((talker = drive[device-8]) != NULL && talker->Ready)
+      {
+         talker_active = true;
+         return ST_OK;
+      }
+   }
 
 	talker_active = false;
 	return ST_NOTPRESENT;
@@ -353,20 +365,21 @@ uint8 IEC::untalk(void)
 
 uint8 IEC::sec_listen(void)
 {
-	switch (received_cmd) {
+	switch (received_cmd)
+   {
+      case CMD_OPEN:	// Prepare for receiving the file name
+         name_ptr = name_buf;
+         name_len = 0;
+         return ST_OK;
 
-		case CMD_OPEN:	// Prepare for receiving the file name
-			name_ptr = name_buf;
-			name_len = 0;
-			return ST_OK;
-
-		case CMD_CLOSE: // Close channel
-			if (listener->LED != DRVLED_ERROR) {
-				listener->LED = DRVLED_OFF;		// Turn off drive LED
-				UpdateLEDs();
-			}
-			return listener->Close(sec_addr);
-	}
+      case CMD_CLOSE: // Close channel
+         if (listener->LED != DRVLED_ERROR)
+         {
+            listener->LED = DRVLED_OFF;		// Turn off drive LED
+            UpdateLEDs();
+         }
+         return listener->Close(sec_addr);
+   }
 	return ST_OK;
 }
 
@@ -387,17 +400,19 @@ uint8 IEC::sec_talk(void)
 
 uint8 IEC::open_out(uint8 byte, bool eoi)
 {
-	if (name_len < NAMEBUF_LENGTH) {
-		*name_ptr++ = byte;
-		name_len++;
-	}
+	if (name_len < NAMEBUF_LENGTH)
+   {
+      *name_ptr++ = byte;
+      name_len++;
+   }
 
-	if (eoi) {
-		*name_ptr = 0;				// End string
-		listener->LED = DRVLED_ON;	// Turn on drive LED
-		UpdateLEDs();
-		return listener->Open(sec_addr, name_buf, name_len);
-	}
+	if (eoi)
+   {
+      *name_ptr     = 0;			// End string
+      listener->LED = DRVLED_ON;	// Turn on drive LED
+      UpdateLEDs();
+      return listener->Open(sec_addr, name_buf, name_len);
+   }
 
 	return ST_OK;
 }
@@ -430,8 +445,8 @@ uint8 IEC::data_in(uint8 &byte)
 Drive::Drive(IEC *iec)
 {
 	the_iec = iec;
-	LED = DRVLED_OFF;
-	Ready = false;
+	LED     = DRVLED_OFF;
+	Ready   = false;
 	set_error(ERR_STARTUP);
 }
 
@@ -502,22 +517,25 @@ void Drive::parse_file_name(const uint8 *src, int src_len, uint8 *dest, int &des
 {
 	// If the string contains a ':', the file name starts after that
 	const uint8 *p = (const uint8 *)memchr(src, ':', src_len);
-	if (p) {
-		p++;
-		src_len -= p - src;
-	} else
+	if (p)
+   {
+      p++;
+      src_len -= p - src;
+   }
+   else
 		p = src;
 
 	// Transfer file name upto ','
 	dest_len = 0;
 	uint8 *q = dest;
-	while (*p != ',' && src_len-- > 0) {
-		if (convert_charset)
-			*q++ = petscii2ascii(*p++);
-		else
-			*q++ = *p++;
-		dest_len++;
-	}
+	while (*p != ',' && src_len-- > 0)
+   {
+      if (convert_charset)
+         *q++ = petscii2ascii(*p++);
+      else
+         *q++ = *p++;
+      dest_len++;
+   }
 	*q++ = 0;
 
 	// Strip trailing CRs
@@ -573,7 +591,8 @@ void Drive::parse_file_name(const uint8 *src, int src_len, uint8 *dest, int &des
  *  Execute DOS command (parse command and call appropriate routine)
  */
 
-static void parse_block_cmd_args(const uint8 *p, int &arg1, int &arg2, int &arg3, int &arg4)
+static void parse_block_cmd_args(const uint8 *p, int &arg1,
+      int &arg2, int &arg3, int &arg4)
 {
 	arg1 = arg2 = arg3 = arg4 = 0;
 
@@ -608,149 +627,160 @@ void Drive::execute_cmd(const uint8 *cmd, int cmd_len)
 
 	// Parse command name
 	set_error(ERR_OK);
-	switch (cmd[0]) {
-		case 'B':	// Block/buffer
-			if (!minus)
-				set_error(ERR_SYNTAX31);
-			else {
-				// Parse arguments (up to 4 decimal numbers separated by
-				// space, cursor right or comma)
-				const uint8 *p = colon ? colon + 1 : cmd + 3;
-				int arg1, arg2, arg3, arg4;
-				parse_block_cmd_args(p, arg1, arg2, arg3, arg4);
+	switch (cmd[0])
+   {
+      case 'B':	// Block/buffer
+         if (!minus)
+            set_error(ERR_SYNTAX31);
+         else
+         {
+            // Parse arguments (up to 4 decimal numbers separated by
+            // space, cursor right or comma)
+            const uint8 *p = colon ? colon + 1 : cmd + 3;
+            int arg1, arg2, arg3, arg4;
+            parse_block_cmd_args(p, arg1, arg2, arg3, arg4);
 
-				// Switch on command
-				switch (minus[1]) {
-					case 'R':
-						block_read_cmd(arg1, arg3, arg4);
-						break;
-					case 'W':
-						block_write_cmd(arg1, arg3, arg4);
-						break;
-					case 'E':
-						block_execute_cmd(arg1, arg3, arg4);
-						break;
-					case 'A':
-						block_allocate_cmd(arg2, arg3);
-						break;
-					case 'F':
-						block_free_cmd(arg2, arg3);
-						break;
-					case 'P':
-						buffer_pointer_cmd(arg1, arg2);
-						break;
-					default:
-						set_error(ERR_SYNTAX31);
-						break;
-				}
-			}
-			break;
+            // Switch on command
+            switch (minus[1])
+            {
+               case 'R':
+                  block_read_cmd(arg1, arg3, arg4);
+                  break;
+               case 'W':
+                  block_write_cmd(arg1, arg3, arg4);
+                  break;
+               case 'E':
+                  block_execute_cmd(arg1, arg3, arg4);
+                  break;
+               case 'A':
+                  block_allocate_cmd(arg2, arg3);
+                  break;
+               case 'F':
+                  block_free_cmd(arg2, arg3);
+                  break;
+               case 'P':
+                  buffer_pointer_cmd(arg1, arg2);
+                  break;
+               default:
+                  set_error(ERR_SYNTAX31);
+                  break;
+            }
+         }
+         break;
 
-		case 'M':	// Memory
-			if (cmd[1] != '-')
-				set_error(ERR_SYNTAX31);
-			else {
-				// Read parameters
-				uint16 adr = uint8(cmd[3]) | (uint8(cmd[4]) << 8);
-				uint8 len = uint8(cmd[5]);
+      case 'M':	// Memory
+         if (cmd[1] != '-')
+            set_error(ERR_SYNTAX31);
+         else
+         {
+            // Read parameters
+            uint16 adr = uint8(cmd[3]) | (uint8(cmd[4]) << 8);
+            uint8 len = uint8(cmd[5]);
 
-				// Switch on command
-				switch (cmd[2]) {
-					case 'R':
-						mem_read_cmd(adr, (cmd_len < 6) ? 1 : len);
-						break;
-					case 'W':
-						mem_write_cmd(adr, len, (uint8 *)cmd + 6);
-						break;
-					case 'E':
-						mem_execute_cmd(adr);
-						break;
-					default:
-						set_error(ERR_SYNTAX31);
-						break;
-				}
-			}
-			break;
+            // Switch on command
+            switch (cmd[2])
+            {
+               case 'R':
+                  mem_read_cmd(adr, (cmd_len < 6) ? 1 : len);
+                  break;
+               case 'W':
+                  mem_write_cmd(adr, len, (uint8 *)cmd + 6);
+                  break;
+               case 'E':
+                  mem_execute_cmd(adr);
+                  break;
+               default:
+                  set_error(ERR_SYNTAX31);
+                  break;
+            }
+         }
+         break;
 
-		case 'C':	// Copy
-			if (!colon)
-				set_error(ERR_SYNTAX31);
-			else if (!equal || memchr(cmd, '*', cmd_len) || memchr(cmd, '?', cmd_len) || (comma && comma < equal))
-				set_error(ERR_SYNTAX30);
-			else
-				copy_cmd(colon + 1, equal - colon - 1, equal + 1, cmd_len - (equal + 1 - cmd));
-			break;
+      case 'C':	// Copy
+         if (!colon)
+            set_error(ERR_SYNTAX31);
+         else if (!equal || memchr(cmd, '*', cmd_len) || memchr(cmd, '?', cmd_len) || (comma && comma < equal))
+            set_error(ERR_SYNTAX30);
+         else
+            copy_cmd(colon + 1, equal - colon - 1, equal + 1, cmd_len - (equal + 1 - cmd));
+         break;
 
-		case 'R':	// Rename
-			if (!colon)
-				set_error(ERR_SYNTAX34);
-			else if (!equal || comma || memchr(cmd, '*', cmd_len) || memchr(cmd, '?', cmd_len))
-				set_error(ERR_SYNTAX30);
-			else
-				rename_cmd(colon + 1, equal - colon - 1, equal + 1, cmd_len - (equal + 1 - cmd));
-			break;
+      case 'R':	// Rename
+         if (!colon)
+            set_error(ERR_SYNTAX34);
+         else if (!equal || comma || memchr(cmd, '*', cmd_len) || memchr(cmd, '?', cmd_len))
+            set_error(ERR_SYNTAX30);
+         else
+            rename_cmd(colon + 1, equal - colon - 1, equal + 1, cmd_len - (equal + 1 - cmd));
+         break;
 
-		case 'S':	// Scratch
-			if (!colon)
-				set_error(ERR_SYNTAX34);
-			else
-				scratch_cmd(colon + 1, cmd_len - (colon + 1 - cmd));
-			break;
+      case 'S':	// Scratch
+         if (!colon)
+            set_error(ERR_SYNTAX34);
+         else
+            scratch_cmd(colon + 1, cmd_len - (colon + 1 - cmd));
+         break;
 
-		case 'P':	// Position
-			position_cmd(cmd + 1, cmd_len - 1);
-			break;
+      case 'P':	// Position
+         position_cmd(cmd + 1, cmd_len - 1);
+         break;
 
-		case 'I':	// Initialize
-			initialize_cmd();
-			break;
+      case 'I':	// Initialize
+         initialize_cmd();
+         break;
 
-		case 'N':	// New (format)
-			if (!colon)
-				set_error(ERR_SYNTAX34);
-			else
-				new_cmd(colon + 1, comma ? (comma - colon - 1) : cmd_len - (colon + 1 - cmd), comma);
-			break;
+      case 'N':	// New (format)
+         if (!colon)
+            set_error(ERR_SYNTAX34);
+         else
+            new_cmd(colon + 1, comma ? (comma - colon - 1) : cmd_len - (colon + 1 - cmd), comma);
+         break;
 
-		case 'V':	// Validate
-			validate_cmd();
-			break;
+      case 'V':	// Validate
+         validate_cmd();
+         break;
 
-		case 'U':	// User
-			if (cmd[1] == '0')
-				break;
-			switch (cmd[1] & 0x0f) {
-				case 1: {	// U1/UA: Read block
-					const uint8 *p = colon ? colon + 1 : cmd + 2;
-					int arg1, arg2, arg3, arg4;
-					parse_block_cmd_args(p, arg1, arg2, arg3, arg4);
-					block_read_cmd(arg1, arg3, arg4, true);
-					break;
-				}
-				case 2: {	// U2/UB: Write block
-					const uint8 *p = colon ? colon + 1 : cmd + 2;
-					int arg1, arg2, arg3, arg4;
-					parse_block_cmd_args(p, arg1, arg2, arg3, arg4);
-					block_write_cmd(arg1, arg3, arg4, true);
-					break;
-				}
-				case 9:		// U9/UI: C64/VC20 mode switch
-					if (cmd[2] != '+' && cmd[2] != '-')
-						Reset();
-					break;
-				case 10:	// U:/UJ: Reset
-					Reset();
-					break;
-				default:
-					set_error(ERR_UNIMPLEMENTED);
-					break;
-			}
-			break;
+      case 'U':	// User
+         if (cmd[1] == '0')
+            break;
+         switch (cmd[1] & 0x0f)
+         {
+            case 1:
+               {
+                  // U1/UA: Read block
+                  const uint8 *p = colon ? colon + 1 : cmd + 2;
+                  int arg1, arg2, arg3, arg4;
+                  parse_block_cmd_args(p, arg1, arg2, arg3, arg4);
+                  block_read_cmd(arg1, arg3, arg4, true);
+               }
+               break;
+            case 2:
+               {
+                  // U2/UB: Write block
+                  const uint8 *p = colon ? colon + 1 : cmd + 2;
+                  int arg1, arg2, arg3, arg4;
+                  parse_block_cmd_args(p, arg1, arg2, arg3, arg4);
+                  block_write_cmd(arg1, arg3, arg4, true);
+               }
+               break;
+            case 9:
+               // U9/UI: C64/VC20 mode switch
+               if (cmd[2] != '+' && cmd[2] != '-')
+                  Reset();
+               break;
+            case 10:	// U:/UJ: Reset
+               Reset();
+               break;
+            default:
+               set_error(ERR_UNIMPLEMENTED);
+               break;
+         }
+         break;
 
-		default:
-			set_error(ERR_SYNTAX31);
-			break;
-	}
+      default:
+         set_error(ERR_SYNTAX31);
+         break;
+   }
 }
 
 // BLOCK-READ:channel,0,track,sector
@@ -914,7 +944,7 @@ bool IsMountableFile(const char *path, int &type)
 	uint8 header[64];
 	memset(header, 0, sizeof(header));
 	FILE *f = fopen(path, "rb");
-	if (f == NULL)
+	if (!f)
 		return false;
 	fseek(f, 0, SEEK_END);
 	long size = ftell(f);
@@ -922,14 +952,17 @@ bool IsMountableFile(const char *path, int &type)
 	fread(header, 1, sizeof(header), f);
 	fclose(f);
 
-	if (IsImageFile(path, header, size)) {
-		type = FILE_IMAGE;
-		return true;
-	} else if (IsArchFile(path, header, size)) {
-		type = FILE_ARCH;
-		return true;
-	} else
-		return false;
+	if (IsImageFile(path, header, size))
+   {
+      type = FILE_IMAGE;
+      return true;
+   }
+   else if (IsArchFile(path, header, size))
+   {
+      type = FILE_ARCH;
+      return true;
+   }
+   return false;
 }
 
 
@@ -941,12 +974,14 @@ bool IsMountableFile(const char *path, int &type)
 bool ReadDirectory(const char *path, int type, vector<c64_dir_entry> &vec)
 {
 	vec.clear();
-	switch (type) {
-		case FILE_IMAGE:
-			return ReadImageDirectory(path, vec);
-		case FILE_ARCH:
-			return ReadArchDirectory(path, vec);
-		default:
-			return false;
-	}
+	switch (type)
+   {
+      case FILE_IMAGE:
+         return ReadImageDirectory(path, vec);
+      case FILE_ARCH:
+         return ReadArchDirectory(path, vec);
+      default:
+         break;
+   }
+   return false;
 }
