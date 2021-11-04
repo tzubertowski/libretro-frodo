@@ -1,7 +1,6 @@
 
 /*
   libretro-Frodo - dlgSnapshot.c
-
 */
 
 #include <assert.h>
@@ -26,66 +25,61 @@ static SGOBJ snapshotdlg[] =
 
 void Dialog_SnapshotDlg(void)
 {
-	int but, i;
-	char *snapfile;
+   int but, i;
+   char *snapfile;
 
-	SDLGui_CenterDlg(snapshotdlg);
+   SDLGui_CenterDlg(snapshotdlg);
 
-	/* Draw and process the dialog */
-	do
-	{       
-		but = SDLGui_DoDialog(snapshotdlg, NULL);
+   /* Draw and process the dialog */
+   do
+   {       
+      but = SDLGui_DoDialog(snapshotdlg, NULL);
 
-		switch (but)
-		{
-			case SNATSHOTDLG_LOAD:
+      switch (but)
+      {
+         case SNATSHOTDLG_LOAD:
 
-				snapfile = SDLGui_FileSelect("dump.sna", NULL, false);
+            snapfile = SDLGui_FileSelect("dump.sna", NULL, false);
 
-				if (snapfile)
-				{	
-					if(TheC64->LoadSnapshot(snapfile)){
-							printf("loading snapfile (%s)\n",snapfile);
-					}
-					else 	printf("error loading snapfile (%s)\n",snapfile);
+            if (snapfile)
+            {	
+               TheC64->LoadSnapshot(snapfile);
+               free(snapfile);
+            }
 
-					free(snapfile);
-				}
+            break;
 
-				break;
+         case SNATSHOTDLG_SAVE:
 
-			case SNATSHOTDLG_SAVE:
-			
-				snapfile=(char *)malloc(512*sizeof(char));
+            snapfile=(char *)malloc(512*sizeof(char));
 
-				if(ThePrefs.DrivePath[0]!=NULL){
+            if(ThePrefs.DrivePath[0]!=NULL)
+            {
+               char *pch;
+               sprintf(snapfile,"%s\0",ThePrefs.DrivePath[0]);
+               pch=strrchr(snapfile, '.');
 
-					sprintf(snapfile,"%s\0",ThePrefs.DrivePath[0]);
-					char *pch=strrchr(snapfile, '.');
+               if(strlen(pch)>3)
+               {
+                  *(pch+1)='s';
+                  *(pch+2)='n';
+                  *(pch+3)='a';
+               }
+               else
+                  sprintf(snapfile,"%s.sna\0","dump");
+            }
+            else sprintf(snapfile,"%s.sna\0","dump");
 
-					if(strlen(pch)>3){
-						*(pch+1)='s';
-						*(pch+2)='n';
-						*(pch+3)='a';
-					}
-					else sprintf(snapfile,"%s.sna\0","dump");
-				}
-				else sprintf(snapfile,"%s.sna\0","dump");
+            TheC64->SaveSnapshot(snapfile);
 
-				TheC64->SaveSnapshot(snapfile);
-				printf("saving snapfile (%s)\n",snapfile);
+            free(snapfile);
 
-				free(snapfile);
+            break;
+      }
 
-				break;
+      gui_poll_events();
 
-		}
-
-        gui_poll_events();
-
-	}
-	while (but != SNATSHOTDLG_EXIT && but != SDLGUI_QUIT
-	        && but != SDLGUI_ERROR && !bQuitProgram);
-
-
+   }
+   while (but != SNATSHOTDLG_EXIT && but != SDLGUI_QUIT
+         && but != SDLGUI_ERROR && !bQuitProgram);
 }

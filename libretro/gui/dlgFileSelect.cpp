@@ -37,8 +37,7 @@ int alphasort2(const struct dirent **d1, const struct dirent **d2)
    return strcmp(c1->d_name, c2->d_name);
 }
 
-#define SGFS_NUMENTRIES   16            /* How many entries are displayed at once */
-
+#define SGFS_NUMENTRIES   16 /* How many entries are displayed at once */
 
 #define SGFSDLG_FILENAME    5
 #define SGFSDLG_UPDIR       6
@@ -178,10 +177,8 @@ static int DlgFileSelect_RefreshEntries(struct dirent **files, char *path, bool 
 static void DlgFileSelect_RemoveHiddenFiles(struct dirent **files)
 {
 	int i;
-	int nActPos = -1;
-	int nOldEntries;
-
-	nOldEntries = entries;
+	int nActPos     = -1;
+	int nOldEntries = entries;
 
 	/* Scan list for hidden files and remove them. */
 	for (i = 0; i < nOldEntries; i++)
@@ -236,7 +233,7 @@ static void DlgFileSelect_ScrollUp(void)
  */
 static void DlgFileSelect_ScrollDown(void)
 {
-	if (ypos+SGFS_NUMENTRIES < entries)
+	if (ypos + SGFS_NUMENTRIES < entries)
 	{
 		++ypos;
 		DlgFileSelect_Convert_ypos_to_scrollbar_Ypos();
@@ -377,7 +374,8 @@ static struct dirent **files_free(struct dirent **files)
  * Copy to dst src+add if they are below maxlen and return true,
  * otherwise return false
  */
-static int strcat_maxlen(char *dst, int maxlen, const char *src, const char *add)
+static int strcat_maxlen(char *dst, int maxlen,
+      const char *src, const char *add)
 {
 	int slen = strlen(src);
 	int alen = strlen(add);
@@ -394,7 +392,8 @@ static int strcat_maxlen(char *dst, int maxlen, const char *src, const char *add
 /**
  * Create and return suitable path into zip file
  */
-static char* zip_get_path(const char *zipdir, const char *zipfilename, int browsingzip)
+static char* zip_get_path(const char *zipdir,
+      const char *zipfilename, int browsingzip)
 {
 	if (browsingzip)
 	{
@@ -468,23 +467,23 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 	entries = 0;
 
 	/* Allocate memory for the file and path name strings: */
-	pStringMem = (char *)malloc(4 * FILENAME_MAX);
-	path = pStringMem;
-	fname = pStringMem + FILENAME_MAX;
-	zipdir = pStringMem + 2 * FILENAME_MAX;
-	zipfilename = pStringMem + 3 * FILENAME_MAX;
+	pStringMem     = (char *)malloc(4 * FILENAME_MAX);
+	path           = pStringMem;
+	fname          = pStringMem + FILENAME_MAX;
+	zipdir         = pStringMem + 2 * FILENAME_MAX;
+	zipfilename    = pStringMem + 3 * FILENAME_MAX;
 	zipfilename[0] = 0;
-	fname[0] = 0;
-	path[0] = 0;
+	fname[0]       = 0;
+	path[0]        = 0;
 	SDLGui_CenterDlg(fsdlg);
 	if (bAllowNew)
 	{
-		fsdlg[SGFSDLG_FILENAME].type = SGEDITFIELD;
+		fsdlg[SGFSDLG_FILENAME].type   = SGEDITFIELD;
 		fsdlg[SGFSDLG_FILENAME].flags |= SG_EXIT;
 	}
 	else
 	{
-		fsdlg[SGFSDLG_FILENAME].type = SGTEXT;
+		fsdlg[SGFSDLG_FILENAME].type   = SGTEXT;
 		fsdlg[SGFSDLG_FILENAME].flags &= ~SG_EXIT;
 	}
 
@@ -567,9 +566,7 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 		if (refreshentries)
 		{
 			if (!DlgFileSelect_RefreshEntries(files, path, browsingzip))
-			{
 				goto clean_exit;
-			}
 			refreshentries = false;
 		}
 
@@ -618,11 +615,11 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
                   strcpy(zipdir, tempstr);
                   File_ShrinkName(dlgpath, zipdir, DLGPATH_SIZE);
                }
-               reloaddir = true;
+               reloaddir      = true;
                /* Copy the path name to the dialog */
                zipfilename[0] = '\0';
-               dlgfname[0] = 0;
-               ypos = 0;
+               dlgfname[0]    = 0;
+               ypos           = 0;
                scrollbar_Ypos = 0.0;
             }
             else
@@ -646,9 +643,9 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
                /* Copy the path name to the dialog */
                File_ShrinkName(dlgpath, tempstr, DLGPATH_SIZE);
                strcpy(path, tempstr);
-               reloaddir = true;
-               dlgfname[0] = 0;
-               ypos = 0;
+               reloaddir      = true;
+               dlgfname[0]    = 0;
+               ypos           = 0;
                scrollbar_Ypos = 0.0;
             }
             else if (ZIP_FileNameIsZIP(tempstr) && zip_path != NULL)
@@ -694,7 +691,7 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 						/* free zip file entries */
 						ZIP_FreeZipDir(zipfiles);
 						browsingzip = false;
-						zipfiles = NULL;
+						zipfiles    = NULL;
 						File_ShrinkName(dlgpath, path, DLGPATH_SIZE);
 					}
 					else
@@ -720,13 +717,13 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 					home = Paths_GetWorkingDir();
 				else
 					home = Paths_GetUserHome();
-				if (home == NULL || !*home)
+				if (!home || !*home)
 					break;
 				if (browsingzip)
 				{
 					/* free zip file entries */
 					ZIP_FreeZipDir(zipfiles);
-					zipfiles = NULL;
+					zipfiles    = NULL;
 					browsingzip = false;
 				}
 				strcpy(path, home);
@@ -803,7 +800,6 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 		retpath = NULL;
 
 clean_exit:
-//	SDL_ShowCursor(bOldMouseVisibility);
 	free(pStringMem);
 
 	return retpath;

@@ -519,42 +519,42 @@ bool C64::Load1541JobState(FILE *f)
 
 void C64::SaveSnapshot(char *filename)
 {
-	FILE *f;
-	uint8 flags;
-	uint8 delay;
-	int stat;
-	if (!(f = fopen(filename, "wb")))
+   FILE *f;
+   uint8 flags;
+   uint8 delay;
+   int stat;
+   if (!(f = fopen(filename, "wb")))
       return;
 
-	fprintf(f, "%s%c", SNAPSHOT_HEADER, 10);
-	fputc(0, f);	// Version number 0
-	flags = 0;
-	if (ThePrefs.Emul1541Proc)
-		flags |= SNAPSHOT_1541;
-	fputc(flags, f);
-	SaveVICState(f);
-	SaveSIDState(f);
-	SaveCIAState(f);
+   fprintf(f, "%s%c", SNAPSHOT_HEADER, 10);
+   fputc(0, f);	// Version number 0
+   flags = 0;
+   if (ThePrefs.Emul1541Proc)
+      flags |= SNAPSHOT_1541;
+   fputc(flags, f);
+   SaveVICState(f);
+   SaveSIDState(f);
+   SaveCIAState(f);
 
 #ifdef FRODO_SC
-	delay = 0;
-	do
+   delay = 0;
+   do
    {
       if ((stat = SaveCPUState(f)) == -1)
       {
-                            // -1 -> Instruction not finished yet
+         // -1 -> Instruction not finished yet
          ADVANCE_CYCLES;	 // Advance everything by one cycle
          delay++;
       }
    } while (stat == -1);
-	fputc(delay, f);	// Number of cycles the 
-                     // saved CPUC64 lags behind the previous chips
+   fputc(delay, f);	// Number of cycles the 
+   // saved CPUC64 lags behind the previous chips
 #else
-	SaveCPUState(f);
-	fputc(0, f);		// No delay
+   SaveCPUState(f);
+   fputc(0, f);		// No delay
 #endif
 
-	if (ThePrefs.Emul1541Proc)
+   if (ThePrefs.Emul1541Proc)
    {
       fwrite(ThePrefs.DrivePath[0], 256, 1, f);
 #ifdef FRODO_SC
@@ -574,7 +574,7 @@ void C64::SaveSnapshot(char *filename)
 #endif
       Save1541JobState(f);
    }
-	fclose(f);
+   fclose(f);
 }
 
 

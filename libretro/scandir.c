@@ -50,11 +50,8 @@ int scandir(const char *dirp, struct dirent ***namelist,
     struct dirent **names = NULL;
     size_t names_size = 0, pos;
     int save;
-
-    if (dp == NULL)
+    if (!dp)
         return -1;
-
-    //printf("mm(%s)\n",dirp);
     pos = 0;
     while ((current = readdir (dp)) != NULL)
         if (filter == NULL || (*filter) (current))

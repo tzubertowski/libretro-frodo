@@ -193,5 +193,4 @@ void Dialog_MiscDlg(void)
    for(i=0;i<4;i++)
       if(miscdlg[DLGMISC_REUNONE+i].state & SG_SELECTED)
          prefs->REUSize=i;
-
 }
