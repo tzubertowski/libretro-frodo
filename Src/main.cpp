@@ -24,8 +24,6 @@
 #include "C64.h"
 #include "Display.h"
 #include "Prefs.h"
-#include "SAM.h"
-
 
 // Global variables
 C64 *TheC64 = NULL;		// Global C64 object

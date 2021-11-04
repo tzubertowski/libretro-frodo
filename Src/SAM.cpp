@@ -445,7 +445,6 @@ void SAM(C64 *the_c64)
 	TheCPU1541->SetState(&R1541);
 }
 
-
 /*
  *  Print error message
  */

@@ -61,7 +61,7 @@ SOURCES_CXX := \
 	       $(EMU_DIR)/1541t64.cpp \
 	       $(EMU_DIR)/1541job.cpp
 
-ifneq ($(platform), wii)
+ifeq ($(HAVE_SAM), 1)
 SOURCES_CXX += $(EMU_DIR)/SAM.cpp
 endif
 
