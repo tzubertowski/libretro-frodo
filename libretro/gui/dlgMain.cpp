@@ -10,7 +10,6 @@
 
   The main dialog.
 */
-const char DlgMain_fileid[] = "Hatari dlgMain.c : " __DATE__ " " __TIME__;
 
 #include "dialog.h"
 #include "sdlgui.h"
@@ -50,90 +49,87 @@ static SGOBJ maindlg[] =
 	{ -1, 0, 0, 0,0, 0,0, NULL }
 };
 
-char sConfigFileName[512];
-extern int MUSTRESET_CFG;
-
 /**
  * This functions sets up the actual font and then displays the main dialog.
  */
 int Dialog_MainDlg(bool *bReset, bool *bLoadedSnapshot)
 {
-	int retbut=0;
-	bool bOldMouseVisibility;
-	int nOldMouseX, nOldMouseY;
-	char *psNewCfg;
+   int retbut=0;
+   bool bOldMouseVisibility;
+   int nOldMouseX, nOldMouseY;
+   char *psNewCfg;
 
-	*bReset = false;
-	*bLoadedSnapshot = false;
+   *bReset = false;
+   *bLoadedSnapshot = false;
 
-	if (SDLGui_SetScreen())
-		return false;
+   if (SDLGui_SetScreen())
+      return false;
 
-	SDLGui_CenterDlg(maindlg);
+   SDLGui_CenterDlg(maindlg);
 
-	maindlg[MAINDLG_NORESET].state |= SG_SELECTED;
-	maindlg[MAINDLG_RESET].state &= ~SG_SELECTED;
+   maindlg[MAINDLG_NORESET].state |= SG_SELECTED;
+   maindlg[MAINDLG_RESET].state &= ~SG_SELECTED;
 
-	prefs = new Prefs(ThePrefs);
+   prefs = new Prefs(ThePrefs);
 
-	do
-	{       
-		retbut = SDLGui_DoDialog(maindlg, NULL);
-		switch (retbut)
-		{
-			case MAINDLG_ABOUT:
-				Dialog_AboutDlg();
-				break;
+   do
+   {       
+      retbut = SDLGui_DoDialog(maindlg, NULL);
+      switch (retbut)
+      {
+         case MAINDLG_ABOUT:
+            Dialog_AboutDlg();
+            break;
 
-			case MAINDLG_FLOPPYS:
-				DlgFloppy_Main();
-				break;
+         case MAINDLG_FLOPPYS:
+            DlgFloppy_Main();
+            break;
 
-			case MAINDLG_VIDEO:
-				Dialog_VideoDlg();
-				break;
+         case MAINDLG_VIDEO:
+            Dialog_VideoDlg();
+            break;
 
-			case MAINDLG_MISC:
-				Dialog_MiscDlg();
-				break;
+         case MAINDLG_MISC:
+            Dialog_MiscDlg();
+            break;
 
-			case MAINDLG_JOYSTICK:
-				Dialog_JoyDlg();
-				break;
+         case MAINDLG_JOYSTICK:
+            Dialog_JoyDlg();
+            break;
 
-			case MAINDLG_SOUND:
-				Dialog_SoundDlg();
-				break;
+         case MAINDLG_SOUND:
+            Dialog_SoundDlg();
+            break;
 
-			case MAINDLG_LOADCFG:
-			case MAINDLG_SAVECFG:
-				break;
+         case MAINDLG_LOADCFG:
+         case MAINDLG_SAVECFG:
+            break;
 
-			case MAINDLG_SNAPSHOT:
-				Dialog_SnapshotDlg();
-				break;
+         case MAINDLG_SNAPSHOT:
+            Dialog_SnapshotDlg();
+            break;
 
-			case MAINDLG_QUIT:
-				bQuitProgram = true;
-				break;
-		}
+         case MAINDLG_QUIT:
+            bQuitProgram = true;
+            break;
+      }
 
-		if(ThePrefs!=*prefs){
-			printf("pref change \n");
-			TheC64->NewPrefs(prefs);
-			ThePrefs = *prefs;
-		}
+      if(ThePrefs!=*prefs)
+      {
+         TheC64->NewPrefs(prefs);
+         ThePrefs = *prefs;
+      }
 
-		gui_poll_events();
-	}
-	while (retbut != MAINDLG_OK && retbut != MAINDLG_CANCEL && retbut != SDLGUI_QUIT
-	        && retbut != SDLGUI_ERROR && !bQuitProgram);
+      gui_poll_events();
+   }
+   while (retbut != MAINDLG_OK && retbut != MAINDLG_CANCEL && retbut != SDLGUI_QUIT
+         && retbut != SDLGUI_ERROR && !bQuitProgram);
 
 
-	if (maindlg[MAINDLG_RESET].state & SG_SELECTED)
-		*bReset = true;
+   if (maindlg[MAINDLG_RESET].state & SG_SELECTED)
+      *bReset = true;
 
-	delete prefs;
+   delete prefs;
 
-	return (retbut == MAINDLG_OK);
+   return (retbut == MAINDLG_OK);
 }

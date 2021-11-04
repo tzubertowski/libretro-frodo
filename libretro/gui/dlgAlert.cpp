@@ -71,7 +71,7 @@ static int DlgAlert_FormatTextToBox(char *text, int max_width, int *text_width)
 	while(q < txtend)                             /* q was last place suitable for breaking */
 	{
 		char *r = strpbrk(q, " \t/\\\n");     /* find next suitable place for the break */
-		if (r == NULL)
+		if (!r)
 			r = txtend;                   /* if there's no place then point to the end */
 
 		if ((r-p) <= max_width && *r != '\n') /* '\n' is always used for breaking */
