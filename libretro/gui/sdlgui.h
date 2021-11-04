@@ -31,8 +31,6 @@ extern Prefs ThePrefs,*prefs;
 
 extern void gui_poll_events(void);
 
-#define SDL_Delay usleep
-
 enum
 {
   SGBOX,
@@ -57,16 +55,6 @@ enum
 #define SG_MOUSEDOWN   16
 #define SG_MOUSEUP     (((int)-1) - SG_MOUSEDOWN)
 
-/* Special characters: */
-/*
-#define SGRADIOBUTTON_NORMAL    46//0xfa//12
-#define SGRADIOBUTTON_SELECTED  219//0xe//13
-#define SGCHECKBOX_NORMAL       196//0xf9//14
-#define SGCHECKBOX_SELECTED     197// 0x6//15
-#define SGARROWUP               203//0x5e// 1
-#define SGARROWDOWN             202//0xb//  2
-#define SGFOLDER                '~'// 5
-*/
 #define SGRADIOBUTTON_NORMAL '.'//12
 #define SGRADIOBUTTON_SELECTED '*'//13
 #define SGCHECKBOX_NORMAL 'o'//14
@@ -81,7 +69,6 @@ enum
 #define SDLGUI_ERROR         -1
 #define SDLGUI_QUIT          -2
 #define SDLGUI_UNKNOWNEVENT  -3
-
 
 typedef struct
 {
@@ -99,12 +86,8 @@ extern int sdlgui_fontheight;	/* Height of the actual font */
 extern int SDLGui_Init(void);
 extern int SDLGui_UnInit(void);
 extern int SDLGui_SetScreen();
-extern void SDLGui_GetFontSize(int *width, int *height);
-extern void SDLGui_Text(int x, int y, const char *txt);
-extern void SDLGui_DrawDialog(const SGOBJ *dlg);
 extern int SDLGui_DoDialog(SGOBJ *dlg, int *pEventOut);
 extern void SDLGui_CenterDlg(SGOBJ *dlg);
 extern char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowNew);
-extern bool SDLGui_FileConfSelect(char *dlgname, char *confname, int maxlen, bool bAllowNew);
 
 #endif
