@@ -25,8 +25,6 @@
 
 extern void Paths_Init(const char *argv0);
 extern const char *Paths_GetWorkingDir(void);
-extern const char *Paths_GetDataDir(void);
 extern const char *Paths_GetUserHome(void);
-extern const char *Paths_GetHatariHome(void);
 
 #endif

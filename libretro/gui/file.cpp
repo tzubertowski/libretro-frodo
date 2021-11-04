@@ -44,10 +44,7 @@
  */
 void File_CleanFileName(char *pszFileName)
 {
-	int len;
-
-	len = strlen(pszFileName);
-
+	int len = strlen(pszFileName);
 	/* Remove end slashes from filename! But / remains! Doh! */
 	while (len > 2 && pszFileName[--len] == PATHSEP)
 		pszFileName[len] = '\0';
@@ -60,19 +57,16 @@ void File_CleanFileName(char *pszFileName)
  */
 void File_AddSlashToEndFileName(char *pszFileName)
 {
-	int len;
+   int len = strlen(pszFileName);
+   /* Check dir/filenames */
+   if (len == 0)
+      return;
 
-	len = strlen(pszFileName);
-
-	/* Check dir/filenames */
-	if (len != 0)
-	{
-		if (pszFileName[len-1] != PATHSEP)
-		{
-			pszFileName[len] = PATHSEP; /* Must use end slash */
-			pszFileName[len+1] = '\0';
-		}
-	}
+   if (pszFileName[len-1] != PATHSEP)
+   {
+      pszFileName[len] = PATHSEP; /* Must use end slash */
+      pszFileName[len+1] = '\0';
+   }
 }
 
 
@@ -82,14 +76,13 @@ void File_AddSlashToEndFileName(char *pszFileName)
  */
 bool File_DoesFileExtensionMatch(const char *pszFileName, const char *pszExtension)
 {
-	if (strlen(pszFileName) < strlen(pszExtension))
-		return false;
-	/* Is matching extension? */
-	if (!strcasecmp(&pszFileName[strlen(pszFileName)-strlen(pszExtension)], pszExtension))
-		return true;
-
-	/* No */
-	return false;
+   if (strlen(pszFileName) < strlen(pszExtension))
+      return false;
+   /* Is matching extension? */
+   if (!strcasecmp(&pszFileName[strlen(pszFileName)-strlen(pszExtension)], pszExtension))
+      return true;
+   /* No */
+   return false;
 }
 
 
