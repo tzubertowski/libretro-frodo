@@ -66,34 +66,34 @@
 
 // First and last displayed line
 const unsigned FIRST_DISP_LINE = 0x10;
-const unsigned LAST_DISP_LINE = 0x11f;
+const unsigned LAST_DISP_LINE  = 0x11f;
 
 // First and last possible line for Bad Lines
-const unsigned FIRST_DMA_LINE = 0x30;
-const unsigned LAST_DMA_LINE = 0xf7;
+const unsigned FIRST_DMA_LINE  = 0x30;
+const unsigned LAST_DMA_LINE   = 0xf7;
 
 // Display window coordinates
-const int ROW25_YSTART = 0x33;
-const int ROW25_YSTOP = 0xfb;
-const int ROW24_YSTART = 0x37;
-const int ROW24_YSTOP = 0xf7;
+const int ROW25_YSTART         = 0x33;
+const int ROW25_YSTOP          = 0xfb;
+const int ROW24_YSTART         = 0x37;
+const int ROW24_YSTOP          = 0xf7;
 
 #if defined(SMALL_DISPLAY)
 /* This does not work yet, the sprite code doesn't know about it. */
-const int COL40_XSTART = 0x14;
-const int COL40_XSTOP = 0x154;
-const int COL38_XSTART = 0x1B;
-const int COL38_XSTOP = 0x14B;
+const int COL40_XSTART         = 0x14;
+const int COL40_XSTOP          = 0x154;
+const int COL38_XSTART         = 0x1B;
+const int COL38_XSTOP          = 0x14B;
 #else
-const int COL40_XSTART = 0x20;
-const int COL40_XSTOP = 0x160;
-const int COL38_XSTART = 0x27;
-const int COL38_XSTOP = 0x157;
+const int COL40_XSTART         = 0x20;
+const int COL40_XSTOP          = 0x160;
+const int COL38_XSTART         = 0x27;
+const int COL38_XSTOP          = 0x157;
 #endif
 
 
 // Tables for sprite X expansion
-uint16 ExpTable[256] = {
+uint16 ExpTable[256]           = {
 	0x0000, 0x0003, 0x000C, 0x000F, 0x0030, 0x0033, 0x003C, 0x003F,
 	0x00C0, 0x00C3, 0x00CC, 0x00CF, 0x00F0, 0x00F3, 0x00FC, 0x00FF,
 	0x0300, 0x0303, 0x030C, 0x030F, 0x0330, 0x0333, 0x033C, 0x033F,
@@ -163,11 +163,12 @@ uint16 MultiExpTable[256] = {
 	0xFFA0, 0xFFA5, 0xFFAA, 0xFFAF, 0xFFF0, 0xFFF5, 0xFFFA, 0xFFFF
 };
 
-static union {
-	struct {
-		uint8 a,b,c,d;
-	} a;
-	uint32 b;
+static union
+{
+   struct {
+      uint8 a,b,c,d;
+   } a;
+   uint32 b;
 } TextColorTable[16][16][256][2];
 
 #ifdef GLOBAL_VARS
@@ -195,7 +196,7 @@ static MOS6510 *the_cpu;				// Pointer to 6510
 static uint8 colors[256];				// Indices of the 16 C64 colors (16 times mirrored to avoid "& 0x0f")
 
 static uint8 ec_color, b0c_color, b1c_color, b2c_color, b3c_color; // Indices for exterior/background colors
-static uint8 mm0_color, mm1_color;		// Indices for MOB multicolors
+static uint8 mm0_color, mm1_color;	// Indices for MOB multicolors
 static uint8 spr_color[8];				// Indices for MOB colors
 
 static uint32 ec_color_long;			// ec_color expanded to 32 bits
@@ -204,7 +205,7 @@ static uint8 matrix_line[40];			// Buffer for video line, read in Bad Lines
 static uint8 color_line[40];			// Buffer for color line, read in Bad Lines
 
 static uint8 *chunky_line_start;		// Pointer to start of current line in bitmap buffer
-static int xmod;						// Number of bytes per row
+static int xmod;						   // Number of bytes per row
 
 static uint8 *matrix_base;				// Video matrix base
 static uint8 *char_base;				// Character generator base
@@ -214,8 +215,8 @@ static uint16 raster_y;					// Current raster line
 static uint16 irq_raster;				// Interrupt raster line
 static uint16 dy_start;					// Comparison values for border logic
 static uint16 dy_stop;
-static uint16 rc;						// Row counter
-static uint16 vc;						// Video counter
+static uint16 rc;						   // Row counter
+static uint16 vc;						   // Video counter
 static uint16 vc_base;					// Video counter base
 static uint16 x_scroll;					// X scroll value
 static uint16 y_scroll;					// Y scroll value
@@ -224,17 +225,17 @@ static uint16 cia_vabase;				// CIA VA14/15 video base
 static int display_idx;					// Index of current display mode
 static int skip_counter;				// Counter for frame-skipping
 
-static uint16 mc[8];					// Sprite data counters
+static uint16 mc[8];					   // Sprite data counters
 static uint8 sprite_on;					// 8 Flags: Sprite display/DMA active
 
-static uint8 spr_coll_buf[0x180];		// Buffer for sprite-sprite collisions and priorities
-static uint8 fore_mask_buf[0x180/8];	// Foreground mask for sprite-graphics collisions and priorities
+static uint8 spr_coll_buf[0x180];	// Buffer for sprite-sprite collisions and priorities
+static uint8 fore_mask_buf[0x180/8];// Foreground mask for sprite-graphics collisions and priorities
 
 static bool display_state;				// true: Display state, false: Idle state
 static bool border_on;					// Flag: Upper/lower border on
 static bool border_40_col;				// Flag: 40 column border
 static bool frame_skipped;				// Flag: Frame is being skipped
-static uint8 bad_lines_enabled;			// Flag: Bad Lines enabled for this frame
+static uint8 bad_lines_enabled;		// Flag: Bad Lines enabled for this frame
 static bool lp_triggered;				// Flag: Lightpen was triggered in this frame
 #endif
 
@@ -245,18 +246,20 @@ static bool lp_triggered;				// Flag: Lightpen was triggered in this frame
 
 static void init_text_color_table(uint8 *colors)
 {
-	for (int i = 0; i < 16; i++)
-		for (int j = 0; j < 16; j++)
-			for (int k = 0; k < 256; k++) {
-				TextColorTable[i][j][k][0].a.a = colors[k & 128 ? i : j];
-				TextColorTable[i][j][k][0].a.b = colors[k & 64 ? i : j];
-				TextColorTable[i][j][k][0].a.c = colors[k & 32 ? i : j];
-				TextColorTable[i][j][k][0].a.d = colors[k & 16 ? i : j];
-				TextColorTable[i][j][k][1].a.a = colors[k & 8 ? i : j];
-				TextColorTable[i][j][k][1].a.b = colors[k & 4 ? i : j];
-				TextColorTable[i][j][k][1].a.c = colors[k & 2 ? i : j];
-				TextColorTable[i][j][k][1].a.d = colors[k & 1 ? i : j];
-			}
+   unsigned i, j, k;
+	for (i = 0; i < 16; i++)
+		for (j = 0; j < 16; j++)
+			for (k = 0; k < 256; k++)
+         {
+            TextColorTable[i][j][k][0].a.a = colors[k & 128 ? i : j];
+            TextColorTable[i][j][k][0].a.b = colors[k & 64 ? i : j];
+            TextColorTable[i][j][k][0].a.c = colors[k & 32 ? i : j];
+            TextColorTable[i][j][k][0].a.d = colors[k & 16 ? i : j];
+            TextColorTable[i][j][k][1].a.a = colors[k & 8 ? i : j];
+            TextColorTable[i][j][k][1].a.b = colors[k & 4 ? i : j];
+            TextColorTable[i][j][k][1].a.c = colors[k & 2 ? i : j];
+            TextColorTable[i][j][k][1].a.d = colors[k & 1 ? i : j];
+         }
 }
 
 MOS6569::MOS6569(C64 *c64, C64Display *disp, MOS6510 *CPU, uint8 *RAM, uint8 *Char, uint8 *Color)
@@ -268,20 +271,20 @@ MOS6569::MOS6569(C64 *c64, C64Display *disp, MOS6510 *CPU, uint8 *RAM, uint8 *Ch
 
 	// Set pointers
 #ifdef GLOBAL_VARS
-	the_c64 = c64;
+	the_c64     = c64;
 	the_display = disp;
-	the_cpu = CPU;
-	ram = RAM;
-	char_rom = Char;
-	color_ram = Color;
+	the_cpu     = CPU;
+	ram         = RAM;
+	char_rom    = Char;
+	color_ram   = Color;
 #endif
 	matrix_base = RAM;
-	char_base = RAM;
+	char_base   = RAM;
 	bitmap_base = RAM;
 
 	// Get bitmap info
 	chunky_line_start = disp->BitmapBase();
-	xmod = disp->BitmapXMod();
+	xmod              = disp->BitmapXMod();
 
 	// Initialize VIC registers
 	mx8 = 0;
@@ -333,6 +336,7 @@ MOS6569::MOS6569(C64 *c64, C64Display *disp, MOS6510 *CPU, uint8 *RAM, uint8 *Ch
 void MOS6569::ReInitColors(void)
 {
 	int i;
+   unsigned y, x;
 
 	// Build inverse color table.
 	uint8 xlate_colors[256];
@@ -349,27 +353,28 @@ void MOS6569::ReInitColors(void)
 		xlate_colors[i] = colors[xlate_colors[i]];
 
 	// Translate all the old colors variables.
-	ec_color = colors[ec];
+	ec_color      = colors[ec];
 	ec_color_long = ec_color | (ec_color << 8) | (ec_color << 16) | (ec_color << 24);
-	b0c_color = colors[b0c];
-	b1c_color = colors[b1c];
-	b2c_color = colors[b2c];
-	b3c_color = colors[b3c];
-	mm0_color = colors[mm0];
-	mm1_color = colors[mm1];
+	b0c_color     = colors[b0c];
+	b1c_color     = colors[b1c];
+	b2c_color     = colors[b2c];
+	b3c_color     = colors[b3c];
+	mm0_color     = colors[mm0];
+	mm1_color     = colors[mm1];
 	for (i = 0; i < 8; i++)
-		spr_color[i] = colors[sc[i]];
+		spr_color[i]    = colors[sc[i]];
 	mc_color_lookup[0] = b0c_color | (b0c_color << 8);
 	mc_color_lookup[1] = b1c_color | (b1c_color << 8);
 	mc_color_lookup[2] = b2c_color | (b2c_color << 8);
 
 	// Translate the chunky buffer.
 	uint8 *scanline = the_display->BitmapBase();
-	for (int y = 0; y < DISPLAY_Y; y++) {
-		for (int x = 0; x < DISPLAY_X; x++)
-			scanline[x] = xlate_colors[scanline[x]];
-		scanline += xmod;
-	}
+	for (y = 0; y < DISPLAY_Y; y++)
+   {
+      for (x = 0; x < DISPLAY_X; x++)
+         scanline[x] = xlate_colors[scanline[x]];
+      scanline += xmod;
+   }
 }
 
 #ifdef GLOBAL_VARS
@@ -397,8 +402,7 @@ inline uint8 *MOS6569::get_physical(uint16 adr)
 	int va = adr | cia_vabase;
 	if ((va & 0x7000) == 0x1000)
 		return char_rom + (va & 0x0fff);
-	else
-		return ram + va;
+   return ram + va;
 }
 
 
@@ -410,62 +414,76 @@ void MOS6569::GetState(MOS6569State *vd)
 {
 	int i;
 
-	vd->m0x = mx[0] & 0xff; vd->m0y = my[0];
-	vd->m1x = mx[1] & 0xff; vd->m1y = my[1];
-	vd->m2x = mx[2] & 0xff; vd->m2y = my[2];
-	vd->m3x = mx[3] & 0xff; vd->m3y = my[3];
-	vd->m4x = mx[4] & 0xff; vd->m4y = my[4];
-	vd->m5x = mx[5] & 0xff; vd->m5y = my[5];
-	vd->m6x = mx[6] & 0xff; vd->m6y = my[6];
-	vd->m7x = mx[7] & 0xff; vd->m7y = my[7];
-	vd->mx8 = mx8;
+	vd->m0x      = mx[0] & 0xff; vd->m0y = my[0];
+	vd->m1x      = mx[1] & 0xff; vd->m1y = my[1];
+	vd->m2x      = mx[2] & 0xff; vd->m2y = my[2];
+	vd->m3x      = mx[3] & 0xff; vd->m3y = my[3];
+	vd->m4x      = mx[4] & 0xff; vd->m4y = my[4];
+	vd->m5x      = mx[5] & 0xff; vd->m5y = my[5];
+	vd->m6x      = mx[6] & 0xff; vd->m6y = my[6];
+	vd->m7x      = mx[7] & 0xff; vd->m7y = my[7];
+	vd->mx8      = mx8;
 
-	vd->ctrl1 = (ctrl1 & 0x7f) | ((raster_y & 0x100) >> 1);
-	vd->raster = raster_y & 0xff;
-	vd->lpx = lpx; vd->lpy = lpy;
-	vd->ctrl2 = ctrl2;
-	vd->vbase = vbase;
+	vd->ctrl1    = (ctrl1 & 0x7f) | ((raster_y & 0x100) >> 1);
+	vd->raster   = raster_y & 0xff;
+	vd->lpx      = lpx; vd->lpy = lpy;
+	vd->ctrl2    = ctrl2;
+	vd->vbase    = vbase;
 	vd->irq_flag = irq_flag;
 	vd->irq_mask = irq_mask;
 
-	vd->me = me; vd->mxe = mxe; vd->mye = mye; vd->mdp = mdp; vd->mmc = mmc;
-	vd->mm = clx_spr; vd->md = clx_bgr;
+	vd->me       = me;
+   vd->mxe      = mxe;
+   vd->mye      = mye;
+   vd->mdp      = mdp;
+   vd->mmc      = mmc;
+	vd->mm       = clx_spr;
+   vd->md       = clx_bgr;
 
-	vd->ec = ec;
-	vd->b0c = b0c; vd->b1c = b1c; vd->b2c = b2c; vd->b3c = b3c;
-	vd->mm0 = mm0; vd->mm1 = mm1;
-	vd->m0c = sc[0]; vd->m1c = sc[1];
-	vd->m2c = sc[2]; vd->m3c = sc[3];
-	vd->m4c = sc[4]; vd->m5c = sc[5];
-	vd->m6c = sc[6]; vd->m7c = sc[7];
+	vd->ec       = ec;
+	vd->b0c      = b0c;
+   vd->b1c      = b1c;
+   vd->b2c      = b2c;
+   vd->b3c      = b3c;
+	vd->mm0      = mm0;
+   vd->mm1      = mm1;
+	vd->m0c      = sc[0];
+   vd->m1c      = sc[1];
+	vd->m2c      = sc[2];
+   vd->m3c      = sc[3];
+	vd->m4c      = sc[4];
+   vd->m5c      = sc[5];
+	vd->m6c      = sc[6];
+   vd->m7c      = sc[7];
 
-	vd->pad0 = 0;
+	vd->pad0       = 0;
 	vd->irq_raster = irq_raster;
-	vd->vc = vc;
-	vd->vc_base = vc_base;
-	vd->rc = rc;
-	vd->spr_dma = vd->spr_disp = sprite_on;
-	for (i=0; i<8; i++)
-		vd->mc[i] = vd->mc_base[i] = mc[i];
-	vd->display_state = display_state;
-	vd->bad_line = raster_y >= FIRST_DMA_LINE && raster_y <= LAST_DMA_LINE && ((raster_y & 7) == y_scroll) && bad_lines_enabled;
-	vd->bad_line_enable = bad_lines_enabled;
-	vd->lp_triggered = lp_triggered;
-	vd->border_on = border_on;
+	vd->vc         = vc;
+	vd->vc_base    = vc_base;
+	vd->rc         = rc;
+	vd->spr_dma    = vd->spr_disp = sprite_on;
 
-	vd->bank_base = cia_vabase;
-	vd->matrix_base = ((vbase & 0xf0) << 6) | cia_vabase;
-	vd->char_base = ((vbase & 0x0e) << 10) | cia_vabase;
-	vd->bitmap_base = ((vbase & 0x08) << 10) | cia_vabase;
+	for (i=0; i<8; i++)
+		vd->mc[i]        = vd->mc_base[i] = mc[i];
+	vd->display_state   = display_state;
+	vd->bad_line        = raster_y >= FIRST_DMA_LINE && raster_y <= LAST_DMA_LINE && ((raster_y & 7) == y_scroll) && bad_lines_enabled;
+	vd->bad_line_enable = bad_lines_enabled;
+	vd->lp_triggered    = lp_triggered;
+	vd->border_on       = border_on;
+
+	vd->bank_base         = cia_vabase;
+	vd->matrix_base       = ((vbase & 0xf0) << 6) | cia_vabase;
+	vd->char_base         = ((vbase & 0x0e) << 10) | cia_vabase;
+	vd->bitmap_base       = ((vbase & 0x08) << 10) | cia_vabase;
 	for (i=0; i<8; i++)
 		vd->sprite_base[i] = (matrix_base[0x3f8 + i] << 6) | cia_vabase;
 
-	vd->cycle = 1;
-	vd->raster_x = 0;
-	vd->ml_index = 0;
-	vd->ref_cnt = 0xff;
-	vd->last_vic_byte = 0;
-	vd->ud_border_on = border_on;
+	vd->cycle             = 1;
+	vd->raster_x          = 0;
+	vd->ml_index          = 0;
+	vd->ref_cnt           = 0xff;
+	vd->last_vic_byte     = 0;
+	vd->ud_border_on      = border_on;
 }
 
 
@@ -477,44 +495,58 @@ void MOS6569::SetState(MOS6569State *vd)
 {
 	int i, j;
 
-	mx[0] = vd->m0x; my[0] = vd->m0y;
-	mx[1] = vd->m1x; my[1] = vd->m1y;
-	mx[2] = vd->m2x; my[2] = vd->m2y;
-	mx[3] = vd->m3x; my[3] = vd->m3y;
-	mx[4] = vd->m4x; my[4] = vd->m4y;
-	mx[5] = vd->m5x; my[5] = vd->m5y;
-	mx[6] = vd->m6x; my[6] = vd->m6y;
-	mx[7] = vd->m7x; my[7] = vd->m7y;
-	mx8 = vd->mx8;
-	for (i=0, j=1; i<8; i++, j<<=1) {
-		if (mx8 & j)
-			mx[i] |= 0x100;
-		else
-			mx[i] &= 0xff;
-	}
+	mx[0] = vd->m0x;
+   my[0] = vd->m0y;
+	mx[1] = vd->m1x;
+   my[1] = vd->m1y;
+	mx[2] = vd->m2x;
+   my[2] = vd->m2y;
+	mx[3] = vd->m3x;
+   my[3] = vd->m3y;
+	mx[4] = vd->m4x;
+   my[4] = vd->m4y;
+	mx[5] = vd->m5x;
+   my[5] = vd->m5y;
+	mx[6] = vd->m6x;
+   my[6] = vd->m6y;
+	mx[7] = vd->m7x;
+   my[7] = vd->m7y;
+	mx8   = vd->mx8;
 
-	ctrl1 = vd->ctrl1;
-	ctrl2 = vd->ctrl2;
+	for (i=0, j=1; i<8; i++, j<<=1)
+   {
+      if (mx8 & j)
+         mx[i] |= 0x100;
+      else
+         mx[i] &= 0xff;
+   }
+
+	ctrl1    = vd->ctrl1;
+	ctrl2    = vd->ctrl2;
 	x_scroll = ctrl2 & 7;
 	y_scroll = ctrl1 & 7;
-	if (ctrl1 & 8) {
-		dy_start = ROW25_YSTART;
-		dy_stop = ROW25_YSTOP;
-	} else {
-		dy_start = ROW24_YSTART;
-		dy_stop = ROW24_YSTOP;
-	}
+	if (ctrl1 & 8)
+   {
+      dy_start = ROW25_YSTART;
+      dy_stop  = ROW25_YSTOP;
+   }
+   else
+   {
+      dy_start = ROW24_YSTART;
+      dy_stop  = ROW24_YSTOP;
+   }
 	border_40_col = ctrl2 & 8;
-	display_idx = ((ctrl1 & 0x60) | (ctrl2 & 0x10)) >> 4;
+	display_idx   = ((ctrl1 & 0x60) | (ctrl2 & 0x10)) >> 4;
 
-	raster_y = 0;
-	lpx = vd->lpx; lpy = vd->lpy;
+	raster_y      = 0;
+	lpx           = vd->lpx;
+   lpy           = vd->lpy;
 
-	vbase = vd->vbase;
-	cia_vabase = vd->bank_base;
-	matrix_base = get_physical((vbase & 0xf0) << 6);
-	char_base = get_physical((vbase & 0x0e) << 10);
-	bitmap_base = get_physical((vbase & 0x08) << 10);
+	vbase         = vd->vbase;
+	cia_vabase    = vd->bank_base;
+	matrix_base   = get_physical((vbase & 0xf0) << 6);
+	char_base     = get_physical((vbase & 0x0e) << 10);
+	bitmap_base   = get_physical((vbase & 0x08) << 10);
 
 	irq_flag = vd->irq_flag;
 	irq_mask = vd->irq_mask;
@@ -569,10 +601,11 @@ inline void MOS6569::raster_irq(void)
 #endif
 {
 	irq_flag |= 0x01;
-	if (irq_mask & 0x01) {
-		irq_flag |= 0x80;
-		the_cpu->TriggerVICIRQ();
-	}
+	if (irq_mask & 0x01)
+   {
+      irq_flag |= 0x80;
+      the_cpu->TriggerVICIRQ();
+   }
 }
 
 
@@ -582,84 +615,110 @@ inline void MOS6569::raster_irq(void)
 
 uint8 MOS6569::ReadRegister(uint16 adr)
 {
-	switch (adr) {
-		case 0x00: case 0x02: case 0x04: case 0x06:
-		case 0x08: case 0x0a: case 0x0c: case 0x0e:
-			return mx[adr >> 1];
+	switch (adr)
+   {
+      case 0x00:
+      case 0x02:
+      case 0x04:
+      case 0x06:
+      case 0x08:
+      case 0x0a:
+      case 0x0c:
+      case 0x0e:
+         return mx[adr >> 1];
 
-		case 0x01: case 0x03: case 0x05: case 0x07:
-		case 0x09: case 0x0b: case 0x0d: case 0x0f:
-			return my[adr >> 1];
+      case 0x01:
+      case 0x03:
+      case 0x05:
+      case 0x07:
+      case 0x09:
+      case 0x0b:
+      case 0x0d:
+      case 0x0f:
+         return my[adr >> 1];
 
-		case 0x10:	// Sprite X position MSB
-			return mx8;
+      case 0x10:	// Sprite X position MSB
+         return mx8;
 
-		case 0x11:	// Control register 1
-			return (ctrl1 & 0x7f) | ((raster_y & 0x100) >> 1);
+      case 0x11:	// Control register 1
+         return (ctrl1 & 0x7f) | ((raster_y & 0x100) >> 1);
 
-		case 0x12:	// Raster counter
-			return raster_y;
+      case 0x12:	// Raster counter
+         return raster_y;
 
-		case 0x13:	// Light pen X
-			return lpx;
+      case 0x13:	// Light pen X
+         return lpx;
 
-		case 0x14:	// Light pen Y
-			return lpy;
+      case 0x14:	// Light pen Y
+         return lpy;
 
-		case 0x15:	// Sprite enable
-			return me;
+      case 0x15:	// Sprite enable
+         return me;
 
-		case 0x16:	// Control register 2
-			return ctrl2 | 0xc0;
+      case 0x16:	// Control register 2
+         return ctrl2 | 0xc0;
 
-		case 0x17:	// Sprite Y expansion
-			return mye;
+      case 0x17:	// Sprite Y expansion
+         return mye;
 
-		case 0x18:	// Memory pointers
-			return vbase | 0x01;
+      case 0x18:	// Memory pointers
+         return vbase | 0x01;
 
-		case 0x19:	// IRQ flags
-			return irq_flag | 0x70;
+      case 0x19:	// IRQ flags
+         return irq_flag | 0x70;
 
-		case 0x1a:	// IRQ mask
-			return irq_mask | 0xf0;
+      case 0x1a:	// IRQ mask
+         return irq_mask | 0xf0;
 
-		case 0x1b:	// Sprite data priority
-			return mdp;
+      case 0x1b:	// Sprite data priority
+         return mdp;
 
-		case 0x1c:	// Sprite multicolor
-			return mmc;
+      case 0x1c:	// Sprite multicolor
+         return mmc;
 
-		case 0x1d:	// Sprite X expansion
-			return mxe;
+      case 0x1d:	// Sprite X expansion
+         return mxe;
 
-		case 0x1e:{	// Sprite-sprite collision
-			uint8 ret = clx_spr;
-			clx_spr = 0;	// Read and clear
-			return ret;
-		}
+      case 0x1e:
+         {	// Sprite-sprite collision
+            uint8 ret = clx_spr;
+            clx_spr   = 0;	// Read and clear
+            return ret;
+         }
+      case 0x1f:
+         {	// Sprite-background collision
+            uint8 ret = clx_bgr;
+            clx_bgr   = 0;	// Read and clear
+            return ret;
+         }
 
-		case 0x1f:{	// Sprite-background collision
-			uint8 ret = clx_bgr;
-			clx_bgr = 0;	// Read and clear
-			return ret;
-		}
-
-		case 0x20: return ec | 0xf0;
-		case 0x21: return b0c | 0xf0;
-		case 0x22: return b1c | 0xf0;
-		case 0x23: return b2c | 0xf0;
-		case 0x24: return b3c | 0xf0;
-		case 0x25: return mm0 | 0xf0;
-		case 0x26: return mm1 | 0xf0;
-
-		case 0x27: case 0x28: case 0x29: case 0x2a:
-		case 0x2b: case 0x2c: case 0x2d: case 0x2e:
-			return sc[adr - 0x27] | 0xf0;
-
-		default:
-			return 0xff;
-	}
+      case 0x20:
+         return ec | 0xf0;
+      case 0x21:
+         return b0c | 0xf0;
+      case 0x22:
+         return b1c | 0xf0;
+      case 0x23:
+         return b2c | 0xf0;
+      case 0x24:
+         return b3c | 0xf0;
+      case 0x25:
+         return mm0 | 0xf0;
+      case 0x26:
+         return mm1 | 0xf0;
+      case 0x27:
+      case 0x28:
+      case 0x29:
+      case 0x2a:
+      case 0x2b:
+      case 0x2c:
+      case 0x2d:
+      case 0x2e:
+         return sc[adr - 0x27] | 0xf0;
+      default:
+         break;
+   }
+   return 0xff;
 }
 
 
@@ -669,145 +728,147 @@ uint8 MOS6569::ReadRegister(uint16 adr)
 
 void MOS6569::WriteRegister(uint16 adr, uint8 byte)
 {
-	switch (adr) {
-		case 0x00: case 0x02: case 0x04: case 0x06:
-		case 0x08: case 0x0a: case 0x0c: case 0x0e:
-			mx[adr >> 1] = (mx[adr >> 1] & 0xff00) | byte;
-			break;
+	switch (adr)
+   {
+      case 0x00: case 0x02: case 0x04: case 0x06:
+      case 0x08: case 0x0a: case 0x0c: case 0x0e:
+         mx[adr >> 1] = (mx[adr >> 1] & 0xff00) | byte;
+         break;
 
-		case 0x10:{
-			int i, j;
-			mx8 = byte;
-			for (i=0, j=1; i<8; i++, j<<=1) {
-				if (mx8 & j)
-					mx[i] |= 0x100;
-				else
-					mx[i] &= 0xff;
-			}
-			break;
-		}
+      case 0x10:
+         {
+            int i, j;
+            mx8 = byte;
+            for (i=0, j=1; i<8; i++, j<<=1) {
+               if (mx8 & j)
+                  mx[i] |= 0x100;
+               else
+                  mx[i] &= 0xff;
+            }
+         }
+         break;
 
-		case 0x01: case 0x03: case 0x05: case 0x07:
-		case 0x09: case 0x0b: case 0x0d: case 0x0f:
-			my[adr >> 1] = byte;
-			break;
+      case 0x01: case 0x03: case 0x05: case 0x07:
+      case 0x09: case 0x0b: case 0x0d: case 0x0f:
+                my[adr >> 1] = byte;
+                break;
 
-		case 0x11:{	// Control register 1
-			ctrl1 = byte;
-			y_scroll = byte & 7;
+      case 0x11:{	// Control register 1
+                   ctrl1 = byte;
+                   y_scroll = byte & 7;
 
-			uint16 new_irq_raster = (irq_raster & 0xff) | ((byte & 0x80) << 1);
-			if (irq_raster != new_irq_raster && raster_y == new_irq_raster)
-				raster_irq();
-			irq_raster = new_irq_raster;
+                   uint16 new_irq_raster = (irq_raster & 0xff) | ((byte & 0x80) << 1);
+                   if (irq_raster != new_irq_raster && raster_y == new_irq_raster)
+                      raster_irq();
+                   irq_raster = new_irq_raster;
 
-			if (byte & 8) {
-				dy_start = ROW25_YSTART;
-				dy_stop = ROW25_YSTOP;
-			} else {
-				dy_start = ROW24_YSTART;
-				dy_stop = ROW24_YSTOP;
-			}
+                   if (byte & 8) {
+                      dy_start = ROW25_YSTART;
+                      dy_stop = ROW25_YSTOP;
+                   } else {
+                      dy_start = ROW24_YSTART;
+                      dy_stop = ROW24_YSTOP;
+                   }
 
-			display_idx = ((ctrl1 & 0x60) | (ctrl2 & 0x10)) >> 4;
-			break;
-		}
+                   display_idx = ((ctrl1 & 0x60) | (ctrl2 & 0x10)) >> 4;
+                   break;
+                }
 
-		case 0x12:{	// Raster counter
-			uint16 new_irq_raster = (irq_raster & 0xff00) | byte;
-			if (irq_raster != new_irq_raster && raster_y == new_irq_raster)
-				raster_irq();
-			irq_raster = new_irq_raster;
-			break;
-		}
+      case 0x12:{	// Raster counter
+                   uint16 new_irq_raster = (irq_raster & 0xff00) | byte;
+                   if (irq_raster != new_irq_raster && raster_y == new_irq_raster)
+                      raster_irq();
+                   irq_raster = new_irq_raster;
+                   break;
+                }
 
-		case 0x15:	// Sprite enable
-			me = byte;
-			break;
+      case 0x15:	// Sprite enable
+                me = byte;
+                break;
 
-		case 0x16:	// Control register 2
-			ctrl2 = byte;
-			x_scroll = byte & 7;
-			border_40_col = byte & 8;
-			display_idx = ((ctrl1 & 0x60) | (ctrl2 & 0x10)) >> 4;
-			break;
+      case 0x16:	// Control register 2
+                ctrl2 = byte;
+                x_scroll = byte & 7;
+                border_40_col = byte & 8;
+                display_idx = ((ctrl1 & 0x60) | (ctrl2 & 0x10)) >> 4;
+                break;
 
-		case 0x17:	// Sprite Y expansion
-			mye = byte;
-			break;
+      case 0x17:	// Sprite Y expansion
+                mye = byte;
+                break;
 
-		case 0x18:	// Memory pointers
-			vbase = byte;
-			matrix_base = get_physical((byte & 0xf0) << 6);
-			char_base = get_physical((byte & 0x0e) << 10);
-			bitmap_base = get_physical((byte & 0x08) << 10);
-			break;
+      case 0x18:	// Memory pointers
+                vbase = byte;
+                matrix_base = get_physical((byte & 0xf0) << 6);
+                char_base = get_physical((byte & 0x0e) << 10);
+                bitmap_base = get_physical((byte & 0x08) << 10);
+                break;
 
-		case 0x19: // IRQ flags
-			irq_flag = irq_flag & (~byte & 0x0f);
-			the_cpu->ClearVICIRQ();	// Clear interrupt (hack!)
-			if (irq_flag & irq_mask) // Set master bit if allowed interrupt still pending
-				irq_flag |= 0x80;
-			break;
-		
-		case 0x1a:	// IRQ mask
-			irq_mask = byte & 0x0f;
-			if (irq_flag & irq_mask) { // Trigger interrupt if pending and now allowed
-				irq_flag |= 0x80;
-				the_cpu->TriggerVICIRQ();
-			} else {
-				irq_flag &= 0x7f;
-				the_cpu->ClearVICIRQ();
-			}
-			break;
+      case 0x19: // IRQ flags
+                irq_flag = irq_flag & (~byte & 0x0f);
+                the_cpu->ClearVICIRQ();	// Clear interrupt (hack!)
+                if (irq_flag & irq_mask) // Set master bit if allowed interrupt still pending
+                   irq_flag |= 0x80;
+                break;
 
-		case 0x1b:	// Sprite data priority
-			mdp = byte;
-			break;
+      case 0x1a:	// IRQ mask
+                irq_mask = byte & 0x0f;
+                if (irq_flag & irq_mask) { // Trigger interrupt if pending and now allowed
+                   irq_flag |= 0x80;
+                   the_cpu->TriggerVICIRQ();
+                } else {
+                   irq_flag &= 0x7f;
+                   the_cpu->ClearVICIRQ();
+                }
+                break;
 
-		case 0x1c:	// Sprite multicolor
-			mmc = byte;
-			break;
+      case 0x1b:	// Sprite data priority
+                mdp = byte;
+                break;
 
-		case 0x1d:	// Sprite X expansion
-			mxe = byte;
-			break;
+      case 0x1c:	// Sprite multicolor
+                mmc = byte;
+                break;
 
-		case 0x20:
-			ec_color = colors[ec = byte];
-			ec_color_long = (ec_color << 24) | (ec_color << 16) | (ec_color << 8) | ec_color;
-			break;
+      case 0x1d:	// Sprite X expansion
+                mxe = byte;
+                break;
 
-		case 0x21:
-			if (b0c != byte) {
-				b0c_color = colors[b0c = byte & 0xF];
-				make_mc_table();
-			}
-			break;
+      case 0x20:
+                ec_color = colors[ec = byte];
+                ec_color_long = (ec_color << 24) | (ec_color << 16) | (ec_color << 8) | ec_color;
+                break;
 
-		case 0x22: 
-			if (b1c != byte) {
-				b1c_color = colors[b1c = byte & 0xF];
-				make_mc_table();
-			}
-			break;
+      case 0x21:
+                if (b0c != byte) {
+                   b0c_color = colors[b0c = byte & 0xF];
+                   make_mc_table();
+                }
+                break;
 
-		case 0x23: 
-			if (b2c != byte) {
-				b2c_color = colors[b2c = byte & 0xF];
-				make_mc_table();
-			}
-			break;
+      case 0x22: 
+                if (b1c != byte) {
+                   b1c_color = colors[b1c = byte & 0xF];
+                   make_mc_table();
+                }
+                break;
 
-		case 0x24: b3c_color = colors[b3c = byte & 0xF]; break;
-		case 0x25: mm0_color = colors[mm0 = byte]; break;
-		case 0x26: mm1_color = colors[mm1 = byte]; break;
+      case 0x23: 
+                if (b2c != byte) {
+                   b2c_color = colors[b2c = byte & 0xF];
+                   make_mc_table();
+                }
+                break;
 
-		case 0x27: case 0x28: case 0x29: case 0x2a:
-		case 0x2b: case 0x2c: case 0x2d: case 0x2e:
-			spr_color[adr - 0x27] = colors[sc[adr - 0x27] = byte];
-			break;
-	}
+      case 0x24: b3c_color = colors[b3c = byte & 0xF]; break;
+      case 0x25: mm0_color = colors[mm0 = byte]; break;
+      case 0x26: mm1_color = colors[mm1 = byte]; break;
+
+      case 0x27: case 0x28: case 0x29: case 0x2a:
+      case 0x2b: case 0x2c: case 0x2d: case 0x2e:
+                 spr_color[adr - 0x27] = colors[sc[adr - 0x27] = byte];
+                 break;
+   }
 }
 
 
@@ -853,7 +914,8 @@ static inline void vblank(void)
 inline void MOS6569::vblank(void)
 #endif
 {
-   raster_y = vc_base = 0;
+   raster_y     = 0;
+   vc_base      = 0;
    lp_triggered = false;
 
    if (!(frame_skipped = --skip_counter))
@@ -874,19 +936,21 @@ static inline void el_std_text(uint8 *p, uint8 *q, uint8 *r)
 inline void MOS6569::el_std_text(uint8 *p, uint8 *q, uint8 *r)
 #endif
 {
+   unsigned i;
 	unsigned int b0cc = b0c;
-	uint32 *lp = (uint32 *)p;
-	uint8 *cp = color_line;
-	uint8 *mp = matrix_line;
+	uint32 *lp        = (uint32 *)p;
+	uint8 *cp         = color_line;
+	uint8 *mp         = matrix_line;
 
 	// Loop for 40 characters
-	for (int i=0; i<40; i++) {
-		uint8 color = cp[i];
-		uint8 data = r[i] = q[mp[i] << 3];
+	for (i=0; i<40; i++)
+   {
+      uint8 color = cp[i];
+      uint8 data  = r[i] = q[mp[i] << 3];
 
-		*lp++ = TextColorTable[color][b0cc][data][0].b;
-		*lp++ = TextColorTable[color][b0cc][data][1].b;
-	}
+      *lp++       = TextColorTable[color][b0cc][data][0].b;
+      *lp++       = TextColorTable[color][b0cc][data][1].b;
+   }
 }
 
 

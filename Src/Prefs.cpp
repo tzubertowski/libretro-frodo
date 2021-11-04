@@ -34,50 +34,50 @@ Prefs ThePrefs;
 
 Prefs::Prefs()
 {
-	NormalCycles = 63;
-	BadLineCycles = 23;
-	CIACycles = 63;
-	FloppyCycles = 64;
-	SkipFrames = 1;
-	LatencyMin = 80;
-	LatencyMax = 120;
-	LatencyAvg = 280;
-	ScalingNumerator = 2;
-	ScalingDenominator = 2;
+   NormalCycles       = 63;
+   BadLineCycles      = 23;
+   CIACycles          = 63;
+   FloppyCycles       = 64;
+   SkipFrames         = 1;
+   LatencyMin         = 80;
+   LatencyMax         = 120;
+   LatencyAvg         = 280;
+   ScalingNumerator   = 2;
+   ScalingDenominator = 2;
 
-	strcpy(DrivePath[0], "64prgs");
-	strcpy(DrivePath[1], "");
-	strcpy(DrivePath[2], "");
-	strcpy(DrivePath[3], "");
+   strcpy(DrivePath[0], "64prgs");
+   strcpy(DrivePath[1], "");
+   strcpy(DrivePath[2], "");
+   strcpy(DrivePath[3], "");
 
-	strcpy(ViewPort, "Default");
-	strcpy(DisplayMode, "Default");
+   strcpy(ViewPort, "Default");
+   strcpy(DisplayMode, "Default");
 
-	SIDType = SIDTYPE_DIGITAL;
-	REUSize = REU_NONE;
-	DisplayType = DISPTYPE_WINDOW;
-	Joystick1Port = 0;
-	Joystick2Port = 0;
+   SIDType            = SIDTYPE_DIGITAL;
+   REUSize            = REU_NONE;
+   DisplayType        = DISPTYPE_WINDOW;
+   Joystick1Port      = 0;
+   Joystick2Port      = 0;
 
-	SpritesOn = true;
-	SpriteCollisions = true;
-	JoystickSwap = false;
-	LimitSpeed = true;
-	FastReset = false;
-	CIAIRQHack = false;
-	MapSlash = true;
-	Emul1541Proc = false;
-	SIDFilters = true;
-	DoubleScan = true;
-	HideCursor = false;
-	DirectSound = true;	
-	ExclusiveSound = false;
-	AutoPause = false;
-	PrefsAtStartup = false;
-	SystemMemory = false;
-	AlwaysCopy = false;
-	SystemKeys = true;
-	ShowLEDs = true;
+   SpritesOn          = true;
+   SpriteCollisions   = true;
+   JoystickSwap       = false;
+   LimitSpeed         = true;
+   FastReset          = false;
+   CIAIRQHack         = false;
+   MapSlash           = true;
+   Emul1541Proc       = false;
+   SIDFilters         = true;
+   DoubleScan         = true;
+   HideCursor         = false;
+   DirectSound        = true;	
+   ExclusiveSound     = false;
+   AutoPause          = false;
+   PrefsAtStartup     = false;
+   SystemMemory       = false;
+   AlwaysCopy         = false;
+   SystemKeys         = true;
+   ShowLEDs           = true;
 }
 
 
@@ -138,5 +138,5 @@ bool Prefs::operator!=(const Prefs &rhs) const
 
 void Prefs::set_drive8(char *filename,int type)
 {
-	strcpy(DrivePath[0], filename);
+   strcpy(DrivePath[0], filename);
 }

@@ -51,7 +51,8 @@ char AppDirPath[1024];	// Path of application directory
  *  Load C64 ROM files
  */
 
-bool Frodo::load_rom(const char *which, const char *path, uint8 *where, size_t size, const uint8 *builtin)
+bool Frodo::load_rom(const char *which, const char *path,
+      uint8 *where, size_t size, const uint8 *builtin)
 {
    FILE *f = fopen(path, "rb");
    if (f)
@@ -66,13 +67,20 @@ bool Frodo::load_rom(const char *which, const char *path, uint8 *where, size_t s
 
 void Frodo::load_rom_files()
 {
-	if (!load_rom("Basic", BASIC_ROM_FILE, TheC64->Basic, BASIC_ROM_SIZE, builtin_basic_rom))
+	if (!load_rom("Basic", BASIC_ROM_FILE, TheC64->Basic,
+            BASIC_ROM_SIZE, builtin_basic_rom))
       memcpy(TheC64->Basic, builtin_basic_rom, BASIC_ROM_SIZE);
-	if (!load_rom("Kernal", KERNAL_ROM_FILE, TheC64->Kernal, KERNAL_ROM_SIZE, builtin_kernal_rom))
+
+	if (!load_rom("Kernal", KERNAL_ROM_FILE, TheC64->Kernal,
+            KERNAL_ROM_SIZE, builtin_kernal_rom))
       memcpy(TheC64->Kernal, builtin_kernal_rom, KERNAL_ROM_SIZE);
-	if (!load_rom("Char", CHAR_ROM_FILE, TheC64->Char, CHAR_ROM_SIZE, builtin_char_rom))
+
+	if (!load_rom("Char", CHAR_ROM_FILE, TheC64->Char,
+            CHAR_ROM_SIZE, builtin_char_rom))
       memcpy(TheC64->Char, builtin_char_rom, CHAR_ROM_SIZE);
-	if (!load_rom("1541", DRIVE_ROM_FILE, TheC64->ROM1541, DRIVE_ROM_SIZE, builtin_drive_rom))
+
+	if (!load_rom("1541", DRIVE_ROM_FILE, TheC64->ROM1541,
+            DRIVE_ROM_SIZE, builtin_drive_rom))
       memcpy(TheC64->ROM1541, builtin_drive_rom, DRIVE_ROM_SIZE);
 }
 
@@ -185,6 +193,4 @@ bool IsDirectory(const char *path)
 {
 	struct stat st;
 	return stat(path, &st) == 0 && S_ISDIR(st.st_mode);
-
 }
-

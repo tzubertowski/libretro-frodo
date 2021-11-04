@@ -325,4 +325,3 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 
    return 1;
 }
-

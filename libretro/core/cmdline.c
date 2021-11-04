@@ -86,14 +86,14 @@ static void parse_cmdline(const char *argv)
 
 int pre_main(const char *argv)
 {
-   int i;
+   unsigned i;
    bool Only1Arg;
 
    parse_cmdline(argv); 
 
    Only1Arg = (strcmp(ARGUV[0],"skelsdl") == 0) ? 0 : 1;
 
-   for (i = 0; i<64; i++)
+   for (i = 0; i < 64; i++)
       xargv_cmd[i] = NULL;
 
    Add_Option("skelsdl");

@@ -66,7 +66,7 @@ void retro_set_environment(retro_environment_t cb)
 static void update_variables(void)
 {
    struct retro_variable var;
-   var.key = "frodo_resolution";
+   var.key   = "frodo_resolution";
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
@@ -294,26 +294,27 @@ void retro_run(void)
 
    bool updated = false;
 
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE,
+            &updated) && updated)
       update_variables();
 
    if (pulse_counter > 20 && pulse_handler)
       pulse_handler(0);
 
-   if(pauseg==0){
-	  
-      	if(SND==1)
-			for(x=0;x<882;x++)
-				audio_cb(SNDBUF[x],SNDBUF[x]);
-#ifdef NO_LIBCO
-	#ifndef FRODO_SC
-		for(x=0;x<312;x++)
-	#else
-		for(x=0;x<63*312;x++) 
-	#endif
-		TheC64->thread_func();
-#endif
+   if(pauseg==0)
+   {
 
+      if(SND==1)
+         for(x=0;x<882;x++)
+            audio_cb(SNDBUF[x],SNDBUF[x]);
+#ifdef NO_LIBCO
+#ifndef FRODO_SC
+      for(x=0;x<312;x++)
+#else
+         for(x=0;x<63*312;x++) 
+#endif
+            TheC64->thread_func();
+#endif
    }   
 
    video_cb(Retro_Screen,retrow,retroh,retrow<<PIXEL_BYTES);
@@ -326,9 +327,7 @@ void retro_run(void)
 
 bool retro_load_game(const struct retro_game_info *info)
 {
-   const char *full_path;
-
-   (void)info;
+   const char *full_path = NULL;
 
 #ifndef NO_LIBCO
    if (!mainThread || !emuThread)
@@ -338,7 +337,8 @@ bool retro_load_game(const struct retro_game_info *info)
    }
 #endif
 
-   full_path = info ? info->path : NULL;
+   if (info)
+      full_path = info->path;
 
    if (full_path)
      strcpy(RPATH,full_path);
@@ -398,17 +398,15 @@ bool retro_unserialize(const void *data_, size_t size)
 
 void *retro_get_memory_data(unsigned id)
 {
-   (void)id;
    return NULL;
 }
 
 size_t retro_get_memory_size(unsigned id)
 {
-   (void)id;
    return 0;
 }
 
-void retro_cheat_reset(void) {}
+void retro_cheat_reset(void) { }
 
 void retro_cheat_set(unsigned index, bool enabled, const char *code)
 {

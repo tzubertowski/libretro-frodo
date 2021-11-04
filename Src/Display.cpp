@@ -178,49 +178,53 @@ void retro_Frect(retro_Surface *buffer,int x,int y,int dx,int dy,unsigned  color
 
 void retro_FillRect(retro_Surface * surf,retro_Rect *rect,unsigned int col)
 {
-	if(rect==NULL)retro_Frect(surf,0,0,surf->w ,surf->h,col); 
-	else retro_Frect(surf,rect->x,rect->y,rect->w ,rect->h,col); 
+	if (!rect)
+      retro_Frect(surf,0,0,surf->w ,surf->h,col); 
+	else
+      retro_Frect(surf,rect->x,rect->y,rect->w ,rect->h,col); 
 }
 
 void Retro_BlitSurface(retro_Surface *ss)
 {
+   unsigned char *pout;
+   unsigned char *pin;
 	retro_Rect src,dst;
-
 	int x,y,w;
 
-	src.x=0;
-	src.y=0;
-	src.w=ss->w;
-	src.h=ss->h;
-	dst.x=0;
-	dst.y=0;
-	dst.w=retrow;
-	dst.h=retroh;
+	src.x = 0;
+	src.y = 0;
+	src.w = ss->w;
+	src.h = ss->h;
+	dst.x = 0;
+	dst.y = 0;
+	dst.w = retrow;
+	dst.h = retroh;
 
-	unsigned char * pout=(unsigned char *)Retro_Screen+(dst.x*4+dst.y*retrow*4);
-	unsigned char * pin =(unsigned char *)ss->pixels+(src.x*1+src.y*ss->w*1);
+	pout  = (unsigned char *)Retro_Screen+(dst.x*4+dst.y*retrow*4);
+	pin   = (unsigned char *)ss->pixels+(src.x*1+src.y*ss->w*1);
 
-	for(y=0;y<src.h;y++){		
-		for(x=0;x<src.w;x++){
+	for(y=0;y<src.h;y++)
+   {
+      for(x=0;x<src.w;x++)
+      {
+         unsigned int mcoul=palette[*pin].r<<16|palette[*pin].g<<8|palette[*pin].b;
 
-			unsigned int mcoul=palette[*pin].r<<16|palette[*pin].g<<8|palette[*pin].b;
+         for(w=0;w<4;w++)
+         {
+            *pout=(mcoul>>(8*w))&0xff;
+            pout++;
+         }
+         pin++;
 
-			for(w=0;w<4;w++){	
-		   		*pout=(mcoul>>(8*w))&0xff;
-		   		pout++;
-			}
-			pin++;
-
-		}
-		pin +=(ss->w-src.w)*1;
-		pout+=(retrow-src.w)*4;
-	}
-
-	return;
+      }
+      pin  += (ss->w-src.w)  * 1;
+      pout += (retrow-src.w) * 4;
+   }
 }
 
-void Retro_ClearSurface(retro_Surface *ss){
-	memset(ss->pixels,0,ss->h*ss->pitch);
+void Retro_ClearSurface(retro_Surface *ss)
+{
+   memset(ss->pixels,0,ss->h*ss->pitch);
 }
 
 /*
@@ -229,32 +233,38 @@ void Retro_ClearSurface(retro_Surface *ss){
 
 void draw_string(retro_Surface *s, int x, int y, const char *str, uint8 front_color, uint8 back_color)
 {
-	uint8 *pb = (uint8 *)s->pixels + s->pitch*y + x;
 	char c;
-	while ((c = *str++) != 0) {
-		uint8 *q = TheC64->Char + c*8 + 0x800;
-		uint8 *p = pb;
-		for (int y=0; y<8; y++) {
-			uint8 v = *q++;
-			p[0] = (v & 0x80) ? front_color : back_color;
-			p[1] = (v & 0x40) ? front_color : back_color;
-			p[2] = (v & 0x20) ? front_color : back_color;
-			p[3] = (v & 0x10) ? front_color : back_color;
-			p[4] = (v & 0x08) ? front_color : back_color;
-			p[5] = (v & 0x04) ? front_color : back_color;
-			p[6] = (v & 0x02) ? front_color : back_color;
-			p[7] = (v & 0x01) ? front_color : back_color;
-			p += s->pitch;
-		}
-		pb += 8;
-	}
+	uint8 *pb = (uint8 *)s->pixels + s->pitch*y + x;
+	while ((c = *str++) != 0)
+   {
+      unsigned y;
+      uint8 *q = TheC64->Char + c*8 + 0x800;
+      uint8 *p = pb;
+      for (y = 0; y < 8; y++)
+      {
+         uint8 v = *q++;
+         p[0]    = (v & 0x80) ? front_color : back_color;
+         p[1]    = (v & 0x40) ? front_color : back_color;
+         p[2]    = (v & 0x20) ? front_color : back_color;
+         p[3]    = (v & 0x10) ? front_color : back_color;
+         p[4]    = (v & 0x08) ? front_color : back_color;
+         p[5]    = (v & 0x04) ? front_color : back_color;
+         p[6]    = (v & 0x02) ? front_color : back_color;
+         p[7]    = (v & 0x01) ? front_color : back_color;
+         p      += s->pitch;
+      }
+      pb        += 8;
+   }
 }
 
 /* 0 clear emu scr , 1 clear c64 scr ,>1 clear both*/
 void Screen_SetFullUpdate(int scr)
 {
-   if(scr==0 ||scr>1)memset(Retro_Screen, 0, sizeof(Retro_Screen));
-   if(scr>0)if(screen)memset(screen->pixels,0,screen->h*screen->pitch);
+   if(scr==0 ||scr>1)
+      memset(Retro_Screen, 0, sizeof(Retro_Screen));
+   if(scr>0)
+      if(screen)
+         memset(screen->pixels,0,screen->h*screen->pitch);
 }
 
 
@@ -263,40 +273,39 @@ char kbd_feedbuf[255];
 int kbd_feedbuf_pos;
 bool autoboot=true;
 
-void kbd_buf_feed(char *s) {
-	strcpy(kbd_feedbuf, s);
-	kbd_feedbuf_pos=0;
+void kbd_buf_feed(char *s)
+{
+   strcpy(kbd_feedbuf, s);
+   kbd_feedbuf_pos=0;
 }
 
-void kbd_buf_update(C64 *TheC64) {
-	if( (kbd_feedbuf[kbd_feedbuf_pos]!=0) && TheC64->RAM[198]==0) {
-		TheC64->RAM[631]=kbd_feedbuf[kbd_feedbuf_pos];
-		TheC64->RAM[198]=1;
+void kbd_buf_update(C64 *TheC64)
+{
+   if( (kbd_feedbuf[kbd_feedbuf_pos]!=0) && TheC64->RAM[198]==0)
+   {
+      TheC64->RAM[631]=kbd_feedbuf[kbd_feedbuf_pos];
+      TheC64->RAM[198]=1;
 
-		kbd_feedbuf_pos++;
-	}
-	else if(kbd_feedbuf[kbd_feedbuf_pos]=='\0')autoboot=false;
+      kbd_feedbuf_pos++;
+   }
+   else if(kbd_feedbuf[kbd_feedbuf_pos]=='\0')
+      autoboot=false;
 }
 
 //fautoboot
 
-
 void virtual_kdb(char *buffer,int vx,int vy)
 {
-
-   int x, y, page;
-   unsigned coul;
+   int x, y;
 
 #if defined PITCH && PITCH == 4
-unsigned *pix=(unsigned*)buffer;
+   unsigned *pix=(unsigned*)buffer;
 #else
-unsigned short *pix=(unsigned short *)buffer;
+   unsigned short *pix=(unsigned short *)buffer;
 #endif
-
-   page = (NPAGE == -1) ? 0 : 50;
-   coul = RGB565(28, 28, 31);
+   int page      = (NPAGE == -1) ? 0 : 50;
+   unsigned coul = RGB565(28, 28, 31);
    BKGCOLOR = (KCOL>0?0xFF404040:0);
-
 
    for(x=0;x<NPLGN;x++)
    {
@@ -316,9 +325,8 @@ unsigned short *pix=(unsigned short *)buffer;
 
 int check_vkey2(int x,int y)
 {
-   int page;
-   //check which key is press
-   page= (NPAGE==-1) ? 0 : 50;
+   //check which key is pressed
+   int page= (NPAGE==-1) ? 0 : 50;
    return MVk[y*NPLGN+x+page].val;
 }
 
@@ -328,7 +336,6 @@ int check_vkey2(int x,int y)
 
 int init_graphics(void)
 {
-
 	screen         = (retro_Surface*)malloc( sizeof(retro_Surface*) );
 	screen->pixels = (unsigned char*)malloc(DISPLAY_X *( DISPLAY_Y + 16) );
 	screen->h      = DISPLAY_Y+16;
@@ -340,23 +347,25 @@ int init_graphics(void)
 
 extern bool quit_requested;
 
-
 /*
  *  LED error blink
  */
 
-
 void C64Display::pulse_handler(...)
 {
-	for (int i=0; i<4; i++)
-		switch (c64_disp->led_state[i]) {
-			case LED_ERROR_ON:
-				c64_disp->led_state[i] = LED_ERROR_OFF;
-				break;
-			case LED_ERROR_OFF:
-				c64_disp->led_state[i] = LED_ERROR_ON;
-				break;
-		}
+   unsigned i;
+   for (i = 0; i < 4; i++)
+   {
+      switch (c64_disp->led_state[i])
+      {
+         case LED_ERROR_ON:
+            c64_disp->led_state[i] = LED_ERROR_OFF;
+            break;
+         case LED_ERROR_OFF:
+            c64_disp->led_state[i] = LED_ERROR_ON;
+            break;
+      }
+   }
 }
 
 
@@ -364,8 +373,6 @@ void C64Display::pulse_handler(...)
 /*
  *  Display constructor
  */
-
-
 
 C64Display::C64Display(C64 *the_c64) : TheC64(the_c64)
 {
@@ -417,6 +424,7 @@ void C64Display::Update(void)
 
    if(ThePrefs.ShowLEDs)
    {
+      unsigned i;
       // Draw speedometer/LEDs
       r.x   = 0;
       r.y	= DISPLAY_Y;
@@ -429,7 +437,8 @@ void C64Display::Update(void)
       r.y = DISPLAY_Y + 14;
       retro_FillRect(screen, &r, shadow_gray);
       r.w = 16;
-      for (int i=2; i<6; i++)
+
+      for (i = 2; i < 6; i++)
       {
          r.x = DISPLAY_X * i/5 - 24; r.y = DISPLAY_Y + 4;
          retro_FillRect(screen, &r, shadow_gray);
@@ -437,7 +446,7 @@ void C64Display::Update(void)
          retro_FillRect(screen, &r, shine_gray);
       }
       r.y = DISPLAY_Y; r.w = 1; r.h = 15;
-      for (int i=0; i<5; i++)
+      for (i = 0; i < 5; i++)
       {
          r.x = DISPLAY_X * i / 5;
          retro_FillRect(screen, &r, shine_gray);
@@ -445,7 +454,7 @@ void C64Display::Update(void)
          retro_FillRect(screen, &r, shadow_gray);
       }
       r.y = DISPLAY_Y + 4; r.h = 7;
-      for (int i=2; i<6; i++)
+      for (i = 2; i < 6; i++)
       {
          r.x = DISPLAY_X * i/5 - 24;
          retro_FillRect(screen, &r, shadow_gray);
@@ -453,7 +462,7 @@ void C64Display::Update(void)
          retro_FillRect(screen, &r, shine_gray);
       }
       r.y = DISPLAY_Y + 5; r.w = 14; r.h = 5;
-      for (int i=0; i<4; i++)
+      for (i = 0; i < 4; i++)
       {
          int c;
          r.x = DISPLAY_X * (i+2) / 5 - 23;
@@ -889,7 +898,6 @@ bool C64Display::NumLock(void)
 {
 	return num_locked;
 }
-
 
 /*
  *  Allocate C64 colors
