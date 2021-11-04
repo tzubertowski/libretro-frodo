@@ -10,10 +10,8 @@
 
   A tiny graphical user interface for Hatari.
 */
-const char SDLGui_fileid[] = "Hatari sdlgui.c : " __DATE__ " " __TIME__;
-
 #include <stdlib.h>
-#include <stdbool.h>
+#include <boolean.h>
 #include <ctype.h>
 #include <string.h>
 

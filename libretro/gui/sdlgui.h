@@ -14,6 +14,8 @@
 #ifndef HATARI_SDLGUI_H
 #define HATARI_SDLGUI_H
 
+#include <boolean.h>
+
 #include "sysdeps.h"
 
 #define SNAP_BMP 1
@@ -23,10 +25,10 @@
 #include "Display.h"
 #include "Prefs.h"
 #include "SAM.h"
+
 extern C64 *TheC64;
 extern Prefs ThePrefs,*prefs;
 
-#include <stdbool.h>
 extern void gui_poll_events(void);
 
 #define SDL_Delay usleep
@@ -104,8 +106,5 @@ extern int SDLGui_DoDialog(SGOBJ *dlg, int *pEventOut);
 extern void SDLGui_CenterDlg(SGOBJ *dlg);
 extern char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowNew);
 extern bool SDLGui_FileConfSelect(char *dlgname, char *confname, int maxlen, bool bAllowNew);
-
-extern void rsxGui_prepare();
-extern void rsxGui_flip(int but);
 
 #endif
