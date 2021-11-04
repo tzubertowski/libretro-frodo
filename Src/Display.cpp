@@ -27,7 +27,9 @@
 #include "retro_video.h"
 
 #include "C64.h"
+#ifdef HAVE_SAM
 #include "SAM.h"
+#endif
 #include "Version.h"
 
 #include <libretro.h>
@@ -689,10 +691,10 @@ void C64Display:: Keymap_KeyDown(int symkey,uint8 *key_matrix,
 	switch (symkey)
    {
       case RETROK_F9:	// F9: Invoke SAM
-#ifdef GEKKO
-         pauseg = 1;
-#else
+#ifdef HAVE_SAM
          SAM(TheC64);
+#else
+	 pauseg = 1;
 #endif
          break;
       case RETROK_F10:	// F10: Quit

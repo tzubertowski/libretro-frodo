@@ -9,7 +9,6 @@
 #include "C64.h"
 #include "Display.h"
 #include "Prefs.h"
-#include "SAM.h"
 #else
 cothread_t mainThread;
 cothread_t emuThread;

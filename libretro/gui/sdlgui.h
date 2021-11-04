@@ -24,7 +24,6 @@
 #include "C64.h"
 #include "Display.h"
 #include "Prefs.h"
-#include "SAM.h"
 
 extern C64 *TheC64;
 extern Prefs ThePrefs,*prefs;

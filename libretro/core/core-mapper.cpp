@@ -15,7 +15,6 @@
 #include "C64.h"
 #include "Display.h"
 #include "Prefs.h"
-#include "SAM.h"
 
 /* forward declarations */
 extern C64 *TheC64;
