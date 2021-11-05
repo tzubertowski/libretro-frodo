@@ -1,7 +1,3 @@
-/*
-	modded for libretro-uae
-*/
-
 #ifndef HATARI_UTYPE_H
 #define HATARI_UTYPE_H
 
@@ -15,21 +11,7 @@
 #endif
 
 #include <ctype.h>
-
-typedef uint8_t	 Uint8;
-typedef int8_t	 Sint8;
-typedef uint16_t Uint16;
-typedef int16_t	 Sint16;
-typedef uint32_t Uint32;
-typedef int32_t	 Sint32;
-
-typedef int8_t     int8;
-typedef int16_t    int16;
-typedef int32_t   int32;
-typedef uint8_t   uint8;
-typedef uint16_t  uint16;
-typedef uint32_t  uint32;
-
+#include "../../Src/types.h"
 
 #if defined (__vita__) || defined(__psp__)
 #define	getcwd(a,b)	"/"
@@ -47,12 +29,6 @@ typedef uint32_t  uint32;
 #define chdir(a) 0
 #define getenv(a)	"/dev_hdd0/HOMEBREW/ST/"
 #define tmpfile() NULL
-#endif
-
-#ifdef _WIN32
-#define PATHSEP '\\'
-#else
-#define PATHSEP '/'
 #endif
 
 #endif
