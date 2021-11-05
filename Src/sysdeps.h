@@ -24,46 +24,15 @@
 
 #include <stdlib.h>
 #include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <signal.h>
 #include <boolean.h>
 
 #include "types.h"
 
-/* Define if you have the <dirent.h> header file, and it defines `DIR'. */
-#define HAVE_DIRENT_H 1
-
-/* Define if you have the `mkdir' function. */
-#define HAVE_MKDIR 1
-
-/* Define if you have the `rmdir' function. */
-#define HAVE_RMDIR 1
-
+#ifdef HAVE_SAM
 /* Define if you have the `sigaction' function. */
 #if !defined (__vita__) && !defined(__psp__) && !defined(_3DS) && !defined(_WIN32) && !defined(__SWITCH__)
 #define HAVE_SIGACTION 1
 #endif
-
-/* Define if you have the `statfs' function. */
-#define HAVE_STATFS 1
-
-/* Define if `st_blocks' is member of `struct stat'. */
-#define HAVE_STRUCT_STAT_ST_BLOCKS 1
-
-#if HAVE_DIRENT_H
-# include <dirent.h>
-#else
-# define dirent direct
-# if HAVE_SYS_NDIR_H
-#  include <sys/ndir.h>
-# endif
-# if HAVE_SYS_DIR_H
-#  include <sys/dir.h>
-# endif
-# if HAVE_NDIR_H
-#  include <ndir.h>
-# endif
 #endif
 
 #ifdef _WIN32
