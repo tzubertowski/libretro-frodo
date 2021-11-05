@@ -42,6 +42,7 @@
 #endif
 
 #include <sys/stat.h>
+#include <dirent.h> /* TODO/FIXME - get rid of dirent */
 
 #include "sysdeps.h"
 

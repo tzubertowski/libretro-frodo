@@ -50,14 +50,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 int mkstemp2(char *path)
 {
 	int fd;   
 	char *start, *trv;
-    struct stat sbuf;
-
-	pid_t pid;
-    pid = getpid();
+	struct stat sbuf;
+	pid_t pid = getpid();
 
 	/* To guarantee multiple calls generate unique names even if
 	   the file is not created. 676 different possibilities with 7
