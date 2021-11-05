@@ -35,6 +35,14 @@
  *  - Only "I" and "UJ" commands implemented
  */
 
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <unistd.h> /* chdir */
+#endif
+
+#include <sys/stat.h>
+
 #include "sysdeps.h"
 
 #include "1541fs.h"

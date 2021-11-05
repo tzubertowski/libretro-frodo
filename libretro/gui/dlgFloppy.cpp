@@ -9,6 +9,8 @@
   your option any later version. Read the file gpl.txt for details.
 */
 
+#include <string.h>
+
 #include "dialog.h"
 #include "sdlgui.h"
 #include "file.h"

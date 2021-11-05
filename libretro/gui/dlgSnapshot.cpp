@@ -4,6 +4,7 @@
 */
 
 #include <assert.h>
+#include <string.h>
 
 #include "dialog.h"
 #include "sdlgui.h"

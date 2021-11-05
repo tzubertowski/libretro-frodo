@@ -55,6 +55,8 @@
  *    6510 that first write back the original value.
  */
 
+#include <string.h>
+
 #include "sysdeps.h"
 
 #include "VIC.h"
