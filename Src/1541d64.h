@@ -22,6 +22,7 @@
 #define _1541D64_H
 
 #include <stdio.h>
+#include <vector>
 
 #include "IEC.h"
 
@@ -145,7 +146,7 @@ private:
 extern bool IsImageFile(const char *path, const uint8 *header, long size);
 
 // Read directory of disk image file into (empty) c64_dir_entry vector
-extern bool ReadImageDirectory(const char *path, vector<c64_dir_entry> &vec);
+extern bool ReadImageDirectory(const char *path, std::vector<c64_dir_entry> &vec);
 
 // Create new blank disk image file
 extern bool CreateImageFile(const char *path);

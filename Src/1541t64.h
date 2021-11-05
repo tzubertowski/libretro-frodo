@@ -22,6 +22,7 @@
 #define _1541T64_H
 
 #include <stdio.h>
+#include <vector>
 
 #include "IEC.h"
 
@@ -63,7 +64,7 @@ private:
 
 	FILE *the_file;			// File pointer for archive file
 	int archive_type;		// File/archive type (see defines above)
-	vector<c64_dir_entry> file_info;	// Vector of file information structs for all files in the archive
+	std::vector<c64_dir_entry> file_info;	// Vector of file information structs for all files in the archive
 
 	char dir_title[16];		// Directory title
 	FILE *file[16];			// File pointers for each of the 16 channels (all temporary files)
@@ -81,6 +82,6 @@ private:
 extern bool IsArchFile(const char *path, const uint8 *header, long size);
 
 // Read directory of archive file into (empty) c64_dir_entry vector
-extern bool ReadArchDirectory(const char *path, vector<c64_dir_entry> &vec);
+extern bool ReadArchDirectory(const char *path, std::vector<c64_dir_entry> &vec);
 
 #endif
