@@ -18,6 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <sys/time.h> /* TODO/FIXME - get rid of gettimeofday */
+
+#include <libretro.h>
+
 #include "sysdeps.h"
 
 #include "C64.h"
@@ -33,8 +37,6 @@
 #include "Prefs.h"
 
 #include "main.h"
-
-#include <libretro.h>
 
 #ifndef NO_LIBCO
 #include "libco.h"

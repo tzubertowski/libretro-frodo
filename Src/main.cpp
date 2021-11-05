@@ -18,6 +18,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <string.h>
+#include <sys/time.h> /* TODO/FIXME - get rid of gettimeofday */
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <unistd.h>   /* getcwd */
+#endif
+#include <sys/stat.h>
+
 #include "sysdeps.h"
 
 #include "main.h"

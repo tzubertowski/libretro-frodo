@@ -37,6 +37,8 @@
  *  - The .d64 error info is unused
  */
 
+#include <string.h>
+
 #include "sysdeps.h"
 
 #include "1541job.h"
