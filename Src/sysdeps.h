@@ -19,14 +19,17 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef _SYSDEPS_H
+#define _SYSDEPS_H
+
 #include <stdlib.h>
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
+#include <boolean.h>
 
-/* sysconfig.h.  Generated automatically by configure.  */
-/* sysconfig.h.in.  Generated from configure.in by autoheader.  */
+#include "types.h"
 
 /* Define if you have the <dirent.h> header file, and it defines `DIR'. */
 #define HAVE_DIRENT_H 1
@@ -272,72 +275,13 @@ struct utimbuf
 #define O_BINARY 0
 #endif
 
-#ifdef __mac__
-#define bool Boolean
-#endif
-
 #ifdef _WIN32
 #include <direct.h>
 #if !defined(M_PI)
 #define M_PI 3.14159265358979323846
 #endif
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
-#if defined(_MSC_VER) && _MSC_VER < 1100
-#define bool char
-#endif
 #define LITTLE_ENDIAN_UNALIGNED 1
 #endif
 
-/* If char has more then 8 bits, good night. */
-typedef unsigned char uint8;
-typedef signed char int8;
-
-#if SIZEOF_SHORT == 2
-typedef unsigned short uint16;
-typedef short int16;
-#elif SIZEOF_INT == 2
-typedef unsigned int uint16;
-typedef int int16;
-#else
-#error No 2 byte type, you lose.
-#endif
-
-#if SIZEOF_INT == 4
-typedef unsigned int uint32;
-typedef int int32;
-#elif SIZEOF_LONG == 4
-typedef unsigned long uint32;
-typedef long int32;
-#else
-#error No 4 byte type, you lose.
-#endif
-
-#if SIZEOF_LONG == 8
-typedef unsigned long uint64;
-typedef long int64;
-#elif SIZEOF_LONG_LONG == 8
-typedef unsigned long long uint64;
-typedef long long int64;
-#else
-#error No 8 byte type, you lose.
-#endif
-
-// For systems where SIZEOF_VOID_P is not defined, determine it
-// based on __LP64__ (defined by gcc on 64-bit systems)
-#if !defined(SIZEOF_VOID_P)
-# if defined(__LP64__)
-#  define SIZEOF_VOID_P 8
-# else
-#  define SIZEOF_VOID_P 4
-# endif
-#endif
-
-#if SIZEOF_VOID_P == 4
-typedef uint32 uintptr;
-typedef int32 intptr;
-#elif SIZEOF_VOID_P == 8
-typedef uint64 uintptr;
-typedef int64 intptr;
-#else
-#error Unsupported size of pointer
 #endif
