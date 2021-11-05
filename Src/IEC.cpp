@@ -971,7 +971,7 @@ bool IsMountableFile(const char *path, int &type)
  *  returns false on error
  */
 
-bool ReadDirectory(const char *path, int type, vector<c64_dir_entry> &vec)
+bool ReadDirectory(const char *path, int type, std::vector<c64_dir_entry> &vec)
 {
 	vec.clear();
 	switch (type)

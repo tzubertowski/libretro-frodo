@@ -26,6 +26,8 @@
  *   - Impossible to implement: B-E, M-E
  */
 
+#include <string.h>
+
 #include "sysdeps.h"
 
 #include "1541d64.h"
@@ -1905,22 +1907,19 @@ static bool parse_image_file(FILE *f, image_file_desc &desc)
  *  returns false on error
  */
 
-bool ReadImageDirectory(const char *path, vector<c64_dir_entry> &vec)
+bool ReadImageDirectory(const char *path, std::vector<c64_dir_entry> &vec)
 {
 	bool result = false;
-
-	// Open file
-	FILE *f = open_image_file(path, false);
+	FILE     *f = open_image_file(path, false);
 	if (f) {
+		uint8 dir[256];
 		int num_dir_blocks = 0;
-
 		// Determine file type and fill in image_file_desc structure
 		image_file_desc desc;
 		if (!parse_image_file(f, desc))
 			goto done;
 
 		// Scan all directory blocks
-		uint8 dir[256];
 		dir[DIR_NEXT_TRACK] = DIR_TRACK;
 		dir[DIR_NEXT_SECTOR] = 1;
 
@@ -1976,13 +1975,13 @@ done:	fclose(f);
 
 bool CreateImageFile(const char *path)
 {
+	image_file_desc desc;
 	// Open file for writing
 	FILE *f = fopen(path, "wb");
 	if (f == NULL)
 		return false;
 
 	// Create descriptor
-	image_file_desc desc;
 	desc.type = TYPE_D64;
 	desc.header_size = 0;
 	desc.num_tracks = 35;

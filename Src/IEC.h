@@ -21,9 +21,8 @@
 #ifndef _IEC_H
 #define _IEC_H
 
-#include <vector>
-
-using std::vector;
+#include <string.h>
+#include <sys/types.h> /* off_t header include */
 
 /*
  *  Definitions
@@ -254,8 +253,5 @@ extern void petscii2ascii(char *dest, const uint8 *src, int max);
 
 // Check whether file is a mountable disk image or archive file, return type
 extern bool IsMountableFile(const char *path, int &type);
-
-// Read directory of mountable disk image or archive file into c64_dir_entry vector
-extern bool ReadDirectory(const char *path, int type, vector<c64_dir_entry> &vec);
 
 #endif

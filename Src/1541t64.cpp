@@ -213,9 +213,9 @@ FILE* tmpfile2() {
 static bool is_t64_header(const uint8 *header);
 static bool is_lynx_header(const uint8 *header);
 static bool is_p00_header(const uint8 *header);
-static bool parse_t64_file(FILE *f, vector<c64_dir_entry> &vec, char *dir_title);
-static bool parse_lynx_file(FILE *f, vector<c64_dir_entry> &vec, char *dir_title);
-static bool parse_p00_file(FILE *f, vector<c64_dir_entry> &vec, char *dir_title);
+static bool parse_t64_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title);
+static bool parse_lynx_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title);
+static bool parse_p00_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title);
 
 
 /*
@@ -431,7 +431,7 @@ static bool match(const uint8 *p, int p_len, const uint8 *n)
 
 bool ArchDrive::find_first_file(const uint8 *pattern, int pattern_len, int &num)
 {
-	vector<c64_dir_entry>::const_iterator i, end = file_info.end();
+	std::vector<c64_dir_entry>::const_iterator i, end = file_info.end();
 	for (i = file_info.begin(), num = 0; i != end; i++, num++) {
 		if (match(pattern, pattern_len, (uint8 *)i->name))
 			return true;
@@ -477,7 +477,7 @@ uint8 ArchDrive::open_directory(int channel, const uint8 *pattern, int pattern_l
 	fwrite(buf, 1, 32, file[channel]);
 
 	// Create and write one line for every directory entry
-	vector<c64_dir_entry>::const_iterator i, end = file_info.end();
+	std::vector<c64_dir_entry>::const_iterator i, end = file_info.end();
 	for (i = file_info.begin(); i != end; i++) {
 
 		// Include only files matching the pattern
@@ -739,7 +739,7 @@ bool IsArchFile(const char *path, const uint8 *header, long size)
  *  returns false on error
  */
 
-static bool parse_t64_file(FILE *f, vector<c64_dir_entry> &vec, char *dir_title)
+static bool parse_t64_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title)
 {
 	// Read header and get maximum number of files contained
 	fseek(f, 32, SEEK_SET);
@@ -793,7 +793,7 @@ static bool parse_t64_file(FILE *f, vector<c64_dir_entry> &vec, char *dir_title)
 	return true;
 }
 
-static bool parse_lynx_file(FILE *f, vector<c64_dir_entry> &vec, char *dir_title)
+static bool parse_lynx_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title)
 {
 	// Dummy directory title
 	strcpy(dir_title, "LYNX ARCHIVE    ");
@@ -860,7 +860,7 @@ static bool parse_lynx_file(FILE *f, vector<c64_dir_entry> &vec, char *dir_title
 	return true;
 }
 
-static bool parse_p00_file(FILE *f, vector<c64_dir_entry> &vec, char *dir_title)
+static bool parse_p00_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title)
 {
 	// Dummy directory title
 	strcpy(dir_title, ".P00 FILE       ");
@@ -887,7 +887,7 @@ static bool parse_p00_file(FILE *f, vector<c64_dir_entry> &vec, char *dir_title)
 	return true;
 }
 
-bool ReadArchDirectory(const char *path, vector<c64_dir_entry> &vec)
+bool ReadArchDirectory(const char *path, std::vector<c64_dir_entry> &vec)
 {
 	// Open file
 	FILE *f = fopen(path, "rb");
