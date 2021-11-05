@@ -35,6 +35,8 @@
  *   - Impossible to implement: B-R, B-W, B-E, B-A, B-F, M-E
  */
 
+#include <ctype.h>
+
 #include "sysdeps.h"
 
 #include "1541t64.h"
