@@ -20,8 +20,6 @@ extern bool File_DoesFileExtensionMatch(const char *pszFileName, const char *psz
 extern const char *File_RemoveFileNameDrive(const char *pszFileName);
 extern bool File_DoesFileNameEndWithSlash(char *pszFileName);
 extern Uint8 *File_Read(const char *pszFileName, long *pFileSize, const char * const ppszExts[]);
-extern bool File_Exists(const char *pszFileName);
-extern bool File_DirExists(const char *psDirName);
 extern char* File_FindPossibleExtFileName(const char *pszFileName,const char * const ppszExts[]);
 extern void File_SplitPath(const char *pSrcFileName, char *pDir, char *pName, char *Ext);
 extern char* File_MakePath(const char *pDir, const char *pName, const char *pExt);

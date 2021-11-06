@@ -161,11 +161,12 @@ bool File_DoesFileNameEndWithSlash(char *pszFileName)
 Uint8 *File_Read(const char *pszFileName, long *pFileSize, const char * const ppszExts[])
 {
 	char *filepath = NULL;
-	Uint8 *pFile = NULL;
-	long FileSize = 0;
+	Uint8 *pFile   = NULL;
+	long FileSize  = 0;
 
-	/* Does the file exist? If not, see if can scan for other extensions and try these */
-	if (!File_Exists(pszFileName) && ppszExts)
+	/* Does the file exist? If not, see if it can scan 
+      for other extensions and try these */
+	if (!path_is_valid(pszFileName) && ppszExts)
 	{
 		/* Try other extensions, if succeeds, returns correct one */
 		filepath = File_FindPossibleExtFileName(pszFileName, ppszExts);
@@ -232,33 +233,15 @@ Uint8 *File_Read(const char *pszFileName, long *pFileSize, const char * const pp
 
 /*-----------------------------------------------------------------------*/
 /**
- * Return TRUE if file exists, is readable or writable at least and is not
- * a directory.
- */
-bool File_Exists(const char *filename)
-{
-   return path_is_valid(filename);
-}
-
-/*-----------------------------------------------------------------------*/
-/**
- * Return TRUE if directory exists.
- */
-bool File_DirExists(const char *path)
-{
-   return path_is_directory(path);
-}
-
-/*-----------------------------------------------------------------------*/
-/**
  * Try filename with various extensions and check if file exists
  * - if so, return allocated string which caller should free,
  *   otherwise return NULL
  */
-char * File_FindPossibleExtFileName(const char *pszFileName, const char * const ppszExts[])
+char * File_FindPossibleExtFileName(
+      const char *pszFileName, const char * const ppszExts[])
 {
-	char *szSrcName, *szSrcExt;
 	int i;
+	char *szSrcName, *szSrcExt;
 	/* Allocate temporary memory for strings: */
 	char *szSrcDir = (char*)malloc(3 * FILENAME_MAX);
 	if (!szSrcDir)
@@ -279,7 +262,7 @@ char * File_FindPossibleExtFileName(const char *pszFileName, const char * const 
 		if (szTempFileName)
 		{
 			/* Does this file exist? */
-			if (File_Exists(szTempFileName))
+			if (path_is_valid(szTempFileName))
 			{
 				free(szSrcDir);
 				/* return filename without extra strings */

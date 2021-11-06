@@ -3,7 +3,6 @@
   libretro-Frodo - dlgSnapshot.c
 */
 
-#include <assert.h>
 #include <string.h>
 
 #include "dialog.h"
