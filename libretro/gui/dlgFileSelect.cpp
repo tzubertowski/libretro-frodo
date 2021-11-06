@@ -461,22 +461,22 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 	/* the fileselector at the same position it was used */
 	if ( ypos < 0 )
 	{
-		scrollbar_Ypos = 0.0;
-		ypos = 0;
+		scrollbar_Ypos   = 0.0;
+		ypos             = 0;
 	}
 
-	refreshentries = true;
-	entries = 0;
+	refreshentries           = true;
+	entries                  = 0;
 
 	/* Allocate memory for the file and path name strings: */
-	pStringMem     = (char *)malloc(4 * FILENAME_MAX);
-	path           = pStringMem;
-	fname          = pStringMem + FILENAME_MAX;
-	zipdir         = pStringMem + 2 * FILENAME_MAX;
-	zipfilename    = pStringMem + 3 * FILENAME_MAX;
-	zipfilename[0] = 0;
-	fname[0]       = 0;
-	path[0]        = 0;
+	pStringMem               = (char *)malloc(4 * FILENAME_MAX);
+	path                     = pStringMem;
+	fname                    = pStringMem + FILENAME_MAX;
+	zipdir                   = pStringMem + 2 * FILENAME_MAX;
+	zipfilename              = pStringMem + 3 * FILENAME_MAX;
+	zipfilename[0]           = 0;
+	fname[0]                 = 0;
+	path[0]                  = 0;
 	SDLGui_CenterDlg(fsdlg);
 	if (bAllowNew)
 	{
@@ -495,10 +495,10 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
 		strncpy(path, path_and_name, FILENAME_MAX);
 		path[FILENAME_MAX-1] = '\0';
 	}
-	if (!File_DirExists(path))
+	if (!path_is_directory(path))
 	{
 		File_SplitPath(path, path, fname, NULL);
-		if (!(File_DirExists(path)
+		if (!(path_is_directory(path)
 #if !defined(__vita__) && !defined(__psp__)
 		      || getcwd(path, FILENAME_MAX)
 #endif
@@ -638,7 +638,8 @@ char* SDLGui_FileSelect(const char *path_and_name, char **zip_path, bool bAllowN
             if (!strcat_maxlen(tempstr, FILENAME_MAX,
                      path, files[retbut-SGFSDLG_ENTRYFIRST+ypos]->d_name))
                goto clean_exit;
-            if (File_DirExists(tempstr))
+
+            if (path_is_directory(tempstr))
             {
                File_HandleDotDirs(tempstr);
                File_AddSlashToEndFileName(tempstr);

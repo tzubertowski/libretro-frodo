@@ -11,6 +11,8 @@
 
 #include <string.h>
 
+#include <file/file_path.h>
+
 #include "dialog.h"
 #include "sdlgui.h"
 #include "file.h"
@@ -122,7 +124,7 @@ const char* Floppy_SetDiskFileName(int Drive, const char *pszFileName, const cha
 	if (!*pszFileName || strcasecmp(pszFileName, "none") == 0)
 		return Floppy_SetDiskFileNameNone(Drive);
 	/* See if file exists, and if not, get/add correct extension */
-	if (!File_Exists(pszFileName))
+	if (!path_is_valid(pszFileName))
 		filename = File_FindPossibleExtFileName(pszFileName, pszDiskImageNameExts);
 	else
 		filename = strdup(pszFileName);
@@ -165,7 +167,7 @@ static void DlgDisk_BrowseDisk(char *dlgname, int drive, int diskid)
 	if (!selname)
 		return;
 
-	if (File_Exists(selname))
+	if (path_is_valid(selname))
 	{
 		realname = Floppy_SetDiskFileName(drive, selname, zip_path);
 		if (realname)

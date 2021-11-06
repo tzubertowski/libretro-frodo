@@ -3,18 +3,12 @@
 */
 
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
-
-#include "libretro-core.h"
-
-#include "graph.h"
 
 typedef unsigned  int  PIXEL;
 
-#define AVERAGE(a, b)   ( (((a) & 0xfffefefe) + ((b) & 0xfffefefe)) >> 1 )
-
-void ScaleLine(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
+static void ScaleLine(PIXEL *Target, PIXEL *Source,
+      int SrcWidth, int TgtWidth)
 {
    int NumPixels = TgtWidth;
    int IntPart   = SrcWidth / TgtWidth;
@@ -61,23 +55,4 @@ void ScaleRect(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
          Source += SrcWidth;
       } /* if */
    } /* while */
-}
-
-void ScaleMinifyByTwo(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight)
-{
-   PIXEL p, q;
-   int x, y, x2, y2;
-   int TgtWidth  = SrcWidth / 2;
-   int TgtHeight = SrcHeight / 2;
-   for (y = 0; y < TgtHeight; y++)
-   {
-      y2 = 2 * y;
-      for (x = 0; x < TgtWidth; x++)
-      {
-         x2 = 2 * x;
-         p  = AVERAGE(Source[y2*SrcWidth + x2], Source[y2*SrcWidth + x2 + 1]);
-         q  = AVERAGE(Source[(y2+1)*SrcWidth + x2], Source[(y2+1)*SrcWidth + x2 + 1]);
-         Target[y*TgtWidth + x] = AVERAGE(p, q);
-      } /* for */
-   } /* for */
 }
