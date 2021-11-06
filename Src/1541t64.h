@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <vector>
 
+#include <streams/file_stream.h>
+
 #include "IEC.h"
 
 
@@ -62,7 +64,7 @@ private:
 	virtual void initialize_cmd(void);
 	virtual void validate_cmd(void);
 
-	FILE *the_file;			// File pointer for archive file
+	RFILE *the_file;			// File pointer for archive file
 	int archive_type;		// File/archive type (see defines above)
 	std::vector<c64_dir_entry> file_info;	// Vector of file information structs for all files in the archive
 
