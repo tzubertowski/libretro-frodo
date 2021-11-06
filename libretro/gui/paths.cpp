@@ -32,17 +32,8 @@
 #  include <pspiofilemgr.h>
 #endif
 
-#if defined(VITA) || defined(PSP)
-#define mkdir sceIoMkdir
-#endif
-
-#if defined(WIN32) && !defined(mkdir)
-#define mkdir(name,mode) mkdir(name)
-#endif  /* WIN32 */
-
 static char sWorkingDir[FILENAME_MAX];    /* Working directory */
 static char sUserHomeDir[FILENAME_MAX];   /* User's home directory ($HOME) */
-
 
 /**
  * Return pointer to current working directory string

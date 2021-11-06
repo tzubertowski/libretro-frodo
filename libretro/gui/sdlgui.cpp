@@ -71,11 +71,11 @@ static const char *cross[] = {
   "                                ",
 };
 
-void draw_cross(int x,int y) {
-
+void draw_cross(int x,int y)
+{
 	int i,j,idx;
-	int dx=32,dy=20;
 	uint16_t color;
+	int dx = 32, dy = 20;
 
 	for(j=y;j<y+dy;j++)
    {
@@ -103,22 +103,16 @@ int sdlgui_fontheight = FontH;			/* Height of the actual font */
 #define fontwidth sdlgui_fontwidth
 #define fontheight sdlgui_fontheight
 
-/*-----------------------------------------------------------------------*/
-/**
- * Initialize the GUI.
- */
+/* Initialize the GUI. */
 int SDLGui_Init(void)
 {
 	return 0;
 }
 
-/*-----------------------------------------------------------------------*/
-/**
- * Uninitialize the GUI.
- */
+/* Uninitialize the GUI. */
 int SDLGui_UnInit(void)
 {
-	return 0;
+   return 0;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -127,7 +121,7 @@ int SDLGui_UnInit(void)
  * prepare the font to suit the actual resolution.
  */
 
-int SDLGui_SetScreen(/*SDL_Surface *pScrn*/)
+int SDLGui_SetScreen(void)
 {
 	memset(Retro_Screen, 0, sizeof(Retro_Screen));
 
@@ -148,11 +142,7 @@ void SDLGui_CenterDlg(SGOBJ *dlg)
 	dlg[0].y = (TEXTURE_HEIGHT / fontheight - dlg[0].h) / 2;
 }
 
-/*-----------------------------------------------------------------------*/
-/**
- * Draw a text string.
- */
-
+/* Draw a text string. */
 static void SDLGui_Text(int x, int y, const char *txt)
 {       
    Draw_text((char*)Retro_Screen,x,y,1,0,1,1,40,(char *)txt);
@@ -328,8 +318,6 @@ static void SDLGui_DrawScrollbar(const SGOBJ *bdlg, int objnum)
 	DrawBoxF(x,y - offset,0,w ,1,grey1);
 	/* Draw bottom border: */
 	DrawBoxF(x,y + h - 1 + offset,0,w ,1,grey2);
-	
-	
 }
 
 /*-----------------------------------------------------------------------*/
@@ -405,9 +393,7 @@ static void SDLGui_DrawDialog(const SGOBJ *dlg)
 			break;
 		}
 	}
-
 }
-
 
 /*-----------------------------------------------------------------------*/
 /**
@@ -456,26 +442,6 @@ static int SDLGui_FindObj(const SGOBJ *dlg, int fx, int fy)
 
 	return ob;
 }
-
-
-/*-----------------------------------------------------------------------*/
-/**
- * Search a button with a special flag (e.g. SG_DEFAULT or SG_CANCEL).
- */
-static int SDLGui_SearchFlaggedButton(const SGOBJ *dlg, int flag)
-{
-	int i = 0;
-
-	while (dlg[i].type != -1)
-	{
-		if (dlg[i].flags & flag)
-			return i;
-		i++;
-	}
-
-	return 0;
-}
-
 
 extern int touch;
 extern int gmx,gmy;
