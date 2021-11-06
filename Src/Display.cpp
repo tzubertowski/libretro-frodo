@@ -620,10 +620,13 @@ static void translate_key(int key, bool key_up,
 	if (c64_key & 0x40)
    {
       c64_key              &= 0x1f;
-      if (key_up)
-         *joystick         |= c64_key;
-      else
-         *joystick         &= ~c64_key;
+      if (joystick)
+      {
+         if (key_up)
+            *joystick         |= c64_key;
+         else
+            *joystick         &= ~c64_key;
+      }
       return;
    }
 
@@ -635,21 +638,29 @@ static void translate_key(int key, bool key_up,
    {
       if (shifted)
       {
-         key_matrix[6]     |= 0x10;
-         rev_matrix[4]     |= 0x40;
+         if (key_matrix)
+            key_matrix[6]     |= 0x10;
+         if (rev_matrix)
+            rev_matrix[4]     |= 0x40;
       }
-      key_matrix[c64_byte] |= (1 << c64_bit);
-      rev_matrix[c64_bit]  |= (1 << c64_byte);
+      if (key_matrix)
+         key_matrix[c64_byte] |= (1 << c64_bit);
+      if (rev_matrix)
+         rev_matrix[c64_bit]  |= (1 << c64_byte);
    }
    else
    {
       if (shifted)
       {
-         key_matrix[6]     &= 0xef;
-         rev_matrix[4]     &= 0xbf;
+         if (key_matrix)
+            key_matrix[6]     &= 0xef;
+         if (rev_matrix)
+            rev_matrix[4]     &= 0xbf;
       }
-      key_matrix[c64_byte] &= ~(1 << c64_bit);
-      rev_matrix[c64_bit]  &= ~(1 << c64_byte);
+      if (key_matrix)
+         key_matrix[c64_byte] &= ~(1 << c64_bit);
+      if (rev_matrix)
+         rev_matrix[c64_bit]  &= ~(1 << c64_byte);
    }
 }
 
@@ -664,23 +675,30 @@ static void validkey(int c64_key,int key_up,uint8 *key_matrix,
    {
       if (shifted)
       {
-         key_matrix[6]     |= 0x10;
-         rev_matrix[4]     |= 0x40;
+         if (key_matrix)
+            key_matrix[6]     |= 0x10;
+         if (rev_matrix)
+            rev_matrix[4]     |= 0x40;
       }
-      key_matrix[c64_byte] |= (1 << c64_bit);
-      rev_matrix[c64_bit]  |= (1 << c64_byte);
+      if (key_matrix)
+         key_matrix[c64_byte] |= (1 << c64_bit);
+      if (rev_matrix)
+         rev_matrix[c64_bit]  |= (1 << c64_byte);
    }
    else
    {
 		if (shifted)
       {
-         key_matrix[6]     &= 0xef;
-         rev_matrix[4]     &= 0xbf;
+         if (key_matrix)
+            key_matrix[6]     &= 0xef;
+         if (rev_matrix)
+            rev_matrix[4]     &= 0xbf;
       }
-		key_matrix[c64_byte] &= ~(1 << c64_bit);
-		rev_matrix[c64_bit]  &= ~(1 << c64_byte);
+      if (key_matrix)
+         key_matrix[c64_byte] &= ~(1 << c64_bit);
+      if (rev_matrix)
+         rev_matrix[c64_bit]  &= ~(1 << c64_byte);
 	}
-
 }
 
 
@@ -696,14 +714,13 @@ void  C64Display::Keymap_KeyUp(int symkey,uint8 *key_matrix,
 void C64Display:: Keymap_KeyDown(int symkey,uint8 *key_matrix,
       uint8 *rev_matrix, uint8 *joystick)
 {
-
-	switch (symkey)
+   switch (symkey)
    {
       case RETROK_F9:	// F9: Invoke SAM
 #ifdef HAVE_SAM
          SAM(TheC64);
 #else
-	 pauseg = 1;
+         pauseg = 1;
 #endif
          break;
       case RETROK_F10:	// F10: Quit

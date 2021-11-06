@@ -112,30 +112,6 @@ static inline int fixsquare(int x)
   return(x);
 }
 
-
-// Computes the square root of a fixpoint number.
-static inline int fixsqrt(int x)
-{
-  int test, step;
-  if (x < 0)
-     return(-1);
-  if (x == 0)
-     return(0);
-  step = (x <= (1<<FIXPOINT_PREC)) ? (1<<FIXPOINT_PREC) : (1<<((FIXPOINT_BITS - 2 + FIXPOINT_PREC)>>1));
-  test = 0;
-  while (step != 0)
-  {
-    int h = fixsquare(test + step);
-    if (h <= x)
-       test += step;
-    if (h == x)
-       break;
-    step >>= 1;
-  }
-  return(test);
-}
-
-
 // Divides a fixpoint number by another fixpoint number, yielding a fixpoint result.
 static inline int fixdiv(int x, int y)
 {
@@ -193,12 +169,10 @@ public:
 
   // conversions
   int Value(void);
-  int round(void);
   operator int(void);
 
   // unary operators
   FixPoint sqrt(void);
-  FixPoint sqr(void);
   FixPoint abs(void);
   FixPoint operator+(void);
   FixPoint operator-(void);
@@ -263,16 +237,10 @@ FixPoint::~FixPoint(void) {;}
 
 inline int FixPoint::Value(void) {return(x);}
 
-inline int FixPoint::round(void) {return((x + (1 << (FIXPOINT_PREC-1))) >> FIXPOINT_PREC);}
-
 inline FixPoint::operator int(void) {return(x);}
 
 
 // unary operators
-inline FixPoint FixPoint::sqrt(void) {return(fixsqrt(x));}
-
-inline FixPoint FixPoint::sqr(void) {return(fixsquare(x));}
-
 inline FixPoint FixPoint::abs(void) {return((x < 0) ? -x : x);}
 
 inline FixPoint FixPoint::operator+(void) {return(x);}
@@ -387,23 +355,14 @@ inline bool operator>(int x, FixPoint y) {return(x > y.Value());}
 
 inline bool operator>=(int x, FixPoint y) {return(x >= y.Value());}
 
-
-
 /*
  *  For more convenient creation of constant fixpoint numbers from constant floats.
  */
-
 #define FixNo(n)	(FixPoint)((int)(n*(1<<FIXPOINT_PREC)))
-
-
-
-
-
 
 /*
  *  Stuff re. the sinus table used with fixpoint arithmetic
  */
-
 
 // define as global variable
 FixPoint SinTable[(1<<ldSINTAB)];
@@ -419,19 +378,14 @@ FixPoint SinTable[(1<<ldSINTAB)];
 // sin and cos: angle is fixpoint number 0 <= angle <= 2 (*PI)
 static inline FixPoint fixsin(FixPoint x)
 {
-  int angle = x;
-
-  angle = (angle >> (FIXPOINT_PREC - ldSINTAB - 1)) & ((1<<(ldSINTAB+2))-1);
+  int angle = (x >> (FIXPOINT_PREC - ldSINTAB - 1)) & ((1<<(ldSINTAB+2))-1);
   FIXPOINT_SIN_COS_GENERIC
 }
 
 
 static inline FixPoint fixcos(FixPoint x)
 {
-  int angle = x;
-
-  // cos(x) = sin(x+PI/2)
-  angle = (angle + (1<<(FIXPOINT_PREC-1)) >> (FIXPOINT_PREC - ldSINTAB - 1)) & ((1<<(ldSINTAB+2))-1);
+  int angle = (x + (1<<(FIXPOINT_PREC-1)) >> (FIXPOINT_PREC - ldSINTAB - 1)) & ((1<<(ldSINTAB+2))-1);
   FIXPOINT_SIN_COS_GENERIC
 }
 
@@ -441,9 +395,6 @@ static inline void InitFixSinTab(void)
 {
   int i;
   float step;
-
   for (i=0, step=0; i<(1<<ldSINTAB); i++, step+=0.5/(1<<ldSINTAB))
-  {
     SinTable[i] = FixNo(sin(M_PI * step));
-  }
 }
