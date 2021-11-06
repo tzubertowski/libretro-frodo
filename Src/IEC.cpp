@@ -41,6 +41,8 @@
  *    Sent before the last byte, not after it.
  */
 
+#include <streams/file_stream.h>
+
 #include "sysdeps.h"
 
 #include "IEC.h"
@@ -51,15 +53,15 @@
 #include "Display.h"
 #include "main.h"
 
-// IEC command codes
+/* IEC command codes */
 enum
 {
-   CMD_DATA     = 0x60,	// Data transfer
-   CMD_CLOSE    = 0xe0,	// Close channel
-   CMD_OPEN     = 0xf0		// Open channel
+   CMD_DATA     = 0x60,    /* Data transfer */
+   CMD_CLOSE    = 0xe0,    /* Close channel */
+   CMD_OPEN     = 0xf0		/* Open channel */
 };
 
-// IEC ATN codes
+/* IEC ATN codes */
 enum
 {
    ATN_LISTEN   = 0x20,
@@ -68,38 +70,43 @@ enum
    ATN_UNTALK   = 0x50
 };
 
+/* Forward declarations */
+extern "C" {
+RFILE* rfopen(const char *path, const char *mode);
+int64_t rfseek(RFILE* stream, int64_t offset, int origin);
+int64_t rftell(RFILE* stream);
+int rfclose(RFILE* stream);
+int64_t rfread(void* buffer,
+   size_t elem_size, size_t elem_count, RFILE* stream);
+}
 
-/*
- *  Constructor: Initialize variables
- */
-
+/* Constructor: Initialize variables */
 Drive *IEC::create_drive(const char *path)
 {
+   int type;
    // Mount host directory
-	if (IsDirectory(path))
-		return new FSDrive(this, path);
+   if (IsDirectory(path))
+      return new FSDrive(this, path);
+   // Not a directory, check for mountable file type
+   if (IsMountableFile(path, type))
    {
-		// Not a directory, check for mountable file type
-		int type;
-		if (IsMountableFile(path, type))
-      {
-			if (type == FILE_IMAGE)
-				// Mount disk image
-				return new ImageDrive(this, path);
-         // Mount archive type file
-         return new ArchDrive(this, path);
-		}
-	}
+      if (type == FILE_IMAGE)
+         // Mount disk image
+         return new ImageDrive(this, path);
+      // Mount archive type file
+      return new ArchDrive(this, path);
+   }
    return NULL;
 }
 
 IEC::IEC(C64Display *display) : the_display(display)
 {
 	int i;
-
-	// Create drives 8..11
+	/* Create drives 8..11 */
 	for (i=0; i<4; i++)
-		drive[i] = NULL;	// Important because UpdateLEDs is called from the drive constructors (via set_error)
+		drive[i] = NULL;	/* Important because UpdateLEDs 
+                           is called from the drive
+                           constructors (via set_error) */
 
 	if (!ThePrefs.Emul1541Proc)
    {
@@ -107,18 +114,17 @@ IEC::IEC(C64Display *display) : the_display(display)
          drive[i] = create_drive(ThePrefs.DrivePath[i]);
    }
 
-	listener_active = talker_active = false;
+	listener_active = false;
+   talker_active   = false;
 	listening       = false;
 }
 
 
-/*
- *  Destructor: Delete drives
- */
-
+/* Destructor: Delete drives */
 IEC::~IEC()
 {
-	for (int i=0; i<4; i++)
+   int i;
+	for (i=0; i<4; i++)
 		delete drive[i];
 }
 
@@ -129,8 +135,9 @@ IEC::~IEC()
 
 void IEC::Reset(void)
 {
-	for (int i=0; i<4; i++)
-		if (drive[i] != NULL && drive[i]->Ready)
+   int i;
+	for (i = 0; i < 4; i++)
+		if (drive[i] && drive[i]->Ready)
 			drive[i]->Reset();
 
 	UpdateLEDs();
@@ -145,13 +152,18 @@ void IEC::Reset(void)
 
 void IEC::NewPrefs(Prefs *prefs)
 {
-	// Delete and recreate all changed drives
-	for (int i=0; i<4; i++)
+   int i;
+	/* Delete and recreate all changed drives */
+	for (i=0; i<4; i++)
    {
-      if (strcmp(ThePrefs.DrivePath[i], prefs->DrivePath[i]) || ThePrefs.Emul1541Proc != prefs->Emul1541Proc)
+      if (     strcmp(ThePrefs.DrivePath[i],
+               prefs->DrivePath[i]) 
+            || ThePrefs.Emul1541Proc != prefs->Emul1541Proc)
       {
          delete drive[i];
-         drive[i] = NULL;	// Important because UpdateLEDs is called from drive constructors (via set_error())
+         drive[i] = NULL;	/* Important because UpdateLEDs 
+                              is called from drive
+                              constructors (via set_error()) */
          if (!prefs->Emul1541Proc)
             drive[i] = create_drive(prefs->DrivePath[i]);
       }
@@ -161,21 +173,20 @@ void IEC::NewPrefs(Prefs *prefs)
 }
 
 
-/*
- *  Update drive LED display
- */
-
+/* Update drive LED display */
 void IEC::UpdateLEDs(void)
 {
-   if (drive[0] != NULL && drive[1] != NULL && drive[2] != NULL && drive[3] != NULL)
-      the_display->UpdateLEDs(drive[0]->LED, drive[1]->LED, drive[2]->LED, drive[3]->LED);
+   if (
+            drive[0] != NULL 
+         && drive[1] != NULL 
+         && drive[2] != NULL 
+         && drive[3] != NULL)
+      the_display->UpdateLEDs(drive[0]->LED,
+            drive[1]->LED, drive[2]->LED, drive[3]->LED);
 }
 
 
-/*
- *  Output one byte
- */
-
+/* Output one byte */
 uint8 IEC::Out(uint8 byte, bool eoi)
 {
 	if (listener_active)
@@ -189,10 +200,7 @@ uint8 IEC::Out(uint8 byte, bool eoi)
 }
 
 
-/*
- *  Output one byte with ATN (Talk/Listen/Untalk/Unlisten)
- */
-
+/* Output one byte with ATN (Talk/Listen/Untalk/Unlisten) */
 uint8 IEC::OutATN(uint8 byte)
 {
 	received_cmd = sec_addr = 0;	// Command is sent with secondary address
@@ -393,7 +401,6 @@ uint8 IEC::sec_talk(void)
 	return ST_OK;
 }
 
-
 /*
  *  Byte after Open command: Store character in file name, open file on EOI
  */
@@ -417,11 +424,7 @@ uint8 IEC::open_out(uint8 byte, bool eoi)
 	return ST_OK;
 }
 
-
-/*
- *  Write byte to channel
- */
-
+/* Write byte to channel */
 uint8 IEC::data_out(uint8 byte, bool eoi)
 {
 	return listener->Write(sec_addr, byte, eoi);
@@ -493,8 +496,8 @@ void Drive::set_error(int error, int track, int sector)
 {
 	// Write error message to buffer
 	sprintf(error_buf, Errors_1541[error], track, sector);
-	error_ptr = error_buf;
-	error_len = strlen(error_buf);
+	error_ptr     = error_buf;
+	error_len     = strlen(error_buf);
 	current_error = error;
 
 	// Set drive condition
@@ -515,6 +518,7 @@ void Drive::set_error(int error, int track, int sector)
 
 void Drive::parse_file_name(const uint8 *src, int src_len, uint8 *dest, int &dest_len, int &mode, int &type, int &rec_len, bool convert_charset)
 {
+   uint8 *q;
 	// If the string contains a ':', the file name starts after that
 	const uint8 *p = (const uint8 *)memchr(src, ':', src_len);
 	if (p)
@@ -527,7 +531,7 @@ void Drive::parse_file_name(const uint8 *src, int src_len, uint8 *dest, int &des
 
 	// Transfer file name upto ','
 	dest_len = 0;
-	uint8 *q = dest;
+	q        = dest;
 	while (*p != ',' && src_len-- > 0)
    {
       if (convert_charset)
@@ -940,17 +944,18 @@ void petscii2ascii(char *dest, const uint8 *src, int n)
 
 bool IsMountableFile(const char *path, int &type)
 {
-	// Read header and determine file size
+   int64_t size;
+	/* Read header and determine file size */
 	uint8 header[64];
 	memset(header, 0, sizeof(header));
-	FILE *f = fopen(path, "rb");
+	RFILE *f = rfopen(path, "rb");
 	if (!f)
 		return false;
-	fseek(f, 0, SEEK_END);
-	long size = ftell(f);
-	fseek(f, 0, SEEK_SET);
-	fread(header, 1, sizeof(header), f);
-	fclose(f);
+	rfseek(f, 0, SEEK_END);
+	size = rftell(f);
+	rfseek(f, 0, SEEK_SET);
+	rfread(header, 1, sizeof(header), f);
+	rfclose(f);
 
 	if (IsImageFile(path, header, size))
    {
@@ -967,11 +972,12 @@ bool IsMountableFile(const char *path, int &type)
 
 
 /*
- *  Read directory of mountable disk image or archive file into c64_dir_entry vector,
+ *  Read directory of mountable disk image 
+ *  or archive file into c64_dir_entry vector,
  *  returns false on error
  */
-
-bool ReadDirectory(const char *path, int type, std::vector<c64_dir_entry> &vec)
+bool ReadDirectory(const char *path, int type,
+      std::vector<c64_dir_entry> &vec)
 {
 	vec.clear();
 	switch (type)

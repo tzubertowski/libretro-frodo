@@ -23,14 +23,18 @@
 
 #include <stdio.h>
 
-// Sizes of memory areas
-const int C64_RAM_SIZE = 0x10000;
-const int COLOR_RAM_SIZE = 0x400;
-const int BASIC_ROM_SIZE = 0x2000;
+#include <streams/file_stream.h>
+
+/* TODO/FIXME - most if not all the file I/O should eventually be removed */
+
+/* Sizes of memory areas */
+const int C64_RAM_SIZE    = 0x10000;
+const int COLOR_RAM_SIZE  = 0x400;
+const int BASIC_ROM_SIZE  = 0x2000;
 const int KERNAL_ROM_SIZE = 0x2000;
-const int CHAR_ROM_SIZE = 0x1000;
-const int DRIVE_RAM_SIZE = 0x800;
-const int DRIVE_ROM_SIZE = 0x4000;
+const int CHAR_ROM_SIZE   = 0x1000;
+const int DRIVE_RAM_SIZE  = 0x800;
+const int DRIVE_ROM_SIZE  = 0x4000;
 
 
 // false: Frodo, true: FrodoSC
@@ -62,18 +66,18 @@ public:
 	void SaveRAM(char *filename);
 	void SaveSnapshot(char *filename);
 	bool LoadSnapshot(char *filename);
-	int SaveCPUState(FILE *f);
-	int Save1541State(FILE *f);
-	bool Save1541JobState(FILE *f);
-	bool SaveVICState(FILE *f);
-	bool SaveSIDState(FILE *f);
-	bool SaveCIAState(FILE *f);
-	bool LoadCPUState(FILE *f);
-	bool Load1541State(FILE *f);
-	bool Load1541JobState(FILE *f);
-	bool LoadVICState(FILE *f);
-	bool LoadSIDState(FILE *f);
-	bool LoadCIAState(FILE *f);
+	int SaveCPUState(RFILE *f);
+	int Save1541State(RFILE *f);
+	bool Save1541JobState(RFILE *f);
+	bool SaveVICState(RFILE *f);
+	bool SaveSIDState(RFILE *f);
+	bool SaveCIAState(RFILE *f);
+	bool LoadCPUState(RFILE *f);
+	bool Load1541State(RFILE *f);
+	bool Load1541JobState(RFILE *f);
+	bool LoadVICState(RFILE *f);
+	bool LoadSIDState(RFILE *f);
+	bool LoadCIAState(RFILE *f);
 
 	uint8 *RAM, *Basic, *Kernal,
 		  *Char, *Color;		// C64

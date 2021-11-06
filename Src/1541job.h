@@ -21,7 +21,7 @@
 #ifndef _1541JOB_H
 #define _1541JOB_H
 
-#include <stdio.h>
+#include <streams/file_stream.h>
 
 class MOS6502_1541;
 class Prefs;
@@ -56,7 +56,7 @@ private:
 	void disk2gcr(void);
 
 	uint8 *ram;				// Pointer to 1541 RAM
-	FILE *the_file;			// File pointer for .d64 file
+	RFILE *the_file;		// File pointer for .d64 file
 	int image_header;		// Length of .d64/.x64 file header
 
 	uint8 id1, id2;			// ID of disk
@@ -87,14 +87,12 @@ struct Job1541State {
 
 inline bool Job1541::SyncFound(void)
 {
-	if (*gcr_ptr == 0xff)
-		return true;
-	else {
-		gcr_ptr++;		// Rotate disk
-		if (gcr_ptr == gcr_track_end)
-			gcr_ptr = gcr_track_start;
-		return false;
-	}
+   if (*gcr_ptr == 0xff)
+      return true;
+   gcr_ptr++;		/* Rotate disk */
+   if (gcr_ptr == gcr_track_end)
+      gcr_ptr = gcr_track_start;
+   return false;
 }
 
 
@@ -117,11 +115,12 @@ inline uint8 Job1541::ReadGCRByte(void)
 
 inline uint8 Job1541::WPState(void)
 {
-	if (disk_changed) {	// Disk change -> WP sensor strobe
+	if (disk_changed) // Disk change -> WP sensor strobe
+   {	
 		disk_changed = false;
 		return write_protected ? 0x10 : 0;
-	} else
-		return write_protected ? 0 : 0x10;
+	}
+   return write_protected ? 0 : 0x10;
 }
 
 #endif

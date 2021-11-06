@@ -23,20 +23,24 @@
 #include <errno.h>
 #include <string.h>
 #include <zlib.h>
+#include <file/file_path.h>
+#include <streams/file_stream.h>
 
 #include "utype.h"
-
-#if defined(WIN32) && !defined(_VCWIN_)
-#include <winsock2.h>
-#endif
 
 #include "dialog.h"
 #include "file.h"
 #include "zip.h"
 
-#if defined(WIN32)
-#define ftello ftell
-#endif
+/* Forward declarations */
+extern "C" {
+RFILE* rfopen(const char *path, const char *mode);
+int64_t rfseek(RFILE* stream, int64_t offset, int origin);
+int64_t rftell(RFILE* stream);
+int rfclose(RFILE* stream);
+int64_t rfread(void* buffer,
+   size_t elem_size, size_t elem_count, RFILE* stream);
+}
 
 /*-----------------------------------------------------------------------*/
 /**
@@ -100,7 +104,7 @@ static bool File_IsRootFileName(const char *pszFileName)
 	if (pszFileName[0] == PATHSEP)
 		return true;
 
-#ifdef WIN32
+#ifdef _WIN32
 	if (pszFileName[1] == ':')
 		return true;
 #endif
@@ -172,10 +176,9 @@ Uint8 *File_Read(const char *pszFileName, long *pFileSize, const char * const pp
 	/* Is it a gzipped file? */
 	if (File_DoesFileExtensionMatch(filepath, ".gz"))
 	{
-		gzFile hGzFile;
 		/* Open and read gzipped file */
-		hGzFile = gzopen(filepath, "rb");
-		if (hGzFile != NULL)
+		gzFile hGzFile = gzopen(filepath, "rb");
+		if (hGzFile)
 		{
 			/* Find size of file: */
 			do
@@ -203,21 +206,19 @@ Uint8 *File_Read(const char *pszFileName, long *pFileSize, const char * const pp
 	}
 	else          /* It is a normal file */
 	{
-		FILE *hDiskFile;
 		/* Open and read normal file */
-		hDiskFile = fopen(filepath, "rb");
-		if (hDiskFile != NULL)
+		RFILE *hDiskFile = rfopen(filepath, "rb");
+		if (hDiskFile)
 		{
 			/* Find size of file: */
-			fseek(hDiskFile, 0, SEEK_END);
-			FileSize = ftell(hDiskFile);
-			fseek(hDiskFile, 0, SEEK_SET);
+			rfseek(hDiskFile, 0, SEEK_END);
+			FileSize = rftell(hDiskFile);
+			rfseek(hDiskFile, 0, SEEK_SET);
 			/* Read in... */
 			pFile = (Uint8*)malloc(FileSize);
 			if (pFile)
-				FileSize = fread(pFile, 1, FileSize, hDiskFile);
-
-			fclose(hDiskFile);
+				FileSize = rfread(pFile, 1, FileSize, hDiskFile);
+			rfclose(hDiskFile);
 		}
 	}
 	free(filepath);
@@ -229,79 +230,6 @@ Uint8 *File_Read(const char *pszFileName, long *pFileSize, const char * const pp
 	return pFile;        /* Return to where read in/allocated */
 }
 
-
-/*-----------------------------------------------------------------------*/
-/**
- * Save file to disk, return FALSE if errors
- */
-bool File_Save(const char *pszFileName, const Uint8 *pAddress, size_t Size, bool bQueryOverwrite)
-{
-	bool bRet = false;
-
-	/* Check if need to ask user if to overwrite */
-	if (bQueryOverwrite)
-	{
-		/* If file exists, ask if OK to overwrite */
-		if (!File_QueryOverwrite(pszFileName))
-			return false;
-	}
-
-	/* Normal file or gzipped file? */
-	if (File_DoesFileExtensionMatch(pszFileName, ".gz"))
-	{
-		gzFile hGzFile;
-		/* Create a gzipped file: */
-		hGzFile = gzopen(pszFileName, "wb");
-		if (hGzFile != NULL)
-		{
-			/* Write data, set success flag */
-			if (gzwrite(hGzFile, pAddress, Size) == (int)Size)
-				bRet = true;
-
-			gzclose(hGzFile);
-		}
-	}
-	else
-	{
-		FILE *hDiskFile;
-		/* Create a normal file: */
-		hDiskFile = fopen(pszFileName, "wb");
-		if (hDiskFile != NULL)
-		{
-			/* Write data, set success flag */
-			if (fwrite(pAddress, 1, Size, hDiskFile) == Size)
-				bRet = true;
-
-			fclose(hDiskFile);
-		}
-	}
-
-	return bRet;
-}
-
-
-/*-----------------------------------------------------------------------*/
-/**
- * Return size of file, -1 if error
- */
-off_t File_Length(const char *pszFileName)
-{
-	off_t FileSize;
-	FILE *hDiskFile = fopen(pszFileName, "rb");
-
-	if (hDiskFile!=NULL)
-	{
-		fseek(hDiskFile, 0, SEEK_END);
-		FileSize = ftello(hDiskFile);
-		fseek(hDiskFile, 0, SEEK_SET);
-		fclose(hDiskFile);
-		return FileSize;
-	}
-
-	return -1;
-}
-
-
 /*-----------------------------------------------------------------------*/
 /**
  * Return TRUE if file exists, is readable or writable at least and is not
@@ -309,23 +237,8 @@ off_t File_Length(const char *pszFileName)
  */
 bool File_Exists(const char *filename)
 {
-#ifdef RETRO
-   if( access( filename, F_OK ) != -1 )
-      return true;
-   return false;
-#else
-   struct stat buf;
-   if (     stat(filename, &buf) == 0 
-         &&  (buf.st_mode & (S_IRUSR|S_IWUSR)) 
-         && !(buf.st_mode & S_IFDIR))
-   {
-      /* file points to user readable regular file */
-      return true;
-   }
-   return false;
-#endif
+   return path_is_valid(filename);
 }
-
 
 /*-----------------------------------------------------------------------*/
 /**
@@ -333,33 +246,8 @@ bool File_Exists(const char *filename)
  */
 bool File_DirExists(const char *path)
 {
-	struct stat buf;
-	return (stat(path, &buf) == 0 && S_ISDIR(buf.st_mode));
+   return path_is_directory(path);
 }
-
-/*-----------------------------------------------------------------------*/
-/**
- * Find if file exists, and if so ask user if OK to overwrite
- */
-bool File_QueryOverwrite(const char *pszFileName)
-{
-	const char *fmt = NULL;
-	char *szString  = NULL;
-	bool ret        = true;
-
-	/* Try and find if file exists */
-	if (File_Exists(pszFileName))
-	{
-		fmt      = "File '%s' exists, overwrite?";
-		/* File does exist, are we OK to overwrite? */
-		szString = (char*)malloc(strlen(pszFileName) + strlen(fmt) + 1);
-		sprintf(szString, fmt, pszFileName);
-		ret      = DlgAlert_Query(szString);
-		free(szString);
-	}
-	return ret;
-}
-
 
 /*-----------------------------------------------------------------------*/
 /**
@@ -502,22 +390,6 @@ void File_ShrinkName(char *pDestFileName, const char *pSrcFileName, int maxlen)
 	}
 }
 
-
-/*-----------------------------------------------------------------------*/
-/**
- * Wrapper for File_MakeAbsoluteName() which special-cases stdin/out/err
- * named files and empty file name.  The given buffer should be opened
- * with File_Open() and closed with File_Close() if this function is used!
- * (On Linux one can use /dev/stdout etc, this is intended for other OSes)
- */
-void File_MakeAbsoluteSpecialName(char *path)
-{
-	if (path[0] &&
-	    strcmp(path, "stdin")  != 0 &&
-	    strcmp(path, "stdout") != 0 &&
-	    strcmp(path, "stderr") != 0)
-		File_MakeAbsoluteName(path);
-}
 
 /*-----------------------------------------------------------------------*/
 /**

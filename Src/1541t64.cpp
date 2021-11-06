@@ -160,55 +160,52 @@ class ScopedSignalBlocker {
   sigset_t old_set_;
 };
 
-static FILE* __tmpfile_dir(const char* tmp_dir) {
-  char buf[PATH_MAX];
-  int path_length = snprintf(buf, sizeof(buf), "%s/tmp.XXXXXXXXXX", tmp_dir);
-  if (path_length >= sizeof(buf)) {
-    return NULL;
-  }
-
-  int fd;
-  {
-    ScopedSignalBlocker ssb;
-    fd = mkstemp2(buf);
-    if (fd == -1) {
+static FILE* __tmpfile_dir(const char* tmp_dir)
+{
+   int fd, old_errno;
+   char buf[PATH_MAX];
+   ScopedSignalBlocker ssb;
+   struct stat sb;
+   FILE *fp        = NULL;
+   int path_length = snprintf(buf, sizeof(buf), "%s/tmp.XXXXXXXXXX", tmp_dir);
+   if (path_length >= sizeof(buf))
       return NULL;
-    }
 
-    // Unlink the file now so that it's removed when closed.
-    unlink(buf);
+   fd = mkstemp2(buf);
+   if (fd == -1)
+      return NULL;
 
-    // Can we still use the file now it's unlinked?
-    // File systems without hard link support won't have the usual Unix semantics.
-    struct stat sb;
-    int rc = fstat(fd, &sb);
-    if (rc == -1) {
-      int old_errno = errno;
+   // Unlink the file now so that it's removed when closed.
+   unlink(buf);
+
+   // Can we still use the file now it's unlinked?
+   // File systems without hard link support won't have the usual Unix semantics.
+   int rc = fstat(fd, &sb);
+   if (rc == -1)
+   {
+      old_errno     = errno;
       close(fd);
-      errno = old_errno;
+      errno         = old_errno;
       return NULL;
-    }
-  }
+   }
 
-  // Turn the file descriptor into a FILE*.
-  FILE* fp = fdopen(fd, "w+");
-  if (fp != NULL) {
-    return fp;
-  }
+   // Turn the file descriptor into a FILE*.
+   fp = fdopen(fd, "w+");
+   if (fp)
+      return fp;
 
-  // Failure. Clean up. We already unlinked, so we just need to close.
-  int old_errno = errno;
-  close(fd);
-  errno = old_errno;
-  return NULL;
+   // Failure. Clean up. We already unlinked, so we just need to close.
+   old_errno = errno;
+   close(fd);
+   errno = old_errno;
+   return NULL;
 }
 
-FILE* tmpfile2() {
-
+FILE* tmpfile2(void)
+{
   FILE* fp = __tmpfile_dir("/data/data/com.retroarch/tmp");
-  if (fp == NULL) {
-     fp = __tmpfile_dir(P_tmpdir);
-  }
+  if (!fp)
+     return __tmpfile_dir(P_tmpdir);
   return fp;
 }
 
@@ -222,42 +219,36 @@ static bool parse_t64_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_t
 static bool parse_lynx_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title);
 static bool parse_p00_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title);
 
-
 /*
  *  Constructor: Prepare emulation
  */
 
 ArchDrive::ArchDrive(IEC *iec, const char *filepath) : Drive(iec), the_file(NULL)
 {
-	for (int i=0; i<16; i++)
+   unsigned i;
+	for (i = 0; i < 16; i++)
 		file[i] = NULL;
 	Reset();
 
-	// Open archive file
+	/* Open archive file */
 	if (change_arch(filepath))
 		Ready = true;
 }
 
-
-/*
- *  Destructor
- */
-
+/* Destructor */
 ArchDrive::~ArchDrive()
 {
 	// Close archive file
-	if (the_file) {
-		close_all_channels();
-		fclose(the_file);
-	}
+	if (the_file)
+   {
+      close_all_channels();
+      fclose(the_file);
+   }
 	Ready = false;
 }
 
 
-/*
- *  Open the archive file
- */
-
+/* Open the archive file */
 bool ArchDrive::change_arch(const char *path)
 {
 	FILE *new_file;
@@ -271,33 +262,41 @@ bool ArchDrive::change_arch(const char *path)
 		uint8 header[64];
 		fread(header, 1, 64, new_file);
 		bool parsed_ok = false;
-		if (is_t64_header(header)) {
-			archive_type = TYPE_T64;
-			parsed_ok = parse_t64_file(new_file, file_info, dir_title);
-		} else if (is_lynx_header(header)) {
-			archive_type = TYPE_LYNX;
-			parsed_ok = parse_lynx_file(new_file, file_info, dir_title);
-		} else if (is_p00_header(header)) {
-			archive_type = TYPE_P00;
-			parsed_ok = parse_p00_file(new_file, file_info, dir_title);
-		}
+		if (is_t64_header(header))
+      {
+         archive_type = TYPE_T64;
+         parsed_ok    = parse_t64_file(new_file, file_info, dir_title);
+      }
+      else if (is_lynx_header(header))
+      {
+         archive_type = TYPE_LYNX;
+         parsed_ok    = parse_lynx_file(new_file, file_info, dir_title);
+      }
+      else if (is_p00_header(header))
+      {
+         archive_type = TYPE_P00;
+         parsed_ok    = parse_p00_file(new_file, file_info, dir_title);
+      }
 
-		if (!parsed_ok) {
-			fclose(new_file);
-			if (the_file) {
-				close_all_channels();
-				fclose(the_file);
-				the_file = NULL;
-			}
-			return false;
-		}
+		if (!parsed_ok)
+      {
+         fclose(new_file);
+         if (the_file)
+         {
+            close_all_channels();
+            fclose(the_file);
+            the_file = NULL;
+         }
+         return false;
+      }
 
 		// Close old archive if open, and set new file
-		if (the_file) {
-			close_all_channels();
-			fclose(the_file);
-			the_file = NULL;
-		}
+		if (the_file)
+      {
+         close_all_channels();
+         fclose(the_file);
+         the_file = NULL;
+      }
 		the_file = new_file;
 		return true;
 	}
@@ -314,40 +313,40 @@ uint8 ArchDrive::Open(int channel, const uint8 *name, int name_len)
 	set_error(ERR_OK);
 
 	// Channel 15: Execute file name as command
-	if (channel == 15) {
-		execute_cmd(name, name_len);
-		return ST_OK;
-	}
+	if (channel == 15)
+   {
+      execute_cmd(name, name_len);
+      return ST_OK;
+   }
 
 	// Close previous file if still open
-	if (file[channel]) {
-		fclose(file[channel]);
-		file[channel] = NULL;
-	}
+	if (file[channel])
+   {
+      fclose(file[channel]);
+      file[channel] = NULL;
+   }
 
-	if (name[0] == '#') {
-		set_error(ERR_NOCHANNEL);
-		return ST_OK;
-	}
+	if (name[0] == '#')
+   {
+      set_error(ERR_NOCHANNEL);
+      return ST_OK;
+   }
 
-	if (the_file == NULL) {
-		set_error(ERR_NOTREADY);
-		return ST_OK;
-	}
+	if (!the_file)
+   {
+      set_error(ERR_NOTREADY);
+      return ST_OK;
+   }
 
 	if (name[0] == '$')
 		return open_directory(channel, name + 1, name_len - 1);
-
 	return open_file(channel, name, name_len);
 }
 
-
-/*
- *  Open file
- */
-
+/* Open file */
 uint8 ArchDrive::open_file(int channel, const uint8 *name, int name_len)
 {
+   bool writing;
 	uint8 plain_name[NAMEBUF_LENGTH];
 	int plain_name_len;
 	int mode = FMODE_READ;
@@ -362,7 +361,7 @@ uint8 ArchDrive::open_file(int channel, const uint8 *name, int name_len)
 			type = FTYPE_PRG;
 	}
 
-	bool writing = (mode == FMODE_WRITE || mode == FMODE_APPEND);
+	writing = (mode == FMODE_WRITE || mode == FMODE_APPEND);
 
 	// Wildcards are only allowed on reading
 	if (writing && (strchr((const char *)plain_name, '*') || strchr((const char *)plain_name, '?'))) {
@@ -423,13 +422,14 @@ uint8 ArchDrive::open_file(int channel, const uint8 *name, int name_len)
 // Return true if name 'n' matches pattern 'p'
 static bool match(const uint8 *p, int p_len, const uint8 *n)
 {
-	while (p_len-- > 0) {
-		if (*p == '*')	// Wildcard '*' matches all following characters
-			return true;
-		if ((*p != *n) && (*p != '?'))	// Wildcard '?' matches single character
-			return false;
-		p++; n++;
-	}
+	while (p_len-- > 0)
+   {
+      if (*p == '*')	// Wildcard '*' matches all following characters
+         return true;
+      if ((*p != *n) && (*p != '?'))	// Wildcard '?' matches single character
+         return false;
+      p++; n++;
+   }
 
 	return *n == 0;
 }
@@ -437,10 +437,11 @@ static bool match(const uint8 *p, int p_len, const uint8 *n)
 bool ArchDrive::find_first_file(const uint8 *pattern, int pattern_len, int &num)
 {
 	std::vector<c64_dir_entry>::const_iterator i, end = file_info.end();
-	for (i = file_info.begin(), num = 0; i != end; i++, num++) {
-		if (match(pattern, pattern_len, (uint8 *)i->name))
-			return true;
-	}
+	for (i = file_info.begin(), num = 0; i != end; i++, num++)
+   {
+      if (match(pattern, pattern_len, (uint8 *)i->name))
+         return true;
+   }
 	return false;
 }
 
@@ -451,19 +452,22 @@ bool ArchDrive::find_first_file(const uint8 *pattern, int pattern_len, int &num)
 
 uint8 ArchDrive::open_directory(int channel, const uint8 *pattern, int pattern_len)
 {
+   uint8 *t;
 	// Special treatment for "$0"
-	if (pattern[0] == '0' && pattern_len == 1) {
-		pattern++;
-		pattern_len--;
-	}
+	if (pattern[0] == '0' && pattern_len == 1)
+   {
+      pattern++;
+      pattern_len--;
+   }
 
 	// Skip everything before the ':' in the pattern
-	uint8 *t = (uint8 *)memchr(pattern, ':', pattern_len);
-	if (t) {
-		t++;
-		pattern_len -= t - pattern;
-		pattern = t;
-	}
+	t = (uint8 *)memchr(pattern, ':', pattern_len);
+	if (t)
+   {
+      t++;
+      pattern_len -= t - pattern;
+      pattern = t;
+   }
 
 #if defined(ANDROID) || defined(__ANDROID__)
 	// Create temporary file
@@ -719,8 +723,7 @@ static bool is_t64_header(const uint8 *header)
 	 || memcmp(header, "C64 tape image", 14) == 0
 	 || memcmp(header, "C64S tape image", 15) == 0)
 		return true;
-	else
-		return false;
+   return false;
 }
 
 static bool is_lynx_header(const uint8 *header)
@@ -894,26 +897,26 @@ static bool parse_p00_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_t
 
 bool ReadArchDirectory(const char *path, std::vector<c64_dir_entry> &vec)
 {
-	// Open file
-	FILE *f = fopen(path, "rb");
-	if (f) {
+   // Open file
+   FILE *f = fopen(path, "rb");
+   if (f)
+   {
+      // Read header
+      uint8 header[64];
+      fread(header, 1, sizeof(header), f);
 
-		// Read header
-		uint8 header[64];
-		fread(header, 1, sizeof(header), f);
+      // Determine archive type and parse archive
+      bool result = false;
+      char dir_title[16];
+      if (is_t64_header(header))
+         result = parse_t64_file(f, vec, dir_title);
+      else if (is_lynx_header(header))
+         result = parse_lynx_file(f, vec, dir_title);
+      else if (is_p00_header(header))
+         result = parse_p00_file(f, vec, dir_title);
 
-		// Determine archive type and parse archive
-		bool result = false;
-		char dir_title[16];
-		if (is_t64_header(header))
-			result = parse_t64_file(f, vec, dir_title);
-		else if (is_lynx_header(header))
-			result = parse_lynx_file(f, vec, dir_title);
-		else if (is_p00_header(header))
-			result = parse_p00_file(f, vec, dir_title);
-
-		fclose(f);
-		return result;
-	} else
-		return false;
+      fclose(f);
+      return result;
+   }
+   return false;
 }

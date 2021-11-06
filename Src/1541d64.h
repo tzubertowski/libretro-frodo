@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <vector>
 
+#include <streams/file_stream.h>
+
 #include "IEC.h"
 
 /*
@@ -123,7 +125,7 @@ private:
 	virtual void new_cmd(const uint8 *name, int name_len, const uint8 *comma);
 	virtual void validate_cmd(void);
 
-	FILE *the_file;			// File pointer for image file
+	RFILE *the_file;			// File pointer for image file
 	image_file_desc desc;	// Image file descriptor
 	bool write_protected;	// Flag: image file write-protected
 
@@ -143,12 +145,12 @@ private:
 
 // Check whether file with given header (64 bytes) and size looks like one
 // of the file types supported by this module
-extern bool IsImageFile(const char *path, const uint8 *header, long size);
+bool IsImageFile(const char *path, const uint8 *header, int64_t size);
 
 // Read directory of disk image file into (empty) c64_dir_entry vector
-extern bool ReadImageDirectory(const char *path, std::vector<c64_dir_entry> &vec);
+bool ReadImageDirectory(const char *path, std::vector<c64_dir_entry> &vec);
 
 // Create new blank disk image file
-extern bool CreateImageFile(const char *path);
+bool CreateImageFile(const char *path);
 
 #endif
