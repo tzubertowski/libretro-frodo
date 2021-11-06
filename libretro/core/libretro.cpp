@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <libretro.h>
+#include <compat/strl.h>
 
 #include "libretro-core.h"
 #include "libretro_core_options.h"
@@ -73,7 +74,7 @@ static void update_variables(void)
    {
       char *pch;
       char str[100];
-      snprintf(str, sizeof(str), "%s", var.value);
+      strlcpy(str, var.value, sizeof(str));
 
       pch = strtok(str, "x");
       if (pch)
