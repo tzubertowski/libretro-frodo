@@ -43,6 +43,7 @@
 
 #include <sys/stat.h>
 #include <dirent.h> /* TODO/FIXME - get rid of dirent */
+#include <file/file_path.h>
 
 #include "sysdeps.h"
 
@@ -337,64 +338,69 @@ uint8 FSDrive::open_directory(int channel, const uint8 *pattern, int pattern_len
 	while (de) {
 
 		// Include only files matching the ascii_pattern
-		if (match(ascii_pattern, de->d_name)) {
-
-			// Get file statistics
+		if (match(ascii_pattern, de->d_name))
+      {
+         bool path_is_dir = false;
+         /* Get file statistics */
 #if defined(__vita__) || defined(__psp__)
-		  {
-		    char *buf = (char *) malloc (strlen(dir_path) + strlen(de->d_name) + 3);
-		    strcat(buf, dir_path);
-		    strcat(buf, "/");
-		    strcat(buf, de->d_name);
-		    stat(buf, &statbuf);
-		    free (buf);
-		  }
+         {
+            size_t len    = strlen(dir_path) + strlen(de->d_name) + 3;
+            char *buf     = (char *) malloc(len);
+            fill_pathname_join(buf, dir_path, de->d_name, len);
+            path_is_dir   = path_is_directory(buf);
+            stat(buf, &statbuf);
+            free (buf);
+         }
 #else
-			chdir(dir_path);
-			stat(de->d_name, &statbuf);
-			chdir(AppDirPath);
+         chdir(dir_path);
+         stat(de->d_name, &statbuf);
+         path_is_dir      = path_is_directory(buf);
+         chdir(AppDirPath);
 #endif
 
-			// Clear line with spaces and terminate with null byte
-			memset(buf, ' ', 31);
-			buf[31] = 0;
+         // Clear line with spaces and terminate with null byte
+         memset(buf, ' ', 31);
+         buf[31] = 0;
 
-			p = buf;
-			*p++ = 0x01;	// Dummy line link
-			*p++ = 0x01;
+         p = buf;
+         *p++ = 0x01;	// Dummy line link
+         *p++ = 0x01;
 
-			// Calculate size in blocks (254 bytes each)
-			i = (statbuf.st_size + 254) / 254;
-			*p++ = i & 0xff;
-			*p++ = (i >> 8) & 0xff;
+         // Calculate size in blocks (254 bytes each)
+         i = (statbuf.st_size + 254) / 254;
+         *p++ = i & 0xff;
+         *p++ = (i >> 8) & 0xff;
 
-			p++;
-			if (i < 10) p++;	// Less than 10: add one space
-			if (i < 100) p++;	// Less than 100: add another space
+         p++;
+         if (i < 10) p++;	// Less than 10: add one space
+         if (i < 100) p++;	// Less than 100: add another space
 
-			// Convert and insert file name
-			strcpy(str, de->d_name);
-			*p++ = '\"';
-			q = p;
-			for (i=0; i<16 && str[i]; i++)
-				*q++ = ascii2petscii(str[i]);
-			*q++ = '\"';
-			p += 18;
+         // Convert and insert file name
+         strcpy(str, de->d_name);
+         *p++ = '\"';
+         q = p;
+         for (i=0; i<16 && str[i]; i++)
+            *q++ = ascii2petscii(str[i]);
+         *q++ = '\"';
+         p += 18;
 
-			// File type
-			if (S_ISDIR(statbuf.st_mode)) {
-				*p++ = 'D';
-				*p++ = 'I';
-				*p++ = 'R';
-			} else {
-				*p++ = 'P';
-				*p++ = 'R';
-				*p++ = 'G';
-			}
+         // File type
+         if (path_is_dir)
+         {
+            *p++ = 'D';
+            *p++ = 'I';
+            *p++ = 'R';
+         }
+         else
+         {
+            *p++ = 'P';
+            *p++ = 'R';
+            *p++ = 'G';
+         }
 
-			// Write line
-			fwrite(buf, 1, 32, file[channel]);
-		}
+         // Write line
+         fwrite(buf, 1, 32, file[channel]);
+      }
 
 		// Get next directory entry
 		de = readdir(dir);
