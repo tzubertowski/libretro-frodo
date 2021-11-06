@@ -18,8 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <sys/time.h> /* TODO/FIXME - get rid of gettimeofday */
-
 #include <libretro.h>
 
 #include "sysdeps.h"
@@ -48,16 +46,28 @@ bool IsFrodoSC = true;
 bool IsFrodoSC = false;
 #endif
 
+/* Forward declarations */
+extern "C" {
+RFILE* rfopen(const char *path, const char *mode);
+int64_t rfseek(RFILE* stream, int64_t offset, int origin);
+int64_t rftell(RFILE* stream);
+int rfclose(RFILE* stream);
+int64_t rfread(void* buffer,
+   size_t elem_size, size_t elem_count, RFILE* stream);
+int64_t rfwrite(void const* buffer,
+   size_t elem_size, size_t elem_count, RFILE* stream);
+int rfgetc(RFILE* stream);
+int rfputc(int character, RFILE * stream);
+int rfprintf(RFILE * stream, const char * format, ...);
+}
 extern retro_input_state_t input_state_cb;
 #ifndef NO_LIBCO
 extern cothread_t mainThread;
 extern cothread_t emuThread;
 #endif
 extern int pauseg,retro_quit;
-extern void pause_select();
+extern void pause_select(void);
 extern int SHOWKEY;
-
-static struct timeval tv_start;
 
 /*
  *  Constructor: Allocate objects and memory
@@ -277,14 +287,14 @@ void C64::PatchKernal(bool fast_reset, bool emul_1541_proc)
 /*  Save RAM contents */
 void C64::SaveRAM(char *filename)
 {
-   FILE *f;
-   if (!(f = fopen(filename, "wb")))
+   RFILE *f;
+   if (!(f = rfopen(filename, "wb")))
       return;
-   fwrite((void*)RAM, 1, 0x10000, f);
-   fwrite((void*)Color, 1, 0x400, f);
+   rfwrite((void*)RAM, 1, 0x10000, f);
+   rfwrite((void*)Color, 1, 0x400, f);
    if (ThePrefs.Emul1541Proc)
-      fwrite((void*)RAM1541, 1, 0x800, f);
-   fclose(f);
+      rfwrite((void*)RAM1541, 1, 0x800, f);
+   rfclose(f);
 }
 
 /*
@@ -294,7 +304,7 @@ void C64::SaveRAM(char *filename)
  *  1: OK
  *  -1: Instruction not completed
  */
-int C64::SaveCPUState(FILE *f)
+int C64::SaveCPUState(RFILE *f)
 {
    int i;
 	MOS6510State state;
@@ -303,9 +313,9 @@ int C64::SaveCPUState(FILE *f)
 	if (!state.instruction_complete)
 		return -1;
 
-	i      = fwrite(RAM, 0x10000, 1, f);
-	i     += fwrite(Color, 0x400, 1, f);
-	i     += fwrite((void*)&state, sizeof(state), 1, f);
+	i      = rfwrite(RAM, 0x10000, 1, f);
+	i     += rfwrite(Color, 0x400, 1, f);
+	i     += rfwrite((void*)&state, sizeof(state), 1, f);
 
 	return i == 3;
 }
@@ -315,12 +325,12 @@ int C64::SaveCPUState(FILE *f)
  *  Load CPU state from snapshot
  */
 
-bool C64::LoadCPUState(FILE *f)
+bool C64::LoadCPUState(RFILE *f)
 {
 	MOS6510State state;
-	int i  = fread(RAM, 0x10000, 1, f);
-	i     += fread(Color, 0x400, 1, f);
-	i     += fread((void*)&state, sizeof(state), 1, f);
+	int i  = rfread(RAM, 0x10000, 1, f);
+	i     += rfread(Color, 0x400, 1, f);
+	i     += rfread((void*)&state, sizeof(state), 1, f);
 
 	if (i == 3)
    {
@@ -339,7 +349,7 @@ bool C64::LoadCPUState(FILE *f)
  *  -1: Instruction not completed
  */
 
-int C64::Save1541State(FILE *f)
+int C64::Save1541State(RFILE *f)
 {
    int i;
 	MOS6502State state;
@@ -348,8 +358,8 @@ int C64::Save1541State(FILE *f)
 	if (!state.idle && !state.instruction_complete)
 		return -1;
 
-	i  = fwrite(RAM1541, 0x800, 1, f);
-	i += fwrite((void*)&state, sizeof(state), 1, f);
+	i  = rfwrite(RAM1541, 0x800, 1, f);
+	i += rfwrite((void*)&state, sizeof(state), 1, f);
 	return i == 2;
 }
 
@@ -358,11 +368,11 @@ int C64::Save1541State(FILE *f)
  *  Load 1541 state from snapshot
  */
 
-bool C64::Load1541State(FILE *f)
+bool C64::Load1541State(RFILE *f)
 {
 	MOS6502State state;
-	int i = fread(RAM1541, 0x800, 1, f);
-	i    += fread((void*)&state, sizeof(state), 1, f);
+	int i = rfread(RAM1541, 0x800, 1, f);
+	i    += rfread((void*)&state, sizeof(state), 1, f);
 
 	if (i == 2)
    {
@@ -377,11 +387,11 @@ bool C64::Load1541State(FILE *f)
  *  Save VIC state to snapshot
  */
 
-bool C64::SaveVICState(FILE *f)
+bool C64::SaveVICState(RFILE *f)
 {
 	MOS6569State state;
 	TheVIC->GetState(&state);
-	return fwrite((void*)&state, sizeof(state), 1, f) == 1;
+	return rfwrite((void*)&state, sizeof(state), 1, f) == 1;
 }
 
 
@@ -389,10 +399,10 @@ bool C64::SaveVICState(FILE *f)
  *  Load VIC state from snapshot
  */
 
-bool C64::LoadVICState(FILE *f)
+bool C64::LoadVICState(RFILE *f)
 {
 	MOS6569State state;
-	if (fread((void*)&state, sizeof(state), 1, f) == 1)
+	if (rfread((void*)&state, sizeof(state), 1, f) == 1)
    {
       TheVIC->SetState(&state);
       return true;
@@ -405,11 +415,11 @@ bool C64::LoadVICState(FILE *f)
  *  Save SID state to snapshot
  */
 
-bool C64::SaveSIDState(FILE *f)
+bool C64::SaveSIDState(RFILE *f)
 {
 	MOS6581State state;
 	TheSID->GetState(&state);
-	return fwrite((void*)&state, sizeof(state), 1, f) == 1;
+	return rfwrite((void*)&state, sizeof(state), 1, f) == 1;
 }
 
 
@@ -417,10 +427,10 @@ bool C64::SaveSIDState(FILE *f)
  *  Load SID state from snapshot
  */
 
-bool C64::LoadSIDState(FILE *f)
+bool C64::LoadSIDState(RFILE *f)
 {
 	MOS6581State state;
-	if (fread((void*)&state, sizeof(state), 1, f) == 1)
+	if (rfread((void*)&state, sizeof(state), 1, f) == 1)
    {
       TheSID->SetState(&state);
       return true;
@@ -433,14 +443,14 @@ bool C64::LoadSIDState(FILE *f)
  *  Save CIA states to snapshot
  */
 
-bool C64::SaveCIAState(FILE *f)
+bool C64::SaveCIAState(RFILE *f)
 {
 	MOS6526State state;
 	TheCIA1->GetState(&state);
-	if (fwrite((void*)&state, sizeof(state), 1, f) == 1)
+	if (rfwrite((void*)&state, sizeof(state), 1, f) == 1)
    {
       TheCIA2->GetState(&state);
-      return fwrite((void*)&state, sizeof(state), 1, f) == 1;
+      return rfwrite((void*)&state, sizeof(state), 1, f) == 1;
    }
    return false;
 }
@@ -450,13 +460,13 @@ bool C64::SaveCIAState(FILE *f)
  *  Load CIA states from snapshot
  */
 
-bool C64::LoadCIAState(FILE *f)
+bool C64::LoadCIAState(RFILE *f)
 {
 	MOS6526State state;
-	if (fread((void*)&state, sizeof(state), 1, f) == 1)
+	if (rfread((void*)&state, sizeof(state), 1, f) == 1)
    {
       TheCIA1->SetState(&state);
-      if (fread((void*)&state, sizeof(state), 1, f) == 1)
+      if (rfread((void*)&state, sizeof(state), 1, f) == 1)
       {
          TheCIA2->SetState(&state);
          return true;
@@ -470,11 +480,11 @@ bool C64::LoadCIAState(FILE *f)
  *  Save 1541 GCR state to snapshot
  */
 
-bool C64::Save1541JobState(FILE *f)
+bool C64::Save1541JobState(RFILE *f)
 {
 	Job1541State state;
 	TheJob1541->GetState(&state);
-	return fwrite((void*)&state, sizeof(state), 1, f) == 1;
+	return rfwrite((void*)&state, sizeof(state), 1, f) == 1;
 }
 
 
@@ -482,10 +492,10 @@ bool C64::Save1541JobState(FILE *f)
  *  Load 1541 GCR state from snapshot
  */
 
-bool C64::Load1541JobState(FILE *f)
+bool C64::Load1541JobState(RFILE *f)
 {
 	Job1541State state;
-	if (fread((void*)&state, sizeof(state), 1, f) == 1)
+	if (rfread((void*)&state, sizeof(state), 1, f) == 1)
    {
       TheJob1541->SetState(&state);
       return true;
@@ -521,19 +531,19 @@ bool C64::Load1541JobState(FILE *f)
 
 void C64::SaveSnapshot(char *filename)
 {
-   FILE *f;
+   RFILE *f;
    uint8 flags;
    uint8 delay;
    int stat;
-   if (!(f = fopen(filename, "wb")))
+   if (!(f = rfopen(filename, "wb")))
       return;
 
-   fprintf(f, "%s%c", SNAPSHOT_HEADER, 10);
-   fputc(0, f);	// Version number 0
+   rfprintf(f, "%s%c", SNAPSHOT_HEADER, 10);
+   rfputc(0, f);	// Version number 0
    flags = 0;
    if (ThePrefs.Emul1541Proc)
       flags |= SNAPSHOT_1541;
-   fputc(flags, f);
+   rfputc(flags, f);
    SaveVICState(f);
    SaveSIDState(f);
    SaveCIAState(f);
@@ -549,16 +559,16 @@ void C64::SaveSnapshot(char *filename)
          delay++;
       }
    } while (stat == -1);
-   fputc(delay, f);	// Number of cycles the 
+   rfputc(delay, f);	// Number of cycles the 
    // saved CPUC64 lags behind the previous chips
 #else
    SaveCPUState(f);
-   fputc(0, f);		// No delay
+   rfputc(0, f);		// No delay
 #endif
 
    if (ThePrefs.Emul1541Proc)
    {
-      fwrite(ThePrefs.DrivePath[0], 256, 1, f);
+      rfwrite(ThePrefs.DrivePath[0], 256, 1, f);
 #ifdef FRODO_SC
       delay = 0;
       do
@@ -569,14 +579,14 @@ void C64::SaveSnapshot(char *filename)
             delay++;
          }
       } while (stat == -1);
-      fputc(delay, f);
+      rfputc(delay, f);
 #else
       Save1541State(f);
-      fputc(0, f);	// No delay
+      rfputc(0, f);	// No delay
 #endif
       Save1541JobState(f);
    }
-   fclose(f);
+   rfclose(f);
 }
 
 
@@ -586,8 +596,8 @@ void C64::SaveSnapshot(char *filename)
 
 bool C64::LoadSnapshot(char *filename)
 {
-	FILE *f;
-	if ((f = fopen(filename, "rb")))
+	RFILE *f;
+	if ((f = rfopen(filename, "rb")))
    {
       uint8 delay, i;
       char Header[] = SNAPSHOT_HEADER;
@@ -597,7 +607,7 @@ bool C64::LoadSnapshot(char *filename)
          and so forth utterly fail here. */
       while (*b > 32)
       {
-         if ((c = fgetc(f)) != *b++)
+         if ((c = rfgetc(f)) != *b++)
          {
             b = NULL;
             break;
@@ -613,15 +623,15 @@ bool C64::LoadSnapshot(char *filename)
 #endif
 
          while (c != 10)
-            c = fgetc(f);	// Shouldn't be necessary
-         if (fgetc(f) != 0)
+            c = rfgetc(f);	// Shouldn't be necessary
+         if (rfgetc(f) != 0)
          {
-            fclose(f);
+            rfclose(f);
             return false;
          }
-         flags  = fgetc(f);
+         flags  = rfgetc(f);
 #ifndef FRODO_SC
-         vicptr = ftell(f);
+         vicptr = rftell(f);
 #endif
 
          error |= !LoadVICState(f);
@@ -629,7 +639,7 @@ bool C64::LoadSnapshot(char *filename)
          error |= !LoadCIAState(f);
          error |= !LoadCPUState(f);
 
-         delay  = fgetc(f);	// Number of cycles the 6510 is ahead of the previous chips
+         delay  = rfgetc(f);	// Number of cycles the 6510 is ahead of the previous chips
 #ifdef FRODO_SC
          // Make the other chips "catch up" with the 6510
          for (i=0; i<delay; i++)
@@ -643,7 +653,7 @@ bool C64::LoadSnapshot(char *filename)
          {
             Prefs *prefs         = new Prefs(ThePrefs);
             // First switch on emulation
-            error               |= (fread(prefs->DrivePath[0], 256, 1, f) 
+            error               |= (rfread(prefs->DrivePath[0], 256, 1, f) 
                   != 1);
             prefs->Emul1541Proc  = true;
             NewPrefs(prefs);
@@ -653,7 +663,7 @@ bool C64::LoadSnapshot(char *filename)
             // Then read the context
             error               |= !Load1541State(f);
 
-            delay                = fgetc(f);	
+            delay                = rfgetc(f);	
                                  // Number of cycles 
                                  // the 6502 is ahead of the previous chips
 #ifdef FRODO_SC
@@ -679,11 +689,11 @@ bool C64::LoadSnapshot(char *filename)
          }
 
 #ifndef FRODO_SC
-         fseek(f, vicptr, SEEK_SET);
+         rfseek(f, vicptr, SEEK_SET);
          LoadVICState(f);	// Load VIC data twice 
                            // in SL (is REALLY necessary sometimes!)
 #endif
-         fclose(f);
+         rfclose(f);
 
          if (error)
          {
@@ -692,7 +702,7 @@ bool C64::LoadSnapshot(char *filename)
          }
          return true;
       }
-      fclose(f);
+      rfclose(f);
    }
    return false;
 }
@@ -712,7 +722,6 @@ void C64::c64_ctor1(void)
 
 void C64::c64_ctor2(void)
 {
-	gettimeofday(&tv_start, NULL);
 }
 
 

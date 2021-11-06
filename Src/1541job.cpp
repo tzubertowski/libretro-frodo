@@ -45,24 +45,23 @@
 #include "CPU1541.h"
 #include "Prefs.h"
 
+/* Number of tracks/sectors */
+#define NUM_TRACKS  35
+#define NUM_SECTORS 683
 
-// Number of tracks/sectors
-const int NUM_TRACKS = 35;
-const int NUM_SECTORS = 683;
-
-// Size of GCR encoded data
+/* Size of GCR encoded data */
 const int GCR_SECTOR_SIZE = 1+10+9+1+325+8;			// SYNC Header Gap SYNC Data Gap (should be 5 SYNC bytes each)
-const int GCR_TRACK_SIZE = GCR_SECTOR_SIZE * 21;	// Each track in gcr_data has 21 sectors
-const int GCR_DISK_SIZE = GCR_TRACK_SIZE * NUM_TRACKS;
+const int GCR_TRACK_SIZE  = GCR_SECTOR_SIZE * 21;	// Each track in gcr_data has 21 sectors
+const int GCR_DISK_SIZE   = GCR_TRACK_SIZE * NUM_TRACKS;
 
-// Job return codes
-const int RET_OK = 1;				// No error
-const int RET_NOT_FOUND = 2;		// Block not found
-const int RET_NOT_READY = 15;		// Drive not ready
+/* Job return codes */
+#define RET_OK        1  /* No error */
+#define RET_NOT_FOUND 2  /* Block not found */
+#define RET_NOT_READY 15 /* Drive not ready */
 
-
-// Number of sectors of each track
-const int num_sectors[36] = {
+/* Number of sectors of each track */
+const int num_sectors[36] = 
+{
 	0,
 	21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,
 	19,19,19,19,19,19,19,
@@ -71,14 +70,26 @@ const int num_sectors[36] = {
 };
 
 // Sector offset of start of track in .d64 file
-const int sector_offset[36] = {
-	0,
-	0,21,42,63,84,105,126,147,168,189,210,231,252,273,294,315,336,
-	357,376,395,414,433,452,471,
-	490,508,526,544,562,580,
-	598,615,632,649,666
+const int sector_offset[36] = 
+{
+   0,
+   0,21,42,63,84,105,126,147,168,189,210,231,252,273,294,315,336,
+   357,376,395,414,433,452,471,
+   490,508,526,544,562,580,
+   598,615,632,649,666
 };
 
+/* Forward declarations */
+extern "C" {
+RFILE* rfopen(const char *path, const char *mode);
+int64_t rfseek(RFILE* stream, int64_t offset, int origin);
+int64_t rftell(RFILE* stream);
+int rfclose(RFILE* stream);
+int64_t rfread(void* buffer,
+   size_t elem_size, size_t elem_count, RFILE* stream);
+int64_t rfwrite(void const* buffer,
+   size_t elem_size, size_t elem_count, RFILE* stream);
+}
 
 /*
  *  Constructor: Open .d64 file if processor-level 1541
@@ -87,13 +98,13 @@ const int sector_offset[36] = {
 
 Job1541::Job1541(uint8 *ram1541) : ram(ram1541)
 {
-	the_file = NULL;
+	the_file          = NULL;
 
-	gcr_data = gcr_ptr = gcr_track_start = new uint8[GCR_DISK_SIZE];
-	gcr_track_end = gcr_track_start + GCR_TRACK_SIZE;
+	gcr_data          = gcr_ptr = gcr_track_start = new uint8[GCR_DISK_SIZE];
+	gcr_track_end     = gcr_track_start + GCR_TRACK_SIZE;
 	current_halftrack = 2;
 
-	disk_changed = true;
+	disk_changed      = true;
 
 	if (ThePrefs.Emul1541Proc)
 		open_d64_file(ThePrefs.DrivePath[0]);
@@ -111,10 +122,7 @@ Job1541::~Job1541()
 }
 
 
-/*
- *  Preferences may have changed
- */
-
+/* Preferences may have changed */
 void Job1541::NewPrefs(Prefs *prefs)
 {
 	// 1541 emulation turned off?
@@ -126,69 +134,74 @@ void Job1541::NewPrefs(Prefs *prefs)
 		open_d64_file(prefs->DrivePath[0]);
 
 	// .d64 file name changed?
-	else if (strcmp(ThePrefs.DrivePath[0], prefs->DrivePath[0])) {
-		close_d64_file();
-		open_d64_file(prefs->DrivePath[0]);
-		disk_changed = true;
-	}
+	else if (strcmp(ThePrefs.DrivePath[0], prefs->DrivePath[0]))
+   {
+      close_d64_file();
+      open_d64_file(prefs->DrivePath[0]);
+      disk_changed = true;
+   }
 }
 
 
-/*
- *  Open .d64 file
- */
-
+/* Open .d64 file */
 void Job1541::open_d64_file(char *filepath)
 {
 	long size;
 	uint8 magic[4];
 	uint8 bam[256];
 
-	// Clear GCR buffer
+	/* Clear GCR buffer */
 	memset(gcr_data, 0x55, GCR_DISK_SIZE);
 
-	// Try opening the file for reading/writing first, then for reading only
+	/* Try opening the file for reading/writing first, 
+      then for reading only */
 	write_protected = false;
-	the_file = fopen(filepath, "rb+");
-	if (the_file == NULL) {
-		write_protected = true;
-		the_file = fopen(filepath, "rb");
-	}
-	if (the_file != NULL) {
+	the_file        = rfopen(filepath, "rb+");
+	if (!the_file)
+   {
+      write_protected = true;
+      the_file        = rfopen(filepath, "rb");
+   }
+	if (the_file)
+   {
+      // Check length
+      rfseek(the_file, 0, SEEK_END);
+      if ((size = rftell(the_file)) < NUM_SECTORS * 256)
+      {
+         rfclose(the_file);
+         the_file = NULL;
+         return;
+      }
 
-		// Check length
-		fseek(the_file, 0, SEEK_END);
-		if ((size = ftell(the_file)) < NUM_SECTORS * 256) {
-			fclose(the_file);
-			the_file = NULL;
-			return;
-		}
+      // x64 image?
+      rfseek(the_file, 0, SEEK_SET);
+      rfread(&magic, 4, 1, the_file);
+      if (     magic[0] == 0x43 
+            && magic[1] == 0x15 
+            && magic[2] == 0x41 
+            && magic[3] == 0x64)
+         image_header = 64;
+      else
+         image_header = 0;
 
-		// x64 image?
-		fseek(the_file, 0, SEEK_SET);
-		fread(&magic, 4, 1, the_file);
-		if (magic[0] == 0x43 && magic[1] == 0x15 && magic[2] == 0x41 && magic[3] == 0x64)
-			image_header = 64;
-		else
-			image_header = 0;
+      // Preset error info (all sectors no error)
+      memset(error_info, 1, NUM_SECTORS);
 
-		// Preset error info (all sectors no error)
-		memset(error_info, 1, NUM_SECTORS);
+      // Load sector error info from .d64 file, if present
+      if (!image_header && size == NUM_SECTORS * 257)
+      {
+         rfseek(the_file, NUM_SECTORS * 256, SEEK_SET);
+         rfread(&error_info, NUM_SECTORS, 1, the_file);
+      }
 
-		// Load sector error info from .d64 file, if present
-		if (!image_header && size == NUM_SECTORS * 257) {
-			fseek(the_file, NUM_SECTORS * 256, SEEK_SET);
-			fread(&error_info, NUM_SECTORS, 1, the_file);
-		};
+      // Read BAM and get ID
+      read_sector(18, 0, bam);
+      id1 = bam[162];
+      id2 = bam[163];
 
-		// Read BAM and get ID
-		read_sector(18, 0, bam);
-		id1 = bam[162];
-		id2 = bam[163];
-
-		// Create GCR encoded disk data from image
-		disk2gcr();
-	}
+      // Create GCR encoded disk data from image
+      disk2gcr();
+   }
 }
 
 
@@ -198,10 +211,10 @@ void Job1541::open_d64_file(char *filepath)
 
 void Job1541::close_d64_file(void)
 {
-	if (the_file != NULL) {
-		fclose(the_file);
-		the_file = NULL;
-	}
+   if (!the_file)
+      return;
+   rfclose(the_file);
+   the_file = NULL;
 }
 
 
@@ -227,23 +240,24 @@ void Job1541::WriteSector(void)
 
 void Job1541::FormatTrack(void)
 {
-	int track = ram[0x51];
-
-	// Get new ID
+	uint8 buf[256];
+   int sector;
+	int track    = ram[0x51];
+	/* Get new ID */
 	uint8 bufnum = ram[0x3d];
 	id1 = ram[0x12 + bufnum];
 	id2 = ram[0x13 + bufnum];
 
-	// Create empty block
-	uint8 buf[256];
+	/* Create empty block */
 	memset(buf, 1, 256);
 	buf[0] = 0x4b;
 
 	// Write block to all sectors on track
-	for(int sector=0; sector<num_sectors[track]; sector++) {
-		write_sector(track, sector, buf);
-		sector2gcr(track, sector);
-	}
+	for(sector=0; sector<num_sectors[track]; sector++)
+   {
+      write_sector(track, sector, buf);
+      sector2gcr(track, sector);
+   }
 
 	// Clear error info (all sectors no error)
 	if (track == 35)
@@ -265,8 +279,8 @@ bool Job1541::read_sector(int track, int sector, uint8 *buffer)
 	if ((offset = offset_from_ts(track, sector)) < 0)
 		return false;
 
-	fseek(the_file, offset + image_header, SEEK_SET);
-	fread(buffer, 256, 1, the_file);
+	rfseek(the_file, offset + image_header, SEEK_SET);
+	rfread(buffer, 256, 1, the_file);
 	return true;
 }
 
@@ -279,13 +293,12 @@ bool Job1541::read_sector(int track, int sector, uint8 *buffer)
 bool Job1541::write_sector(int track, int sector, uint8 *buffer)
 {
 	int offset;
-
-	// Convert track/sector to byte offset in file
+	/* Convert track/sector to byte offset in file */
 	if ((offset = offset_from_ts(track, sector)) < 0)
 		return false;
 
-	fseek(the_file, offset + image_header, SEEK_SET);
-	fwrite(buffer, 256, 1, the_file);
+	rfseek(the_file, offset + image_header, SEEK_SET);
+	rfwrite(buffer, 256, 1, the_file);
 	return true;
 }
 
@@ -320,9 +333,7 @@ const uint16 gcr_table[16] = {
 
 void Job1541::gcr_conv4(uint8 *from, uint8 *to)
 {
-	uint16 g;
-
-	g = (gcr_table[*from >> 4] << 5) | gcr_table[*from & 15];
+	uint16 g = (gcr_table[*from >> 4] << 5) | gcr_table[*from & 15];
 	*to++ = g >> 2;
 	*to = (g << 6) & 0xc0;
 	from++;
@@ -349,9 +360,11 @@ void Job1541::gcr_conv4(uint8 *from, uint8 *to)
 
 void Job1541::sector2gcr(int track, int sector)
 {
+   int i;
 	uint8 block[256];
 	uint8 buf[4];
-	uint8 *p = gcr_data + (track-1) * GCR_TRACK_SIZE + sector * GCR_SECTOR_SIZE;
+	uint8 *p = gcr_data + (track-1) * GCR_TRACK_SIZE 
+      + sector * GCR_SECTOR_SIZE;
 
 	read_sector(track, sector, block);
 
@@ -380,14 +393,15 @@ void Job1541::sector2gcr(int track, int sector)
 	sum ^= buf[3] = block[2];
 	gcr_conv4(buf, p);
 	p += 5;
-	for (int i=3; i<255; i+=4) {
-		sum ^= buf[0] = block[i];
-		sum ^= buf[1] = block[i+1];
-		sum ^= buf[2] = block[i+2];
-		sum ^= buf[3] = block[i+3];
-		gcr_conv4(buf, p);
-		p += 5;
-	}
+	for (i = 3; i < 255; i += 4)
+   {
+      sum ^= buf[0] = block[i];
+      sum ^= buf[1] = block[i+1];
+      sum ^= buf[2] = block[i+2];
+      sum ^= buf[3] = block[i+3];
+      gcr_conv4(buf, p);
+      p += 5;
+   }
 	sum ^= buf[0] = block[255];
 	buf[1] = sum;							// Checksum
 	buf[2] = 0;
@@ -399,64 +413,55 @@ void Job1541::sector2gcr(int track, int sector)
 
 void Job1541::disk2gcr(void)
 {
+   int track, sector;
 	// Convert all tracks and sectors
-	for (int track=1; track<=NUM_TRACKS; track++)
-		for(int sector=0; sector<num_sectors[track]; sector++)
+	for (track = 1; track <= NUM_TRACKS; track++)
+		for(sector = 0; sector < num_sectors[track]; sector++)
 			sector2gcr(track, sector);
 }
 
 
-/*
- *  Move R/W head out (lower track numbers)
- */
-
+/* Move R/W head out (lower track numbers) */
 void Job1541::MoveHeadOut(void)
 {
 	if (current_halftrack == 2)
 		return;
 	current_halftrack--;
-	gcr_ptr = gcr_track_start = gcr_data + ((current_halftrack >> 1) - 1) * GCR_TRACK_SIZE;
+	gcr_ptr       = gcr_track_start = gcr_data + ((current_halftrack >> 1) - 1) * GCR_TRACK_SIZE;
 	gcr_track_end = gcr_track_start + num_sectors[current_halftrack >> 1] * GCR_SECTOR_SIZE;
 }
 
 
-/*
- *  Move R/W head in (higher track numbers)
- */
-
+/* Move R/W head in (higher track numbers) */
 void Job1541::MoveHeadIn(void)
 {
 	if (current_halftrack == NUM_TRACKS*2)
 		return;
 	current_halftrack++;
-	gcr_ptr = gcr_track_start = gcr_data + ((current_halftrack >> 1) - 1) * GCR_TRACK_SIZE;
+	gcr_ptr       = gcr_track_start = gcr_data + ((current_halftrack >> 1) - 1) * GCR_TRACK_SIZE;
 	gcr_track_end = gcr_track_start + num_sectors[current_halftrack >> 1] * GCR_SECTOR_SIZE;
 }
 
 
-/*
- *  Get state
- */
-
+/*  Get state */
 void Job1541::GetState(Job1541State *state)
 {
 	state->current_halftrack = current_halftrack;
-	state->gcr_ptr = gcr_ptr - gcr_data;
-	state->write_protected = write_protected;
-	state->disk_changed = disk_changed;
+	state->gcr_ptr           = gcr_ptr - gcr_data;
+	state->write_protected   = write_protected;
+	state->disk_changed      = disk_changed;
 }
 
 
-/*
- *  Set state
- */
-
+/*  Set state */
 void Job1541::SetState(Job1541State *state)
 {
 	current_halftrack = state->current_halftrack;
-	gcr_ptr = gcr_data + state->gcr_ptr;
-	gcr_track_start = gcr_data + ((current_halftrack >> 1) - 1) * GCR_TRACK_SIZE;
-	gcr_track_end = gcr_track_start + num_sectors[current_halftrack >> 1] * GCR_SECTOR_SIZE;
-	write_protected = state->write_protected;
-	disk_changed = state->disk_changed;
+	gcr_ptr           = gcr_data + state->gcr_ptr;
+	gcr_track_start   = gcr_data 
+      + ((current_halftrack >> 1) - 1) * GCR_TRACK_SIZE;
+	gcr_track_end     = gcr_track_start 
+      + num_sectors[current_halftrack >> 1] * GCR_SECTOR_SIZE;
+	write_protected   = state->write_protected;
+	disk_changed      = state->disk_changed;
 }

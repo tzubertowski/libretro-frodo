@@ -26,6 +26,14 @@
 #include <unistd.h>   /* getcwd */
 #endif
 #include <sys/stat.h>
+#include <file/file_path.h>
+#include <streams/file_stream.h>
+#include "Version.h"
+
+#include "core-log.h"
+#ifndef NO_LIBCO
+#include "libco.h"
+#endif
 
 #include "sysdeps.h"
 
@@ -34,12 +42,28 @@
 #include "Display.h"
 #include "Prefs.h"
 
-// Global variables
-C64 *TheC64 = NULL;		// Global C64 object
-char AppDirPath[1024];	// Path of application directory
+/* Forward declarations */
+int init_graphics(void);
 
+extern "C" {
+RFILE* rfopen(const char *path, const char *mode);
+int64_t rftell(RFILE* stream);
+int rfclose(RFILE* stream);
+int64_t rfread(void* buffer,
+   size_t elem_size, size_t elem_count, RFILE* stream);
+}
+#ifndef NO_LIBCO
+extern cothread_t mainThread;
+extern cothread_t emuThread;
+#endif
 
-// ROM file names
+/* Global variables */
+C64 *TheC64 = NULL;		/* Global C64 object */
+char AppDirPath[1024];	/* Path of application directory */
+char Frodo::device_path[256] = "";
+Frodo *the_app;
+
+/* ROM file names */
 #ifndef DATADIR
 #define DATADIR
 #endif
@@ -49,25 +73,22 @@ char AppDirPath[1024];	// Path of application directory
 #define CHAR_ROM_FILE DATADIR "Char ROM"
 #define DRIVE_ROM_FILE DATADIR "1541 ROM"
 
-
-// Builtin ROMs
+/* Builtin ROMs */
 #include "Basic_ROM.h"
 #include "Kernal_ROM.h"
 #include "Char_ROM.h"
 #include "1541_ROM.h"
 
-/*
- *  Load C64 ROM files
- */
+/* Load C64 ROM files */
 
 bool Frodo::load_rom(const char *which, const char *path,
       uint8 *where, size_t size, const uint8 *builtin)
 {
-   FILE *f = fopen(path, "rb");
+   RFILE *f = rfopen(path, "rb");
    if (f)
    {
-      size_t actual = fread(where, 1, size, f);
-      fclose(f);
+      size_t actual = (size_t)rfread(where, 1, size, f);
+      rfclose(f);
       if (actual == size)
          return true;
    }
@@ -93,26 +114,6 @@ void Frodo::load_rom_files()
       memcpy(TheC64->ROM1541, builtin_drive_rom, DRIVE_ROM_SIZE);
 }
 
-/*
- *  main_x.i - Main program, X specific stuff
- *
- *  Frodo (C) 1994-1997,2002 Christian Bauer
- */
-
-#include "Version.h"
-
-#include "core-log.h"
-#ifndef NO_LIBCO
-#include "libco.h"
-extern cothread_t mainThread;
-extern cothread_t emuThread;
-#endif
-
-extern int init_graphics(void);
-
-Frodo *the_app;
-
-char Frodo::device_path[256] = "";
 
 /*
  *  Create application object and start it
@@ -154,20 +155,14 @@ Frodo::Frodo()
 }
 
 
-/*
- *  Process command line arguments
- */
-
+/* Process command line arguments */
 void Frodo::ArgvReceived(int argc, char **argv)
 {
 	if (argc == 2)
 		strncpy(device_path, argv[1], 255);
 }
 
-/*
- *  Arguments processed, run emulation
- */
-
+/* Arguments processed, run emulation */
 void Frodo::ReadyToRun(void)
 {
 #if defined (__vita__) || defined(__psp__)
@@ -194,12 +189,9 @@ void Frodo::ReadyToRun(void)
 #endif
 }
 
-/*
- *  Determine whether path name refers to a directory
- */
+/* Determine whether path name refers to a directory */
 
 bool IsDirectory(const char *path)
 {
-	struct stat st;
-	return stat(path, &st) == 0 && S_ISDIR(st.st_mode);
+   return path_is_directory(path);
 }
