@@ -37,16 +37,16 @@
 #include "graph.h"
 #include "vkbd_def.h"
 
-// LED states
+/* LED states */
 enum
 {
-	LED_OFF,		   // LED off
-	LED_ON,			// LED on (green)
-	LED_ERROR_ON,	// LED blinking (red), currently on
-	LED_ERROR_OFF	// LED blinking, currently off
+	LED_OFF,		   /* LED off */
+	LED_ON,			/* LED on (green) */
+	LED_ERROR_ON,	/* LED blinking (red), currently on */
+	LED_ERROR_OFF	/* LED blinking, currently off */
 };
 
-// Colors for speedometer/drive LEDs
+/* Colors for speedometer/drive LEDs */
 enum
 {
    black        = 0,
@@ -653,7 +653,7 @@ static void translate_key(int key, bool key_up,
    }
 }
 
-void validkey(int c64_key,int key_up,uint8 *key_matrix,
+static void validkey(int c64_key,int key_up,uint8 *key_matrix,
       uint8 *rev_matrix, uint8 *joystick)
 {
 	// Handle other keys
