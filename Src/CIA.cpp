@@ -64,26 +64,27 @@ MOS6526_2::MOS6526_2(MOS6510 *CPU, MOS6569 *VIC, MOS6502_1541 *CPU1541) : MOS652
 
 void MOS6526::Reset(void)
 {
-	pra = prb = ddra = ddrb = 0;
+	pra         = prb = ddra = ddrb = 0;
 
-	ta = tb = 0xffff;
-	latcha = latchb = 1;
+	ta          = tb = 0xffff;
+	latcha      = latchb = 1;
 
-	tod_10ths = tod_sec = tod_min = tod_hr = 0;
-	alm_10ths = alm_sec = alm_min = alm_hr = 0;
+	tod_10ths   = tod_sec = tod_min = tod_hr = 0;
+	alm_10ths   = alm_sec = alm_min = alm_hr = 0;
 
-	sdr = icr = cra = crb = int_mask = 0;
+	sdr         = icr = cra = crb = int_mask = 0;
 
-	tod_halt = ta_cnt_phi2 = tb_cnt_phi2 = tb_cnt_ta = false;
+	tod_halt    = ta_cnt_phi2 = tb_cnt_phi2 = tb_cnt_ta = false;
 	tod_divider = 0;
 }
 
 void MOS6526_1::Reset(void)
 {
+   int i;
 	MOS6526::Reset();
 
 	// Clear keyboard matrix and joystick states
-	for (int i=0; i<8; i++)
+	for (i=0; i<8; i++)
 		KeyMatrix[i] = RevMatrix[i] = 0xff;
 
 	Joystick1 = Joystick2 = 0xff;
@@ -108,33 +109,33 @@ void MOS6526_2::Reset(void)
 
 void MOS6526::GetState(MOS6526State *cs)
 {
-	cs->pra = pra;
-	cs->prb = prb;
-	cs->ddra = ddra;
-	cs->ddrb = ddrb;
+	cs->pra       = pra;
+	cs->prb       = prb;
+	cs->ddra      = ddra;
+	cs->ddrb      = ddrb;
 
-	cs->ta_lo = ta & 0xff;
-	cs->ta_hi = ta >> 8;
-	cs->tb_lo = tb & 0xff;
-	cs->tb_hi = tb >> 8;
-	cs->latcha = latcha;
-	cs->latchb = latchb;
-	cs->cra = cra;
-	cs->crb = crb;
+	cs->ta_lo     = ta & 0xff;
+	cs->ta_hi     = ta >> 8;
+	cs->tb_lo     = tb & 0xff;
+	cs->tb_hi     = tb >> 8;
+	cs->latcha    = latcha;
+	cs->latchb    = latchb;
+	cs->cra       = cra;
+	cs->crb       = crb;
 
 	cs->tod_10ths = tod_10ths;
-	cs->tod_sec = tod_sec;
-	cs->tod_min = tod_min;
-	cs->tod_hr = tod_hr;
+	cs->tod_sec   = tod_sec;
+	cs->tod_min   = tod_min;
+	cs->tod_hr    = tod_hr;
 	cs->alm_10ths = alm_10ths;
-	cs->alm_sec = alm_sec;
-	cs->alm_min = alm_min;
-	cs->alm_hr = alm_hr;
+	cs->alm_sec   = alm_sec;
+	cs->alm_min   = alm_min;
+	cs->alm_hr    = alm_hr;
 
-	cs->sdr = sdr;
+	cs->sdr       = sdr;
 
-	cs->int_data = icr;
-	cs->int_mask = int_mask;
+	cs->int_data  = icr;
+	cs->int_mask  = int_mask;
 }
 
 
@@ -484,61 +485,61 @@ void MOS6526::CountTOD(void)
 	// Decrement frequency divider
 	if (tod_divider)
 		tod_divider--;
-	else {
+	else
+   {
+      // Reload divider according to 50/60 Hz flag
+      if (cra & 0x80)
+         tod_divider = 4;
+      else
+         tod_divider = 5;
 
-		// Reload divider according to 50/60 Hz flag
-		if (cra & 0x80)
-			tod_divider = 4;
-		else
-			tod_divider = 5;
+      // 1/10 seconds
+      tod_10ths++;
+      if (tod_10ths > 9) {
+         tod_10ths = 0;
 
-		// 1/10 seconds
-		tod_10ths++;
-		if (tod_10ths > 9) {
-			tod_10ths = 0;
+         // Seconds
+         lo = (tod_sec & 0x0f) + 1;
+         hi = tod_sec >> 4;
+         if (lo > 9) {
+            lo = 0;
+            hi++;
+         }
+         if (hi > 5) {
+            tod_sec = 0;
 
-			// Seconds
-			lo = (tod_sec & 0x0f) + 1;
-			hi = tod_sec >> 4;
-			if (lo > 9) {
-				lo = 0;
-				hi++;
-			}
-			if (hi > 5) {
-				tod_sec = 0;
+            // Minutes
+            lo = (tod_min & 0x0f) + 1;
+            hi = tod_min >> 4;
+            if (lo > 9) {
+               lo = 0;
+               hi++;
+            }
+            if (hi > 5) {
+               tod_min = 0;
 
-				// Minutes
-				lo = (tod_min & 0x0f) + 1;
-				hi = tod_min >> 4;
-				if (lo > 9) {
-					lo = 0;
-					hi++;
-				}
-				if (hi > 5) {
-					tod_min = 0;
+               // Hours
+               lo = (tod_hr & 0x0f) + 1;
+               hi = (tod_hr >> 4) & 1;
+               tod_hr &= 0x80;		// Keep AM/PM flag
+               if (lo > 9) {
+                  lo = 0;
+                  hi++;
+               }
+               tod_hr |= (hi << 4) | lo;
+               if ((tod_hr & 0x1f) > 0x11)
+                  tod_hr = tod_hr & 0x80 ^ 0x80;
+            } else
+               tod_min = (hi << 4) | lo;
+         } else
+            tod_sec = (hi << 4) | lo;
+      }
 
-					// Hours
-					lo = (tod_hr & 0x0f) + 1;
-					hi = (tod_hr >> 4) & 1;
-					tod_hr &= 0x80;		// Keep AM/PM flag
-					if (lo > 9) {
-						lo = 0;
-						hi++;
-					}
-					tod_hr |= (hi << 4) | lo;
-					if ((tod_hr & 0x1f) > 0x11)
-						tod_hr = tod_hr & 0x80 ^ 0x80;
-				} else
-					tod_min = (hi << 4) | lo;
-			} else
-				tod_sec = (hi << 4) | lo;
-		}
-
-		// Alarm time reached? Trigger interrupt if enabled
-		if (tod_10ths == alm_10ths && tod_sec == alm_sec &&
-			tod_min == alm_min && tod_hr == alm_hr)
-			TriggerInterrupt(4);
-	}
+      // Alarm time reached? Trigger interrupt if enabled
+      if (tod_10ths == alm_10ths && tod_sec == alm_sec &&
+            tod_min == alm_min && tod_hr == alm_hr)
+         TriggerInterrupt(4);
+   }
 }
 
 
@@ -549,10 +550,11 @@ void MOS6526::CountTOD(void)
 void MOS6526_1::TriggerInterrupt(int bit)
 {
 	icr |= bit;
-	if (int_mask & bit) {
-		icr |= 0x80;
-		the_cpu->TriggerCIAIRQ();
-	}
+	if (int_mask & bit)
+   {
+      icr |= 0x80;
+      the_cpu->TriggerCIAIRQ();
+   }
 }
 
 
@@ -563,8 +565,9 @@ void MOS6526_1::TriggerInterrupt(int bit)
 void MOS6526_2::TriggerInterrupt(int bit)
 {
 	icr |= bit;
-	if (int_mask & bit) {
-		icr |= 0x80;
-		the_cpu->TriggerNMI();
-	}
+	if (int_mask & bit)
+   {
+      icr |= 0x80;
+      the_cpu->TriggerNMI();
+   }
 }

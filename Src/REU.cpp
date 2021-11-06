@@ -209,13 +209,12 @@ void REU::WriteRegister(uint16 adr, uint8 byte)
 
 void REU::FF00Trigger(void)
 {
-	if (!ex_ram)
-		return;
+   if (!ex_ram)
+      return;
 
-	if ((regs[1] & 0x90) == 0x80)
-		execute_dma();
+   if ((regs[1] & 0x90) == 0x80)
+      execute_dma();
 }
-
 
 /*
  *  Execute REU DMA transfer
@@ -223,21 +222,21 @@ void REU::FF00Trigger(void)
 
 void REU::execute_dma(void)
 {
-	// Get C64 and REU transfer base addresses
-	uint16 c64_adr = regs[2] | (regs[3] << 8);
-	uint32 reu_adr = regs[4] | (regs[5] << 8) | (regs[6] << 16);
+   // Get C64 and REU transfer base addresses
+   uint16 c64_adr = regs[2] | (regs[3] << 8);
+   uint32 reu_adr = regs[4] | (regs[5] << 8) | (regs[6] << 16);
 
-	// Calculate transfer length
-	int length     = regs[7] | (regs[8] << 8);
-	if (!length)
-		length      = 0x10000;
+   // Calculate transfer length
+   int length     = regs[7] | (regs[8] << 8);
+   if (!length)
+      length      = 0x10000;
 
-	// Calculate address increments
-	uint32 c64_inc = (regs[10] & 0x80) ? 0 : 1;
-	uint32 reu_inc = (regs[10] & 0x40) ? 0 : 1;
+   // Calculate address increments
+   uint32 c64_inc = (regs[10] & 0x80) ? 0 : 1;
+   uint32 reu_inc = (regs[10] & 0x40) ? 0 : 1;
 
-	// Do transfer
-	switch (regs[1] & 3)
+   // Do transfer
+   switch (regs[1] & 3)
    {
       case 0:		// C64 -> REU
          for (; length--; c64_adr+=c64_inc, reu_adr+=reu_inc)
@@ -266,8 +265,8 @@ void REU::execute_dma(void)
          break;
    }
 
-	// Update address and length registers if autoload is off
-	if (!(regs[1] & 0x20))
+   // Update address and length registers if autoload is off
+   if (!(regs[1] & 0x20))
    {
       regs[2] = c64_adr;
       regs[3] = c64_adr >> 8;
@@ -278,9 +277,9 @@ void REU::execute_dma(void)
       regs[8] = (length + 1) >> 8;
    }
 
-	// Set complete bit in status register
-	regs[0] |= 0x40;
+   // Set complete bit in status register
+   regs[0] |= 0x40;
 
-	// Clear execute bit in command register
-	regs[1] &= 0x7f;
+   // Clear execute bit in command register
+   regs[1] &= 0x7f;
 }
