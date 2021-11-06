@@ -216,8 +216,16 @@ else ifeq ($(platform), wii)
    CXX = $(DEVKITPPC)/bin/powerpc-eabi-g++$(EXE_EXT)
    AR = $(DEVKITPPC)/bin/powerpc-eabi-ar$(EXE_EXT)
    COMMONFLAGS += -DGEKKO -mrvl -mcpu=750 -meabi -mhard-float -D__POWERPC__
-	COMMONFLAGS += -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0 -DHAVE_SIGACTION 
-	STATIC_LINKING = 1
+   COMMONFLAGS += -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0 -DHAVE_SIGACTION 
+   STATIC_LINKING = 1
+else ifeq ($(platform), wiiu)
+   TARGET := $(TARGET_NAME)_libretro_wiiu.a
+   CC = $(DEVKITPPC)/bin/powerpc-eabi-gcc$(EXE_EXT)
+   CXX = $(DEVKITPPC)/bin/powerpc-eabi-g++$(EXE_EXT)
+   AR = $(DEVKITPPC)/bin/powerpc-eabi-ar$(EXE_EXT)
+   COMMONFLAGS += -DGEKKO -DWIIU -mrvl -mcpu=750 -meabi -mhard-float -D__POWERPC__
+   COMMONFLAGS += -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0 -DHAVE_SIGACTION 
+   STATIC_LINKING = 1
 else
    CXXFLAGS += -mno-ms-bitfields  -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0
    CFLAGS += -mno-ms-bitfields  -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0
