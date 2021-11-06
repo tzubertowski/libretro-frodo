@@ -502,7 +502,7 @@ void File_MakeValidPathName(char *pPathName)
 	do
 	{
 		/* Check for a valid path */
-		if (stat(pPathName, &dirstat) == 0 && S_ISDIR(dirstat.st_mode))
+		if (path_is_directory(pPathName))
 			break;
 
 		pLastSlash = strrchr(pPathName, PATHSEP);

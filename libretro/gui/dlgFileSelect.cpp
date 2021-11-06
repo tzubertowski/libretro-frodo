@@ -20,6 +20,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <file/file_path.h>
+
 #include "sdlgui.h"
 #include "file.h"
 #include "paths.h"
@@ -154,7 +156,7 @@ static int DlgFileSelect_RefreshEntries(struct dirent **files, char *path, bool 
 			}
 			else
 			{
-				if( stat(tempstr, &filestat)==0 && S_ISDIR(filestat.st_mode) )
+				if( path_is_directory(tempstr))
 					dlgfilenames[i][0] = SGFOLDER;    /* Mark folders */
 				if (ZIP_FileNameIsZIP(tempstr) && browsingzip == false)
 					dlgfilenames[i][0] = SGFOLDER;    /* Mark .ZIP archives as folders */

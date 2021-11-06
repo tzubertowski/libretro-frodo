@@ -23,7 +23,6 @@
 #define _SYSDEPS_H
 
 #include <stdlib.h>
-#include <assert.h>
 #include <boolean.h>
 
 #include "types.h"
@@ -36,10 +35,9 @@
 #endif
 
 #ifdef _WIN32
-#if !defined(M_PI)
+#ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 #define LITTLE_ENDIAN_UNALIGNED 1
 #endif
 

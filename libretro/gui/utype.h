@@ -23,9 +23,6 @@
 #include <cell.h>
 #include <string.h>
 #define	getcwd(a,b)	"/"
-#define S_ISDIR(x) (x & CELL_FS_S_IFDIR)
-#define F_OK 0
-#define ftello ftell
 #define chdir(a) 0
 #define getenv(a)	"/dev_hdd0/HOMEBREW/ST/"
 #define tmpfile() NULL
