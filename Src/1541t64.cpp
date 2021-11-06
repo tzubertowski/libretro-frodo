@@ -211,13 +211,28 @@ FILE* tmpfile2(void)
 
 #endif
 
-// Prototypes
+/* Forward declarations */
+extern "C" {
+RFILE* rfopen(const char *path, const char *mode);
+int64_t rfseek(RFILE* stream, int64_t offset, int origin);
+int64_t rftell(RFILE* stream);
+int rfclose(RFILE* stream);
+int64_t rfread(void* buffer,
+   size_t elem_size, size_t elem_count, RFILE* stream);
+int64_t rfwrite(void const* buffer,
+   size_t elem_size, size_t elem_count, RFILE* stream);
+int rfeof(RFILE* stream);
+int rfscanf(RFILE * stream, const char * format, ...);
+int rfgetc(RFILE* stream);
+}
+
+/* Prototypes */
 static bool is_t64_header(const uint8 *header);
 static bool is_lynx_header(const uint8 *header);
 static bool is_p00_header(const uint8 *header);
-static bool parse_t64_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title);
-static bool parse_lynx_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title);
-static bool parse_p00_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title);
+static bool parse_t64_file(RFILE *f, std::vector<c64_dir_entry> &vec, char *dir_title);
+static bool parse_lynx_file(RFILE *f, std::vector<c64_dir_entry> &vec, char *dir_title);
+static bool parse_p00_file(RFILE *f, std::vector<c64_dir_entry> &vec, char *dir_title);
 
 /*
  *  Constructor: Prepare emulation
@@ -242,7 +257,7 @@ ArchDrive::~ArchDrive()
 	if (the_file)
    {
       close_all_channels();
-      fclose(the_file);
+      rfclose(the_file);
    }
 	Ready = false;
 }
@@ -251,18 +266,19 @@ ArchDrive::~ArchDrive()
 /* Open the archive file */
 bool ArchDrive::change_arch(const char *path)
 {
-	FILE *new_file;
+   RFILE *new_file;
+   /* Open new archive file */
+   if ((new_file = rfopen(path, "rb")))
+   {
+      uint8 header[64];
+      bool parsed_ok = false;
 
-	// Open new archive file
-	if ((new_file = fopen(path, "rb")) != NULL) {
+      file_info.clear();
 
-		file_info.clear();
+      // Read header, determine archive type and parse archive contents
+      rfread(header, 1, 64, new_file);
 
-		// Read header, determine archive type and parse archive contents
-		uint8 header[64];
-		fread(header, 1, 64, new_file);
-		bool parsed_ok = false;
-		if (is_t64_header(header))
+      if (is_t64_header(header))
       {
          archive_type = TYPE_T64;
          parsed_ok    = parse_t64_file(new_file, file_info, dir_title);
@@ -278,29 +294,29 @@ bool ArchDrive::change_arch(const char *path)
          parsed_ok    = parse_p00_file(new_file, file_info, dir_title);
       }
 
-		if (!parsed_ok)
+      if (!parsed_ok)
       {
-         fclose(new_file);
+         rfclose(new_file);
          if (the_file)
          {
             close_all_channels();
-            fclose(the_file);
+            rfclose(the_file);
             the_file = NULL;
          }
          return false;
       }
 
-		// Close old archive if open, and set new file
-		if (the_file)
+      // Close old archive if open, and set new file
+      if (the_file)
       {
          close_all_channels();
-         fclose(the_file);
+         rfclose(the_file);
          the_file = NULL;
       }
-		the_file = new_file;
-		return true;
-	}
-	return false;
+      the_file = new_file;
+      return true;
+   }
+   return false;
 }
 
 
@@ -352,63 +368,71 @@ uint8 ArchDrive::open_file(int channel, const uint8 *name, int name_len)
 	int mode = FMODE_READ;
 	int type = FTYPE_DEL;
 	int rec_len = 0;
-	parse_file_name(name, name_len, plain_name, plain_name_len, mode, type, rec_len);
+	parse_file_name(name, name_len, plain_name, plain_name_len,
+         mode, type, rec_len);
 
 	// Channel 0 is READ, channel 1 is WRITE
-	if (channel == 0 || channel == 1) {
-		mode = channel ? FMODE_WRITE : FMODE_READ;
-		if (type == FTYPE_DEL)
-			type = FTYPE_PRG;
-	}
+	if (channel == 0 || channel == 1)
+   {
+      mode = channel ? FMODE_WRITE : FMODE_READ;
+      if (type == FTYPE_DEL)
+         type = FTYPE_PRG;
+   }
 
 	writing = (mode == FMODE_WRITE || mode == FMODE_APPEND);
 
 	// Wildcards are only allowed on reading
-	if (writing && (strchr((const char *)plain_name, '*') || strchr((const char *)plain_name, '?'))) {
-		set_error(ERR_SYNTAX33);
-		return ST_OK;
-	}
+	if (writing && (strchr((const char *)plain_name, '*') || strchr((const char *)plain_name, '?')))
+   {
+      set_error(ERR_SYNTAX33);
+      return ST_OK;
+   }
 
 	// Allow only read accesses
-	if (writing) {
-		set_error(ERR_WRITEPROTECT);
-		return ST_OK;
-	}
+	if (writing)
+   {
+      set_error(ERR_WRITEPROTECT);
+      return ST_OK;
+   }
 
 	// Relative files are not supported
-	if (type == FTYPE_REL) {
-		set_error(ERR_UNIMPLEMENTED);
-		return ST_OK;
-	}
+	if (type == FTYPE_REL)
+   {
+      set_error(ERR_UNIMPLEMENTED);
+      return ST_OK;
+   }
 
 	// Find file
 	int num;
-	if (find_first_file(plain_name, plain_name_len, num)) {
-
+	if (find_first_file(plain_name, plain_name_len, num))
+   {
 #if defined(ANDROID) || defined(__ANDROID__)
-		if ((file[channel] = tmpfile2()) != NULL) {
+      if ((file[channel] = tmpfile2()))
 #else
-		// Open temporary file
-		if ((file[channel] = tmpfile()) != NULL) {
+         // Open temporary file
+         if ((file[channel] = tmpfile()))
 #endif
-			// Write load address (.t64 only)
-			if (archive_type == TYPE_T64) {
-				fwrite(&file_info[num].sa_lo, 1, 1, file[channel]);
-				fwrite(&file_info[num].sa_hi, 1, 1, file[channel]);
-			}
+         {
+            // Write load address (.t64 only)
+            if (archive_type == TYPE_T64)
+            {
+               fwrite(&file_info[num].sa_lo, 1, 1, file[channel]);
+               fwrite(&file_info[num].sa_hi, 1, 1, file[channel]);
+            }
 
-			// Copy file contents from archive file to temp file
-			uint8 *buf = new uint8[file_info[num].size];
-			fseek(the_file, file_info[num].offset, SEEK_SET);
-			fread(buf, file_info[num].size, 1, the_file);
-			fwrite(buf, file_info[num].size, 1, file[channel]);
-			rewind(file[channel]);
-			delete[] buf;
+            // Copy file contents from archive file to temp file
+            uint8 *buf = new uint8[file_info[num].size];
+            rfseek(the_file, file_info[num].offset, SEEK_SET);
+            rfread(buf, file_info[num].size, 1, the_file);
+            fwrite(buf, file_info[num].size, 1, file[channel]);
+            rewind(file[channel]);
+            delete[] buf;
 
-			if (mode == FMODE_READ)	// Read and buffer first byte
-				read_char[channel] = getc(file[channel]);
-		}
-	} else
+            if (mode == FMODE_READ)	// Read and buffer first byte
+               read_char[channel] = getc(file[channel]);
+         }
+   }
+   else
 		set_error(ERR_FILENOTFOUND);
 
 	return ST_OK;
@@ -747,13 +771,15 @@ bool IsArchFile(const char *path, const uint8 *header, long size)
  *  returns false on error
  */
 
-static bool parse_t64_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title)
+static bool parse_t64_file(RFILE *f, std::vector<c64_dir_entry> &vec, char *dir_title)
 {
-	// Read header and get maximum number of files contained
-	fseek(f, 32, SEEK_SET);
 	uint8 buf[32];
-	fread(&buf, 32, 1, f);
-	int max = (buf[3] << 8) | buf[2];
+   int max, i;
+	int num_files = 0;
+	// Read header and get maximum number of files contained
+	rfseek(f, 32, SEEK_SET);
+	rfread(&buf, 32, 1, f);
+	max = (buf[3] << 8) | buf[2];
 	if (max == 0)
 		max = 1;
 
@@ -761,115 +787,127 @@ static bool parse_t64_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_t
 
 	// Allocate buffer for file records and read them
 	uint8 *buf2 = new uint8[max * 32];
-	fread(buf2, 32, max, f);
+	rfread(buf2, 32, max, f);
 
 	// Determine number of files contained
-	int num_files = 0;
-	for (int i=0; i<max; i++)
-		if (buf2[i*32] == 1)
-			num_files++;
+	for (i = 0; i < max; i++)
+   {
+      if (buf2[i*32] == 1)
+         num_files++;
+   }
 
-	if (!num_files) {
-		delete[] buf2;
-		return false;
-	}
+	if (!num_files)
+   {
+      delete[] buf2;
+      return false;
+   }
 
 	// Construct file information array
 	vec.reserve(num_files);
 	uint8 *b = buf2;
-	for (int i=0; i<max; i++, b+=32) {
-		if (b[0] == 1) {
+	for (int i=0; i<max; i++, b+=32)
+   {
+      if (b[0] == 1)
+      {
+         // Convert file name (strip trailing spaces)
+         uint8 name_buf[17];
+         memcpy(name_buf, b + 16, 16);
+         name_buf[16] = 0x20;
+         uint8 *p = name_buf + 16;
+         while (*p-- == 0x20) ;
+         p[2] = 0;
 
-			// Convert file name (strip trailing spaces)
-			uint8 name_buf[17];
-			memcpy(name_buf, b + 16, 16);
-			name_buf[16] = 0x20;
-			uint8 *p = name_buf + 16;
-			while (*p-- == 0x20) ;
-			p[2] = 0;
+         // Find file size and offset
+         size_t size = ((b[5] << 8) | b[4]) - ((b[3] << 8) | b[2]);
+         off_t offset = (b[11] << 24) | (b[10] << 16) | (b[9] << 8) | b[8];
 
-			// Find file size and offset
-			size_t size = ((b[5] << 8) | b[4]) - ((b[3] << 8) | b[2]);
-			off_t offset = (b[11] << 24) | (b[10] << 16) | (b[9] << 8) | b[8];
-
-			// Add entry
-			vec.push_back(c64_dir_entry(name_buf, FTYPE_PRG, false, false, size, offset, b[2], b[3]));
-		}
-	}
+         // Add entry
+         vec.push_back(c64_dir_entry(name_buf, FTYPE_PRG, false, false, size, offset, b[2], b[3]));
+      }
+   }
 
 	delete[] buf2;
 	return true;
 }
 
-static bool parse_lynx_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title)
+static bool parse_lynx_file(RFILE *f, std::vector<c64_dir_entry> &vec, char *dir_title)
 {
+	int dir_blocks;
+	int num_files;
 	// Dummy directory title
 	strcpy(dir_title, "LYNX ARCHIVE    ");
 
 	// Read header and get number of directory blocks and files contained
-	fseek(f, 0x60, SEEK_SET);
-	int dir_blocks;
-	fscanf(f, "%d", &dir_blocks);
-	while (getc(f) != 0x0d)
-		if (feof(f))
+	rfseek(f, 0x60, SEEK_SET);
+	rfscanf(f, "%d", &dir_blocks);
+	while (rfgetc(f) != 0x0d)
+		if (rfeof(f))
 			return false;
-	int num_files;
-	fscanf(f, "%d\x0d", &num_files);
+	rfscanf(f, "%d\x0d", &num_files);
 
 	// Construct file information array
 	vec.reserve(num_files);
 	int cur_offset = dir_blocks * 254;
-	for (int i=0; i<num_files; i++) {
+	for (int i=0; i<num_files; i++)
+   {
+      uint8 *p;
+      uint8 sa_lo, sa_hi;
+      uint8 name_buf[17];
+      int num_blocks, last_block;
+      char type_char;
+      size_t size;
+      int type;
+      int64_t here;
 
-		// Read and convert file name (strip trailing shift-spaces)
-		uint8 name_buf[17];
-		fread(name_buf, 16, 1, f);
-		name_buf[16] = 0xa0;
-		uint8 *p = name_buf + 16;
-		while (*p-- == 0xa0) ;
-		p[2] = 0;
+      // Read and convert file name (strip trailing shift-spaces)
+      rfread(name_buf, 16, 1, f);
+      name_buf[16] = 0xa0;
+      p            = name_buf + 16;
+      while (*p-- == 0xa0) ;
+      p[2]         = 0;
 
-		// Read file length and type
-		int num_blocks, last_block;
-		char type_char;
-		fscanf(f, "\x0d%d\x0d%c\x0d%d\x0d", &num_blocks, &type_char, &last_block);
-		size_t size = (num_blocks - 1) * 254 + last_block - 1;
+      // Read file length and type
+      rfscanf(f, "\x0d%d\x0d%c\x0d%d\x0d", &num_blocks, &type_char, &last_block);
+      size = (num_blocks - 1) * 254 + last_block - 1;
 
-		int type;
-		switch (type_char) {
-			case 'S':
-				type = FTYPE_SEQ;
-				break;
-			case 'U':
-				type = FTYPE_USR;
-				break;
-			case 'R':
-				type = FTYPE_REL;
-				break;
-			default:
-				type = FTYPE_PRG;
-				break;
-		}
+      switch (type_char)
+      {
+         case 'S':
+            type = FTYPE_SEQ;
+            break;
+         case 'U':
+            type = FTYPE_USR;
+            break;
+         case 'R':
+            type = FTYPE_REL;
+            break;
+         default:
+            type = FTYPE_PRG;
+            break;
+      }
 
-		// Read start address
-		long here = ftell(f);
-		uint8 sa_lo, sa_hi;
-		fseek(f, cur_offset, SEEK_SET);
-		fread(&sa_lo, 1, 1, f);
-		fread(&sa_hi, 1, 1, f);
-		fseek(f, here, SEEK_SET);
+      // Read start address
+      here = rftell(f);
+      rfseek(f, cur_offset, SEEK_SET);
+      rfread(&sa_lo, 1, 1, f);
+      rfread(&sa_hi, 1, 1, f);
+      rfseek(f, here, SEEK_SET);
 
-		// Add entry
-		vec.push_back(c64_dir_entry(name_buf, type, false, false, size, cur_offset, sa_lo, sa_hi));
+      // Add entry
+      vec.push_back(c64_dir_entry(name_buf, type, false, false, size, cur_offset, sa_lo, sa_hi));
 
-		cur_offset += num_blocks * 254;
-	}
+      cur_offset += num_blocks * 254;
+   }
 
 	return true;
 }
 
-static bool parse_p00_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_title)
+static bool parse_p00_file(RFILE *f, std::vector<c64_dir_entry> &vec, char *dir_title)
 {
+	uint8 name_buf[17];
+	uint8 sa_lo, sa_hi;
+   int64_t size;
+
 	// Dummy directory title
 	strcpy(dir_title, ".P00 FILE       ");
 
@@ -877,18 +915,16 @@ static bool parse_p00_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_t
 	vec.reserve(1);
 
 	// Read file name and start address
-	uint8 name_buf[17];
-	fseek(f, 8, SEEK_SET);
-	fread(name_buf, 17, 1, f);
+	rfseek(f, 8, SEEK_SET);
+	rfread(name_buf, 17, 1, f);
 	name_buf[16] = 0;
-	uint8 sa_lo, sa_hi;
-	fseek(f, 26, SEEK_SET);
-	fread(&sa_lo, 1, 1, f);
-	fread(&sa_hi, 1, 1, f);
+	rfseek(f, 26, SEEK_SET);
+	rfread(&sa_lo, 1, 1, f);
+	rfread(&sa_hi, 1, 1, f);
 
 	// Get file size
-	fseek(f, 0, SEEK_END);
-	size_t size = ftell(f) - 26;
+	rfseek(f, 0, SEEK_END);
+	size = rftell(f) - 26;
 
 	// Add entry
 	vec.push_back(c64_dir_entry(name_buf, FTYPE_PRG, false, false, size, 26, sa_lo, sa_hi));
@@ -898,16 +934,16 @@ static bool parse_p00_file(FILE *f, std::vector<c64_dir_entry> &vec, char *dir_t
 bool ReadArchDirectory(const char *path, std::vector<c64_dir_entry> &vec)
 {
    // Open file
-   FILE *f = fopen(path, "rb");
+   RFILE *f = rfopen(path, "rb");
    if (f)
    {
       // Read header
-      uint8 header[64];
-      fread(header, 1, sizeof(header), f);
-
-      // Determine archive type and parse archive
       bool result = false;
       char dir_title[16];
+      uint8 header[64];
+      rfread(header, 1, sizeof(header), f);
+
+      // Determine archive type and parse archive
       if (is_t64_header(header))
          result = parse_t64_file(f, vec, dir_title);
       else if (is_lynx_header(header))
@@ -915,7 +951,7 @@ bool ReadArchDirectory(const char *path, std::vector<c64_dir_entry> &vec)
       else if (is_p00_header(header))
          result = parse_p00_file(f, vec, dir_title);
 
-      fclose(f);
+      rfclose(f);
       return result;
    }
    return false;
