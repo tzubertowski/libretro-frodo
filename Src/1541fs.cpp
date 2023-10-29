@@ -42,7 +42,11 @@
 #endif
 
 #include <sys/stat.h>
+#if !defined(SF2000)
 #include <dirent.h> /* TODO/FIXME - get rid of dirent */
+#else
+#include "../../../dirent.h"
+#endif
 #include <file/file_path.h>
 
 #include "sysdeps.h"
@@ -192,7 +196,7 @@ uint8 FSDrive::open_file(int channel, const uint8 *name, int name_len)
 	}
 
 	// Open file
-#if !defined(__vita__) && !defined(__psp__)
+#if !defined(__vita__) && !defined(__psp__) && !defined(SF2000)
 	if (chdir(dir_path))
 		set_error(ERR_NOTREADY);
 	else if ((file[channel] = fopen(plain_name, mode_str)) != NULL) {
@@ -342,7 +346,7 @@ uint8 FSDrive::open_directory(int channel, const uint8 *pattern, int pattern_len
       {
          bool path_is_dir = false;
          /* Get file statistics */
-#if defined(__vita__) || defined(__psp__)
+#if defined(__vita__) || defined(__psp__) || defined(SF2000)
          {
             size_t len    = strlen(dir_path) + strlen(de->d_name) + 3;
             char *buf     = (char *) malloc(len);

@@ -389,7 +389,7 @@ void File_MakeAbsoluteName(char *pFileName)
       return;
 
    /* Is it already an absolute name? */
-#if !defined(__psp__) && !defined(__vita__)
+#if !defined(__psp__) && !defined(__vita__) && !defined(SF2000)
    if (File_IsRootFileName(pFileName))
       outpos = 0;
    else

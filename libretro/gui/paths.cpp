@@ -100,6 +100,8 @@ void Paths_Init(const char *argv0)
    strcpy(sWorkingDir, "ux0:/");
 #elif defined(PSP)
    strcpy(sWorkingDir, "ms0:/");
+#elif defined(SF2000)
+   strcpy(sWorkingDir, "/mnt/sda1/");
 #else
    if (getcwd(sWorkingDir, FILENAME_MAX) == NULL)
    {
