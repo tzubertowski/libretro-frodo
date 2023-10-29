@@ -13,7 +13,11 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#if !defined(SF2000)
 #include <dirent.h>
+#else
+#include "../../../../dirent.h"
+#endif
 #include <sys/types.h>
 #include <string.h>
 #include <zlib.h>

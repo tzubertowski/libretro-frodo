@@ -7,7 +7,11 @@
 #ifndef HATARI_SCANDIR_H
 #define HATARI_SCANDIR_H
 
+#if !defined(SF2000)
 #include <dirent.h>
+#else
+#include "../../../../dirent.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

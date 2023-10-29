@@ -13,7 +13,11 @@
 #define HATARI_ZIP_H
 
 
+#if !defined(SF2000)
 #include <dirent.h>
+#else
+#include "../../../../dirent.h"
+#endif
 
 typedef struct
 {

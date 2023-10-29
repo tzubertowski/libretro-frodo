@@ -165,7 +165,7 @@ void Frodo::ArgvReceived(int argc, char **argv)
 /* Arguments processed, run emulation */
 void Frodo::ReadyToRun(void)
 {
-#if defined (__vita__) || defined(__psp__)
+#if defined (__vita__) || defined(__psp__) || defined(SF2000)
 	strcpy(AppDirPath, "/");
 #else
 	getcwd(AppDirPath, 256);
