@@ -1,0 +1,3 @@
+[submodule "Src/libretro-common"]
+	path = Src/libretro-common
+	url = https://github.com/madcock/libretro-common
