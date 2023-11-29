@@ -144,6 +144,11 @@ const uint8 palette_blue[16] = {
 
 #endif
 
+#if defined(SF2000)
+ #define KBTXTSCALE 2
+#else
+ #define KBTXTSCALE 1
+#endif
 
 /*
  *  Update drive LED display (deferred until Update())
@@ -330,13 +335,21 @@ void virtual_kdb(char *buffer,int vx,int vy)
       for(y=0;y<NLIGN;y++)
       {
          DrawBoxBmp((char*)pix,XBASE3+x*XSIDE,YBASE3+y*YSIDE, XSIDE,YSIDE, RGB565(7, 2, 1));
+#if defined(SF2000)
+         Draw_text((char*)pix,XBASE0-2+x*XSIDE ,YBASE0+YSIDE*y,coul, BKGCOLOR, KBTXTSCALE, KBTXTSCALE, 20,
+#else
          Draw_text((char*)pix,XBASE0-2+x*XSIDE ,YBASE0+YSIDE*y,coul, BKGCOLOR ,1, 1,20,
+#endif
                SHIFTON==-1?MVk[(y*NPLGN)+x+page].norml:MVk[(y*NPLGN)+x+page].shift);	
       }
    }
 
    DrawBoxBmp((char*)pix,XBASE3+vx*XSIDE,YBASE3+vy*YSIDE, XSIDE,YSIDE, RGB565(31, 2, 1));
+#if defined(SF2000)
+   Draw_text((char*)pix,XBASE0-2+vx*XSIDE ,YBASE0+YSIDE*vy,RGB565(2,31,1), BKGCOLOR, KBTXTSCALE, KBTXTSCALE, 20,
+#else
    Draw_text((char*)pix,XBASE0-2+vx*XSIDE ,YBASE0+YSIDE*vy,RGB565(2,31,1), BKGCOLOR ,1, 1,20,
+#endif
          SHIFTON==-1?MVk[(vy*NPLGN)+vx+page].norml:MVk[(vy*NPLGN)+vx+page].shift);	
 
 }
@@ -430,6 +443,10 @@ void C64Display::NewPrefs(Prefs *prefs)
 {
 }
 
+#if defined(SF2000)
+extern short shiftstate;
+#endif
+
 /*
  *  Redraw bitmap
  */
@@ -498,7 +515,12 @@ void C64Display::Update(void)
          }
          retro_FillRect(screen, &r, c);
       }
-
+#if defined(SF2000)
+      if ( shiftstate == 1 )
+         draw_string(screen, DISPLAY_X + 8, DISPLAY_Y + 4, "R ON", green, fill_gray);
+      else
+         draw_string(screen, DISPLAY_X + 8, DISPLAY_Y + 4, "R OFF", black, fill_gray);
+#endif
       draw_string(screen, DISPLAY_X * 1/5 + 8, DISPLAY_Y + 4, "D\x12 8", black, fill_gray);
       draw_string(screen, DISPLAY_X * 2/5 + 8, DISPLAY_Y + 4, "D\x12 9", black, fill_gray);
       draw_string(screen, DISPLAY_X * 3/5 + 8, DISPLAY_Y + 4, "D\x12 10", black, fill_gray);
