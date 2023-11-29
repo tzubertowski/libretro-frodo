@@ -90,9 +90,27 @@ extern int SHOWKEY;
 int Retro_PollEvent(uint8 *key_matrix,
       uint8 *rev_matrix, uint8 *joystick);
 
-#define USE_PEPTO_COLORS 1
+#define USE_COLODORE_COLORS 1
+//#define USE_PEPTO_COLORS 1
 
-#ifdef USE_PEPTO_COLORS
+#if defined(USE_COLODORE_COLORS)
+
+// C64 "Colodore" color palette
+// Values based on measurements by Philip "Pepto" Timmermann <pepto@pepto.de>
+// (see https://www.pepto.de/projects/colorvic/)
+const uint8 palette_red[16] = {
+	0x00, 0xff, 0x81, 0x75, 0x8e, 0x56, 0x2e, 0xed, 0x8e, 0x55, 0xc4, 0x4a, 0x7b, 0xa9, 0x70, 0xb2
+};
+
+const uint8 palette_green[16] = {
+	0x00, 0xff, 0x33, 0xce, 0x3c, 0xac, 0x2c, 0xf1, 0x50, 0x38, 0x6c, 0x4a, 0x7b, 0xff, 0x6d, 0xb2
+};
+
+const uint8 palette_blue[16] = {
+	0x00, 0xff, 0x38, 0xc8, 0x97, 0x4d, 0x9b, 0x71, 0x29, 0x00, 0x71, 0x4a, 0x7b, 0x9f, 0xeb, 0xb2
+};
+
+#elif defined(USE_PEPTO_COLORS)
 
 // C64 color palette
 // Values based on measurements by Philip "Pepto" Timmermann <pepto@pepto.de>
