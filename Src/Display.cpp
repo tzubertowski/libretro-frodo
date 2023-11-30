@@ -445,6 +445,7 @@ void C64Display::NewPrefs(Prefs *prefs)
 
 #if defined(SF2000)
 extern short shiftstate;
+extern short joystickport;
 #endif
 
 /*
@@ -520,6 +521,10 @@ void C64Display::Update(void)
          draw_string(screen, DISPLAY_X + 8, DISPLAY_Y + 4, "R ON", green, fill_gray);
       else
          draw_string(screen, DISPLAY_X + 8, DISPLAY_Y + 4, "R OFF", black, fill_gray);
+      if ( joystickport == 1 )
+         draw_string(screen, DISPLAY_X + (7*8), DISPLAY_Y + 4, "J 2", black, fill_gray);
+      else
+         draw_string(screen, DISPLAY_X + (7*8), DISPLAY_Y + 4, "J 1", black, fill_gray);
 #endif
       draw_string(screen, DISPLAY_X * 1/5 + 8, DISPLAY_Y + 4, "D\x12 8", black, fill_gray);
       draw_string(screen, DISPLAY_X * 2/5 + 8, DISPLAY_Y + 4, "D\x12 9", black, fill_gray);

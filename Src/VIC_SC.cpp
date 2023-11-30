@@ -33,6 +33,10 @@
  *    left/right limits of the chunky bitmap
  */
 
+#if defined(SF2000)
+#include <cstring>
+#endif
+
 #include "sysdeps.h"
 
 #include "VIC.h"

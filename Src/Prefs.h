@@ -98,6 +98,9 @@ public:
 	bool ShowLEDs;			// Show LEDs (Win32)
 
 	void set_drive8(char *filename,int type);
+#if defined(SF2000)
+	void swap_joysticks();
+#endif
 };
 
 
