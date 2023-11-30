@@ -223,6 +223,7 @@ else ifeq ($(platform), sf2000)
    CXXFLAGS = $(CFLAGS)
    STATIC_LINKING = 1
    NOLIBCO = 1
+   #EMUTYPE = frodosc
 else ifeq ($(platform), wii)
    TARGET := $(TARGET_NAME)_libretro_wii.a
    CC = $(DEVKITPPC)/bin/powerpc-eabi-gcc$(EXE_EXT)

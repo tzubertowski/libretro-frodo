@@ -37,7 +37,11 @@ unsigned int Retro_Screen[1024*1024];
 
 //SOUND
 short signed int SNDBUF[1024*2];
+#if !defined(SF2000)
 int snd_sampler = 44100 / 50;
+#else
+int snd_sampler = 22050 / 50;
+#endif
 
 //PATH
 char RPATH[512];
@@ -389,6 +393,7 @@ extern bool autoboot;
 
 int shifted_cursor[7] = {0};
 short shiftstate = 0;
+short joystickport = 0;
 
 int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 {
@@ -427,7 +432,20 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 		mbt[RETRO_DEVICE_ID_JOYPAD_START]=0;
 	}
 
-	check_key_with_delay(RETRO_DEVICE_ID_JOYPAD_SELECT, mbt, RETRO_DEVICE_ID_JOYPAD_SELECT, MATRIX(0, 1));
+	//check_key_with_delay(RETRO_DEVICE_ID_JOYPAD_SELECT, mbt, RETRO_DEVICE_ID_JOYPAD_SELECT, MATRIX(0, 1));
+	if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT) && shiftstate == 0 )
+	{
+		mbt[RETRO_DEVICE_ID_JOYPAD_SELECT]++;
+		if ( mbt[RETRO_DEVICE_ID_JOYPAD_SELECT] > 2 )
+		{
+			ThePrefs.swap_joysticks();
+			joystickport = 1 - joystickport;
+		}
+	}
+	else
+	{
+		mbt[RETRO_DEVICE_ID_JOYPAD_SELECT]=0;
+	}
 	check_key_with_delay(RETRO_DEVICE_ID_JOYPAD_L, mbt, RETRO_DEVICE_ID_JOYPAD_L, MATRIX(7, 7));
 
 	if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R) )

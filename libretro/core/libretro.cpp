@@ -248,7 +248,11 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
 				     (unsigned int) retrow,
 				     (unsigned int) retroh,
 				     1024, 1024,4.0 / 3.0 };
+#if !defined(SF2000)
    struct retro_system_timing timing = { 50.0, 44100.0 };
+#else
+   struct retro_system_timing timing = { 50.0, 22050.0 };
+#endif
 
    info->geometry = geom;
    info->timing   = timing;

@@ -142,3 +142,17 @@ void Prefs::set_drive8(char *filename,int type)
 {
    strcpy(DrivePath[0], filename);
 }
+
+#if defined(SF2000)
+void Prefs::swap_joysticks()
+{
+   if ( !ThePrefs.JoystickSwap )
+   {
+      JoystickSwap = true;
+   }
+   else
+   {
+      JoystickSwap = false;
+   }
+}
+#endif

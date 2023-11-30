@@ -234,7 +234,11 @@ void MOS6581::SetState(MOS6581State *ss)
  **  Renderer for digital SID emulation (SIDTYPE_DIGITAL)
  **/
 
+#if !defined(SF2000)
 const uint32 SAMPLE_FREQ = 44100;	// Sample output frequency in Hz
+#else
+const uint32 SAMPLE_FREQ = 22050;	// Sample output frequency in Hz
+#endif
 const uint32 SID_FREQ = 985248;		// SID frequency in Hz
 const uint32 CALC_FREQ = 50;			// Frequency at which calc_buffer is called in Hz (should be 50Hz)
 const uint32 SID_CYCLES = SID_FREQ/SAMPLE_FREQ;	// # of SID clocks per sample frame
