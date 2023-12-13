@@ -397,7 +397,18 @@ short joystickport = 0;
 
 int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 {
+	int mouse_l;
+	int mouse_r;
+	static int mmbL = 0;
+	static int mmbR = 0;
+	int SAVPAS      = PAS;
+	int16_t mouse_x = 0;
+	int16_t mouse_y = 0;
+
 	input_poll_cb();
+
+	//if (SHOWKEY == -1 && pauseg == 0)
+	//	Process_key(key_matrix,rev_matrix,joystick);
 
 	//B to show keyboard (mapped to y on rs90)
 
@@ -415,6 +426,54 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 	{
 		mbt[RETRO_DEVICE_ID_JOYPAD_B]=0;
 	}
+
+	if ((SHOWKEY != 1) && (pauseg == 1))
+	{
+		if (slowdown > 0)
+			return 1;
+
+		if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) && shiftstate == 0)
+			mouse_x += PAS;
+		if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) && shiftstate == 0)
+			mouse_x -= PAS;
+		if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) && shiftstate == 0)
+			mouse_y += PAS;
+		if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) && shiftstate == 0)
+			mouse_y -= PAS;
+		mouse_l    = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A && shiftstate == 0);
+		mouse_r    = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B && shiftstate == 0);
+
+		PAS=SAVPAS;
+
+		slowdown=1;
+	}
+
+	if (mmbL == 0 && mouse_l)
+	{
+		mmbL  = 1;
+		touch = 1;
+	}
+	else if (mmbL == 1 && !mouse_l)
+	{
+		mmbL  = 0;
+		touch = -1;
+	}
+
+	if (mmbR == 0 && mouse_r)
+		mmbR = 1;
+	else if (mmbR == 1 && !mouse_r)
+		mmbR = 0;
+
+	gmx += mouse_x;
+	gmy += mouse_y;
+	if(gmx < 0)
+		gmx = 0;
+	if(gmx > retrow-1)
+		gmx = retrow-1;
+	if(gmy < 0)
+		gmy = 0;
+	if(gmy > retroh-1)
+		gmy = retroh-1;
 
 	if ( SHOWKEY != 1 )
 	{
