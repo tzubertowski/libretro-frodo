@@ -210,7 +210,7 @@ else ifeq ($(platform), ngc)
 	COMMONFLAGS += -DHAVE_SCANDIR=0 -DHAVE_ALPHASORT=0 -DHAVE_SIGACTION 
 	STATIC_LINKING = 1
 
-# SF2000
+# SF2000 - Optimized for DataFrog SF2000
 else ifeq ($(platform), sf2000)
    TARGET := $(TARGET_NAME)_libretro_$(platform).a
    MIPS:=/opt/mips32-mti-elf/2019.09-03-2/bin/mips-mti-elf-
@@ -219,11 +219,22 @@ else ifeq ($(platform), sf2000)
    AR = $(MIPS)ar
    CFLAGS = -EL -march=mips32 -mtune=mips32 -msoft-float -G0 -mno-abicalls -fno-pic
    CFLAGS += -ffast-math -fomit-frame-pointer -ffunction-sections -fdata-sections 
-   CFLAGS += -DSF2000 -DHAVE_SCANDIR=0
-   CXXFLAGS = $(CFLAGS)
+   CFLAGS += -DSF2000 -DHAVE_SCANDIR=0 -DNO_GUI
+   # SF2000 C64 optimizations - enable all performance features
+   CFLAGS += -DSF2000_C64_OPTIMIZED -DSF2000_FAST_CPU -DSF2000_FAST_VIC -DSF2000_FAST_SID
+   CFLAGS += -DSF2000_FAST_MEMORY -DSF2000_COMPUTED_GOTO -DSF2000_MIPS_OPTIMIZED
+   # Maximum optimization for 918MHz MIPS advantage over 1MHz 6502
+   CFLAGS += -O3 -funroll-loops -fgcse-sm -fgcse-las -fgcse-after-reload
+   CFLAGS += -fipa-pta -fivopts -fmodulo-sched -fmodulo-sched-allow-regmoves
+   CFLAGS += -fweb -frename-registers -ftracer -funswitch-loops
+   # MIPS-specific optimizations (compatible with mips32)
+   CFLAGS += -mmemcpy -mno-check-zero-division
+   CFLAGS += -fdelayed-branch -foptimize-register-move
+   CXXFLAGS = $(CFLAGS) -std=c++11
    STATIC_LINKING = 1
    NOLIBCO = 1
-   #EMUTYPE = frodosc
+   # Force standard Frodo (not cycle-accurate) for maximum performance
+   EMUTYPE = frodo
 else ifeq ($(platform), wii)
    TARGET := $(TARGET_NAME)_libretro_wii.a
    CC = $(DEVKITPPC)/bin/powerpc-eabi-gcc$(EXE_EXT)

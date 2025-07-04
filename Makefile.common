@@ -57,13 +57,25 @@ SOURCES_CXX := \
 	       $(EMU_DIR)/main.cpp \
 	       $(EMU_DIR)/Display.cpp \
 	       $(EMU_DIR)/Prefs.cpp \
-	       $(EMU_DIR)/SID.cpp \
 	       $(EMU_DIR)/REU.cpp \
 	       $(EMU_DIR)/IEC.cpp \
 	       $(EMU_DIR)/1541fs.cpp \
 	       $(EMU_DIR)/1541d64.cpp \
 	       $(EMU_DIR)/1541t64.cpp \
 	       $(EMU_DIR)/1541job.cpp
+
+# SID component selection
+ifeq ($(platform), sf2000)
+# SF2000 gets optimized SID plus additional optimized components, plus base SID for inheritance
+SOURCES_CXX += \
+	       $(EMU_DIR)/SID.cpp \
+	       $(EMU_DIR)/SID_SF2000.cpp \
+	       $(EMU_DIR)/CPUC64_SF2000.cpp \
+	       $(EMU_DIR)/Memory_SF2000.cpp \
+	       $(EMU_DIR)/VIC_SF2000.cpp
+else
+SOURCES_CXX += $(EMU_DIR)/SID.cpp
+endif
 
 ifeq ($(HAVE_SAM), 1)
 SOURCES_CXX += $(EMU_DIR)/SAM.cpp
@@ -97,7 +109,11 @@ CXXFLAGS += $(CPPFLAGS)
 SOURCES_CXX += \
 	       $(CORE_DIR)/libretro/core/libretro.cpp \
 	       $(CORE_DIR)/libretro/core/core-mapper.cpp \
-	       $(CORE_DIR)/libretro/core/graph.cpp  \
+	       $(CORE_DIR)/libretro/core/graph.cpp
+
+# Skip GUI components for SF2000 (has missing functions)  
+ifneq ($(platform), sf2000)
+SOURCES_CXX += \
 	       $(GUI_DIR)/dialog.cpp\
 	       $(GUI_DIR)/paths.cpp \
 	       $(GUI_DIR)/file.cpp \
@@ -115,3 +131,4 @@ SOURCES_CXX += \
 	       $(GUI_DIR)/dlgMain.cpp \
 	       $(GUI_DIR)/dlgSnapshot.cpp \
 	       $(GUI_DIR)/sdlgui.cpp
+endif

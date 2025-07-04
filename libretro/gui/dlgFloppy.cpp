@@ -10,6 +10,7 @@
 */
 
 #include <string.h>
+#include "../sf2000_compat.h"
 
 #include <file/file_path.h>
 

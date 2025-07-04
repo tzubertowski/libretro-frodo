@@ -68,7 +68,7 @@ Prefs::Prefs()
    FastReset          = false;
    CIAIRQHack         = false;
    MapSlash           = true;
-   Emul1541Proc       = false;
+   Emul1541Proc       = true;
    SIDFilters         = true;
    DoubleScan         = true;
    HideCursor         = false;

@@ -26,7 +26,11 @@
 #include "CPUC64.h"
 #include "CPU1541.h"
 #include "VIC.h"
+#ifdef SF2000
+#include "SID_SF2000.h"
+#else
 #include "SID.h"
+#endif
 #include "CIA.h"
 #include "REU.h"
 #include "IEC.h"
@@ -65,7 +69,12 @@ extern retro_input_state_t input_state_cb;
 extern cothread_t mainThread;
 extern cothread_t emuThread;
 #endif
+#ifdef SF2000
+extern int pauseg;
+int retro_quit = 0;  // SF2000 stub
+#else
 extern int pauseg,retro_quit;
+#endif
 extern void pause_select(void);
 extern int SHOWKEY;
 
@@ -103,7 +112,11 @@ C64::C64()
          this, TheJob1541, TheDisplay, RAM1541, ROM1541);
 
 	TheVIC         = TheCPU->TheVIC  = new MOS6569(this, TheDisplay, TheCPU, RAM, Char, Color);
+#ifdef SF2000
+	TheSID         = TheCPU->TheSID  = new MOS6581_SF2000(this);
+#else
 	TheSID         = TheCPU->TheSID  = new MOS6581(this);
+#endif
 	TheCIA1        = TheCPU->TheCIA1 = new MOS6526_1(TheCPU, TheVIC);
 	TheCIA2        = TheCPU->TheCIA2 = TheCPU1541->TheCIA2 = new MOS6526_2(TheCPU, TheVIC, TheCPU1541);
 	TheIEC         = TheCPU->TheIEC = new IEC(TheDisplay);
@@ -177,6 +190,7 @@ void C64::Reset(void)
 	TheCIA1->Reset();
 	TheCIA2->Reset();
 	TheIEC->Reset();
+	TheDisplay->ResetAutostart();
 }
 
 
@@ -739,6 +753,9 @@ void C64::Run(void)
 	TheCIA1->Reset();
 	TheCIA2->Reset();
 	TheCPU1541->Reset();
+
+	// Reset autostart system
+	TheDisplay->ResetAutostart();
 
 	// Patch kernal IEC routines
 	orig_kernal_1d84 = Kernal[0x1d84];

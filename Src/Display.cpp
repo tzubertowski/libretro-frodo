@@ -296,6 +296,13 @@ char kbd_feedbuf[255];
 int kbd_feedbuf_pos;
 bool autoboot=true;
 
+// Automatic autostart variables
+static bool autostart_triggered = false;
+static int boot_frame_counter = 0;
+static int autostart_attempt = 0;
+static const int AUTOSTART_DELAY_FRAMES = 180; // 3.6 seconds at 50fps
+static const int AUTOSTART_RETRY_DELAY = 300;  // 6 seconds between attempts
+
 void kbd_buf_feed(char *s)
 {
    strcpy(kbd_feedbuf, s);
@@ -313,6 +320,16 @@ void kbd_buf_update(C64 *TheC64)
    }
    else if(kbd_feedbuf[kbd_feedbuf_pos]=='\0')
       autoboot=false;
+}
+
+void C64Display::ResetAutostart(void)
+{
+   autostart_triggered = false;
+   boot_frame_counter = 0;
+   autostart_attempt = 0;
+   autoboot = false;
+   kbd_feedbuf[0] = '\0';
+   kbd_feedbuf_pos = 0;
 }
 
 //fautoboot
@@ -808,6 +825,40 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix,
    //   RETRO        B    Y    SLT  STA  UP   DWN  LEFT RGT  A    X    L    R    L2   R2   L3   R3
    //   INDEX        0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15
    static int oldi=-1;
+
+   // Automatic autostart logic
+   if (!autostart_triggered) {
+      boot_frame_counter++;
+      if (boot_frame_counter >= AUTOSTART_DELAY_FRAMES) {
+         // Check if C64 is ready (keyboard buffer empty and at BASIC prompt)
+         if (TheC64->RAM[198] == 0) {
+            if (autostart_attempt == 0) {
+               // First attempt: try to load first PRG file
+               kbd_buf_feed("\rLOAD\"*\",8,1:\rRUN\r\0");
+               autoboot = true;
+               autostart_attempt = 1;
+               boot_frame_counter = 0;
+            } else if (autostart_attempt == 1 && boot_frame_counter >= AUTOSTART_RETRY_DELAY) {
+               // Second attempt: try without auto-run flag
+               kbd_buf_feed("\rLOAD\"*\",8:\rRUN\r\0");
+               autoboot = true;
+               autostart_attempt = 2;
+               boot_frame_counter = 0;
+            } else if (autostart_attempt == 2 && boot_frame_counter >= AUTOSTART_RETRY_DELAY) {
+               // Third attempt: load without quotes (some games need this)
+               kbd_buf_feed("\rLOAD*,8:\rRUN\r\0");
+               autoboot = true;
+               autostart_attempt = 3;
+               boot_frame_counter = 0;
+            } else if (autostart_attempt == 3 && boot_frame_counter >= AUTOSTART_RETRY_DELAY) {
+               // Fourth attempt: show directory for manual loading
+               kbd_buf_feed("\rLOAD\"$\",8:\rLIST\r\0");
+               autoboot = true;
+               autostart_triggered = true;
+            }
+         }
+      }
+   }
 
    if (autoboot)
       kbd_buf_update(TheC64);

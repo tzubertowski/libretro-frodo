@@ -56,6 +56,7 @@ class C64Display
       bool NumLock(void);
       void InitColors(uint8 *colors);
       void NewPrefs(Prefs *prefs);
+      void ResetAutostart(void);
 
       C64 *TheC64;
 
