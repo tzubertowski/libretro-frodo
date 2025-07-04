@@ -15,6 +15,27 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <fcntl.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Missing functions for SF2000 build
+static int strcasecmp(const char *s1, const char *s2) {
+    while (*s1 && *s2) {
+        int c1 = tolower((unsigned char)*s1);
+        int c2 = tolower((unsigned char)*s2);
+        if (c1 != c2) return c1 - c2;
+        s1++; s2++;
+    }
+    return tolower((unsigned char)*s1) - tolower((unsigned char)*s2);
+}
+
+static char *strdup(const char *s) {
+    size_t len = strlen(s) + 1;
+    char *dup = (char*)malloc(len);
+    if (dup) memcpy(dup, s, len);
+    return dup;
+}
 #ifdef _WIN32
 #include <direct.h>
 #else

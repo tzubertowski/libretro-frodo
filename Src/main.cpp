@@ -158,8 +158,15 @@ Frodo::Frodo()
 /* Process command line arguments */
 void Frodo::ArgvReceived(int argc, char **argv)
 {
-	if (argc == 2)
+	if (argc == 2) {
 		strncpy(device_path, argv[1], 255);
+		
+		// SF2000 specific: remove .GBA extension if present
+		char *gba_ext = strstr(device_path, ".GBA");
+		if (gba_ext != NULL) {
+			*gba_ext = '\0';  // Truncate at .GBA
+		}
+	}
 }
 
 /* Arguments processed, run emulation */

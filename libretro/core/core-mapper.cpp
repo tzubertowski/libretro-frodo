@@ -23,9 +23,17 @@
 extern C64 *TheC64;
 
 extern void Screen_SetFullUpdate(int scr);
+#ifndef SF2000
 extern bool Dialog_DoProperty(void);
+#endif
 #ifdef NO_LIBCO
 extern void retro_run_gui(void);
+#endif
+
+#ifdef SF2000
+// SF2000 minimal GUI stubs
+bool Dialog_DoProperty(void) { return false; }
+extern int retro_quit;  // Declaration only - defined in C64.cpp
 #endif
 
 //VIDEO
@@ -477,13 +485,15 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 
 	if ( SHOWKEY != 1 )
 	{
+	// Manual autostart trigger - hold START button
 	if ( input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START) && shiftstate == 0 )
 	{
 		mbt[RETRO_DEVICE_ID_JOYPAD_START]++;
 		if ( mbt[RETRO_DEVICE_ID_JOYPAD_START] > 2 )
 		{
-			kbd_buf_feed("\rLOAD\":*\",8,1:\rRUN\r\0");
+			kbd_buf_feed("\rLOAD\"*\",8,1:\rRUN\r\0");
 			autoboot = true;
+			mbt[RETRO_DEVICE_ID_JOYPAD_START] = 0; // Reset to prevent repeated triggers
 		}
 	}
 	else 
