@@ -23,14 +23,14 @@
 #include "sysdeps.h"
 
 #include "C64.h"
-#include "CPUC64.h"
-#include "CPU1541.h"
-#include "VIC.h"
-#ifdef SF2000
-#include "SID_SF2000.h"
+#ifdef SF2000_C64_OPTIMIZED
+#include "SF2000_Optimizations.h"
 #else
+#include "CPUC64.h"
+#include "VIC.h"
 #include "SID.h"
 #endif
+#include "CPU1541.h"
 #include "CIA.h"
 #include "REU.h"
 #include "IEC.h"
@@ -105,16 +105,21 @@ C64::C64()
 	ROM1541        = new uint8[DRIVE_ROM_SIZE];
 
 	// Create the chips
+#ifdef SF2000_C64_OPTIMIZED
+	TheCPU         = new MOS6510_OPTIMIZED(this, RAM, Basic, Kernal, Char, Color);
+#else
 	TheCPU         = new MOS6510(this, RAM, Basic, Kernal, Char, Color);
+#endif
 
 	TheJob1541     = new Job1541(RAM1541);
 	TheCPU1541     = new MOS6502_1541(
          this, TheJob1541, TheDisplay, RAM1541, ROM1541);
 
-	TheVIC         = TheCPU->TheVIC  = new MOS6569(this, TheDisplay, TheCPU, RAM, Char, Color);
-#ifdef SF2000
-	TheSID         = TheCPU->TheSID  = new MOS6581_SF2000(this);
+#ifdef SF2000_C64_OPTIMIZED
+	TheVIC         = TheCPU->TheVIC  = new MOS6569_OPTIMIZED(this, TheDisplay, TheCPU, RAM, Char, Color);
+	TheSID         = TheCPU->TheSID  = new MOS6581_OPTIMIZED(this);
 #else
+	TheVIC         = TheCPU->TheVIC  = new MOS6569(this, TheDisplay, TheCPU, RAM, Char, Color);
 	TheSID         = TheCPU->TheSID  = new MOS6581(this);
 #endif
 	TheCIA1        = TheCPU->TheCIA1 = new MOS6526_1(TheCPU, TheVIC);

@@ -60,7 +60,10 @@ class MOS6510_SF2000 : public MOS6510 {
 public:
     MOS6510_SF2000(C64 *c64, uint8 *Ram, uint8 *Basic, uint8 *Kernal, uint8 *Char, uint8 *Color);
     
-    // Fast emulation methods
+    // Override base class method to use optimized version
+    int EmulateLine(int cycles_left) { return EmulateLineFast(cycles_left); }
+    
+    // Fast emulation methods  
     int EmulateLineFast(int cycles_left);
     void InitializeFastTables();
     
