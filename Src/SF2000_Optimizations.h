@@ -42,7 +42,7 @@
 #endif
 
 // SF2000 performance tuning constants
-#define SF2000_CPU_CYCLES_PER_FRAME    20000   // Reduced from ~65000 for fast emulation
+#define SF2000_CPU_CYCLES_PER_FRAME    65000   // Restored to ~65000 for full emulation
 #define SF2000_RASTER_LINES_PER_FRAME  312     // PAL standard
 #define SF2000_AUDIO_SAMPLES_PER_FRAME 441     // 22050Hz / 50Hz
 

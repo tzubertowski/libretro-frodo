@@ -48,7 +48,7 @@ short signed int SNDBUF[1024*2];
 #if !defined(SF2000)
 int snd_sampler = 44100 / 50;
 #else
-int snd_sampler = 22050 / 50;
+int snd_sampler = 44100 / 50;
 #endif
 
 //PATH
