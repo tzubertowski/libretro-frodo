@@ -221,8 +221,8 @@ else ifeq ($(platform), sf2000)
    CFLAGS += -ffast-math -fomit-frame-pointer -ffunction-sections -fdata-sections 
    CFLAGS += -DSF2000 -DHAVE_SCANDIR=0 -DNO_GUI
    # SF2000 C64 optimizations - enable all performance features
-   CFLAGS += -DSF2000_C64_OPTIMIZED -DSF2000_FAST_CPU -DSF2000_FAST_VIC -DSF2000_FAST_SID
-   CFLAGS += -DSF2000_FAST_MEMORY -DSF2000_COMPUTED_GOTO -DSF2000_MIPS_OPTIMIZED
+   #   CFLAGS += -DSF2000_C64_OPTIMIZED -DSF2000_FAST_CPU -DSF2000_FAST_VIC -DSF2000_FAST_SID
+#   CFLAGS += -DSF2000_FAST_MEMORY -DSF2000_COMPUTED_GOTO -DSF2000_MIPS_OPTIMIZED
    # Maximum optimization for 918MHz MIPS advantage over 1MHz 6502
    CFLAGS += -O3 -funroll-loops -fgcse-sm -fgcse-las -fgcse-after-reload
    CFLAGS += -fipa-pta -fivopts -fmodulo-sched -fmodulo-sched-allow-regmoves

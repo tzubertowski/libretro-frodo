@@ -251,7 +251,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
 #if !defined(SF2000)
    struct retro_system_timing timing = { 50.0, 44100.0 };
 #else
-   struct retro_system_timing timing = { 50.0, 22050.0 };
+   struct retro_system_timing timing = { 60.0, 44100.0 };
 #endif
 
    info->geometry = geom;
