@@ -1266,7 +1266,11 @@ void DigitalRenderer::calc_buffer(int16 *buf, long count)
 /* Initialization */
 void DigitalRenderer::init_sound(void)
 {
-   sndbufsize   = 882;
+#if !defined(SF2000)
+   sndbufsize   = 882;   // 44100 / 50 = 882 samples per frame
+#else
+   sndbufsize   = 441;   // 22050 / 50 = 441 samples per frame  
+#endif
    sound_buffer = new int16[sndbufsize*2];
    ready        = true;
 }
@@ -1312,7 +1316,7 @@ void DigitalRenderer::EmulateLine(void)
     */
    divisor += SAMPLE_FREQ;
    while (divisor >= 0)
-      divisor -= TOTAL_RASTERS*SCREEN_FREQ, to_output++;
+      divisor -= TOTAL_RASTERS*CALC_FREQ, to_output++;
 
    /*
     * Calculate the sound data only when we have enough to fill

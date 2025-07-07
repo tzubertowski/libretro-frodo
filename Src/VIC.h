@@ -37,7 +37,7 @@
 const unsigned TOTAL_RASTERS = 0x138;
 
 // Screen refresh frequency (PAL)
-const unsigned SCREEN_FREQ = 60;
+const unsigned SCREEN_FREQ = 50;
 
 
 class MOS6510;

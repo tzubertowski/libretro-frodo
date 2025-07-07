@@ -48,7 +48,7 @@ short signed int SNDBUF[1024*2];
 #if !defined(SF2000)
 int snd_sampler = 44100 / 50;
 #else
-int snd_sampler = 44100 / 50;
+int snd_sampler = 22050 / 50;  // SF2000: 22050Hz at 50fps = 441 samples per frame
 #endif
 
 //PATH
@@ -491,8 +491,13 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 		mbt[RETRO_DEVICE_ID_JOYPAD_START]++;
 		if ( mbt[RETRO_DEVICE_ID_JOYPAD_START] > 2 )
 		{
-			kbd_buf_feed("\rLOAD\"*\",8,1:\rRUN\r\0");
-			autoboot = true;
+			// Only trigger if no autoload is already in progress
+			if (!any_autoload_in_progress) {
+				kbd_buf_feed("\rLOAD\"*\",8,1:\rRUN\r\0");
+				autoboot = true;
+				manual_autoload_triggered = true;
+				any_autoload_in_progress = true;
+			}
 			mbt[RETRO_DEVICE_ID_JOYPAD_START] = 0; // Reset to prevent repeated triggers
 		}
 	}
