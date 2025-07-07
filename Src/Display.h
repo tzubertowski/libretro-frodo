@@ -67,4 +67,8 @@ class C64Display
       int old_led_state[4];
 };
 
+// Manual autoload coordination variables - shared between Display.cpp and core-mapper.cpp
+extern bool any_autoload_in_progress;
+extern bool manual_autoload_triggered;
+
 #endif

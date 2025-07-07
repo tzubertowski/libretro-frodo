@@ -296,12 +296,9 @@ char kbd_feedbuf[255];
 int kbd_feedbuf_pos;
 bool autoboot=true;
 
-// Automatic autostart variables
-static bool autostart_triggered = false;
-static int boot_frame_counter = 0;
-static int autostart_attempt = 0;
-static const int AUTOSTART_DELAY_FRAMES = 180; // 3.6 seconds at 50fps
-static const int AUTOSTART_RETRY_DELAY = 300;  // 6 seconds between attempts
+// Manual autoload coordination variables
+static bool manual_autoload_triggered = false;
+static bool any_autoload_in_progress = false;
 
 void kbd_buf_feed(char *s)
 {
@@ -319,14 +316,17 @@ void kbd_buf_update(C64 *TheC64)
       kbd_feedbuf_pos++;
    }
    else if(kbd_feedbuf[kbd_feedbuf_pos]=='\0')
+   {
       autoboot=false;
+      // Clear autoload state when command sequence completes
+      any_autoload_in_progress = false;
+   }
 }
 
 void C64Display::ResetAutostart(void)
 {
-   autostart_triggered = false;
-   boot_frame_counter = 0;
-   autostart_attempt = 0;
+   manual_autoload_triggered = false;
+   any_autoload_in_progress = false;
    autoboot = false;
    kbd_feedbuf[0] = '\0';
    kbd_feedbuf_pos = 0;
@@ -827,38 +827,7 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix,
    static int oldi=-1;
 
    // Automatic autostart logic
-   if (!autostart_triggered) {
-      boot_frame_counter++;
-      if (boot_frame_counter >= AUTOSTART_DELAY_FRAMES) {
-         // Check if C64 is ready (keyboard buffer empty and at BASIC prompt)
-         if (TheC64->RAM[198] == 0) {
-            if (autostart_attempt == 0) {
-               // First attempt: try to load first PRG file
-               kbd_buf_feed("\rLOAD\"*\",8,1:\rRUN\r\0");
-               autoboot = true;
-               autostart_attempt = 1;
-               boot_frame_counter = 0;
-            } else if (autostart_attempt == 1 && boot_frame_counter >= AUTOSTART_RETRY_DELAY) {
-               // Second attempt: try without auto-run flag
-               kbd_buf_feed("\rLOAD\"*\",8:\rRUN\r\0");
-               autoboot = true;
-               autostart_attempt = 2;
-               boot_frame_counter = 0;
-            } else if (autostart_attempt == 2 && boot_frame_counter >= AUTOSTART_RETRY_DELAY) {
-               // Third attempt: load without quotes (some games need this)
-               kbd_buf_feed("\rLOAD*,8:\rRUN\r\0");
-               autoboot = true;
-               autostart_attempt = 3;
-               boot_frame_counter = 0;
-            } else if (autostart_attempt == 3 && boot_frame_counter >= AUTOSTART_RETRY_DELAY) {
-               // Fourth attempt: show directory for manual loading
-               kbd_buf_feed("\rLOAD\"$\",8:\rLIST\r\0");
-               autoboot = true;
-               autostart_triggered = true;
-            }
-         }
-      }
-   }
+   // Automatic autoload removed - users have full control via manual triggers
 
    if (autoboot)
       kbd_buf_update(TheC64);
@@ -983,8 +952,13 @@ void C64Display::PollKeyboard(uint8 *key_matrix, uint8 *rev_matrix,
             }
             else if(i==-13) //AUTOBOOT
             {     
-               kbd_buf_feed((char*)"\rLOAD\":*\",8,1:\rRUN\r\0");
-               autoboot=true; 
+               // Fix syntax error: remove extra colon after LOAD
+               if (!any_autoload_in_progress) {
+                  kbd_buf_feed((char*)"\rLOAD\"*\",8,1:\rRUN\r\0");
+                  autoboot=true; 
+                  manual_autoload_triggered = true;
+                  any_autoload_in_progress = true;
+               }
                oldi=-1;
             }
             else if(i==-14) //GUI

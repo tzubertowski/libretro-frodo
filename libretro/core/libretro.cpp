@@ -251,7 +251,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
 #if !defined(SF2000)
    struct retro_system_timing timing = { 50.0, 44100.0 };
 #else
-   struct retro_system_timing timing = { 60.0, 44100.0 };
+   struct retro_system_timing timing = { 50.0, 22050.0 };  // SF2000: PAL 50Hz, 22050Hz audio
 #endif
 
    info->geometry = geom;
@@ -311,7 +311,7 @@ void retro_run(void)
    {
 
       if(SND==1)
-         for(x=0;x<882;x++)
+         for(x=0;x<snd_sampler;x++)
             audio_cb(SNDBUF[x],SNDBUF[x]);
 #ifdef NO_LIBCO
 #ifndef FRODO_SC
