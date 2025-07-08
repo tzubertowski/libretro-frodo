@@ -178,7 +178,13 @@ void Frodo::ReadyToRun(void)
 	getcwd(AppDirPath, 256);
 #endif
 
-	ThePrefs.set_drive8(device_path,0);
+	// Set drive 8 path - use default if no device path provided
+	if (strlen(device_path) > 0) {
+		ThePrefs.set_drive8(device_path, 0);
+	} else {
+		char default_path[] = "64prgs";
+		ThePrefs.set_drive8(default_path, 0);
+	}
 
 	// Create and start C64
 	TheC64 = new C64;
@@ -201,4 +207,18 @@ void Frodo::ReadyToRun(void)
 bool IsDirectory(const char *path)
 {
    return path_is_directory(path);
+}
+
+/* Simple pre_main for libretro */
+void pre_main(char *path)
+{
+	the_app = new Frodo();
+	
+	// Pass device path via argv if provided
+	if (path && strlen(path) > 0) {
+		char *argv[2] = {"frodo", path};
+		the_app->ArgvReceived(2, argv);
+	}
+	
+	the_app->ReadyToRun();
 }

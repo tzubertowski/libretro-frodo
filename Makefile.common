@@ -91,12 +91,23 @@ SOURCES_CXX += \
 	       $(EMU_DIR)/CPU_common.cpp
 CPPFLAGS += -DFRODO_SC
 else
+# For SF2000, use only optimized components
+ifneq ($(platform), sf2000)
 SOURCES_CXX += \
 	       $(EMU_DIR)/C64.cpp \
 	       $(EMU_DIR)/CPUC64.cpp \
 	       $(EMU_DIR)/VIC.cpp \
 	       $(EMU_DIR)/CIA.cpp \
 	       $(EMU_DIR)/CPU1541.cpp
+else
+# SF2000 uses C64.cpp, VIC.cpp, CPUC64.cpp (for base classes) plus optimized components
+SOURCES_CXX += \
+	       $(EMU_DIR)/C64.cpp \
+	       $(EMU_DIR)/VIC.cpp \
+	       $(EMU_DIR)/CPUC64.cpp \
+	       $(EMU_DIR)/CIA.cpp \
+	       $(EMU_DIR)/CPU1541.cpp
+endif
 endif
 CPPFLAGS += -DPRECISE_CPU_CYCLES=1 -DPRECISE_CIA_CYCLES=1 -DPC_IS_POINTER=0
 
