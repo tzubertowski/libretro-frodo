@@ -74,8 +74,9 @@ public:
     inline uint8 ReadMemoryFast(uint16 addr);
     inline void WriteMemoryFast(uint16 addr, uint8 value);
     
-    // Remove memory access overrides to avoid recursion
-    // Base class methods will be used directly
+    // Override memory access methods for performance
+    uint8 ExtReadByte(uint16 addr);
+    void ExtWriteByte(uint16 addr, uint8 value);
     
     // Instruction implementations (optimized)
     void ExecuteInstructionFast();
@@ -98,6 +99,9 @@ private:
     // Simplified configuration tracking
     bool config_changed;
     
+    // Fast access to base class memory for direct RAM optimization
+    uint8* ram_ptr_cache;
+    
     // Performance counters
     uint32 fast_instructions;
     uint32 slow_instructions;
@@ -119,18 +123,26 @@ private:
     void FastNOP();
 };
 
-// Simplified memory access - removed complex mapping
-// The complex mapping caused recursion and performance issues
-// Base class memory access will be used directly
+// Ultra-fast memory access macros for maximum performance
+// These provide the fastest possible memory access for SF2000
 
+// Ultra-fast macros for direct RAM access (zero overhead)
+#define SF2000_READ_RAM_FAST(addr) (ram_ptr_cache[addr])
+#define SF2000_WRITE_RAM_FAST(addr, value) (ram_ptr_cache[addr] = (value))
+
+// Optimized inline functions with minimal overhead
 inline uint8 MOS6510_SF2000::ReadMemoryFast(uint16 addr) {
-    // Simple wrapper - for future optimization
-    return MOS6510::ExtReadByte(addr);
+    // Optimized for MIPS branch prediction
+    return (addr < 0xa000) ? ram_ptr_cache[addr] : MOS6510::ExtReadByte(addr);
 }
 
 inline void MOS6510_SF2000::WriteMemoryFast(uint16 addr, uint8 value) {
-    // Simple wrapper - for future optimization
-    MOS6510::ExtWriteByte(addr, value);
+    // Optimized for MIPS branch prediction  
+    if (addr < 0xa000) {
+        ram_ptr_cache[addr] = value;
+    } else {
+        MOS6510::ExtWriteByte(addr, value);
+    }
 }
 
 // Flag calculation macros using lookup tables
