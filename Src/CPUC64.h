@@ -46,8 +46,8 @@
 enum {
 	INT_VICIRQ,
 	INT_CIAIRQ,
-	INT_NMI
-	// INT_RESET (private)
+	INT_NMI,
+	INT_RESET
 };
 
 
@@ -100,7 +100,7 @@ public:
 	bool BALow;			// BA line for Frodo SC
 #endif
 
-private:
+protected: // Changed from private to protected for MOS6510_SF2000 access
 	uint8 read_byte(uint16 adr);
 	uint8 read_byte_io(uint16 adr);
 	uint16 read_word(uint16 adr);

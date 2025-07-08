@@ -32,12 +32,11 @@
 
 // MIPS register allocation hints for 6502 registers
 #ifdef SF2000_MIPS_OPTIMIZED
-#define REGISTER_A      register uint8 reg_a asm("$s0")
-#define REGISTER_X      register uint8 reg_x asm("$s1")  
-#define REGISTER_Y      register uint8 reg_y asm("$s2")
-#define REGISTER_SP     register uint8 reg_sp asm("$s3")
-#define REGISTER_PC     register uint8* reg_pc asm("$s4")
-#define REGISTER_FLAGS  register uint32 reg_flags asm("$s5")
+#define REGISTER_A      uint8 reg_a
+#define REGISTER_X      uint8 reg_x
+#define REGISTER_Y      uint8 reg_y
+#define REGISTER_SP     uint8 reg_sp
+#define REGISTER_PC     uint8* reg_pc
 #else
 #define REGISTER_A      uint8 reg_a
 #define REGISTER_X      uint8 reg_x
@@ -61,8 +60,8 @@ public:
     MOS6510_SF2000(C64 *c64, uint8 *Ram, uint8 *Basic, uint8 *Kernal, uint8 *Char, uint8 *Color);
     
     // Override base class method to use optimized version
-    int EmulateLine(int cycles_left) { 
-        return EmulateLineFast(cycles_left);
+    int EmulateLine(int cycles_left) {
+        return EmulateLineComputedGoto(cycles_left);
     }
     
     // Fast emulation methods  
@@ -112,14 +111,18 @@ private:
     // Fast instruction implementations
     void FastLDA(); void FastLDX(); void FastLDY();
     void FastSTA(); void FastSTX(); void FastSTY();
-    void FastADC(); void FastSBC();
+    void FastADC(uint8 operand);
+    void FastSBC(uint8 operand);
     void FastAND(); void FastORA(); void FastEOR();
-    void FastCMP(); void FastCPX(); void FastCPY();
+    void FastCMP(uint8 reg_val, uint8 operand); void FastCPX(uint8 operand); void FastCPY(uint8 operand);
     void FastINC(); void FastDEC(); void FastINX(); void FastINY(); void FastDEX(); void FastDEY();
     void FastJMP(); void FastJSR(); void FastRTS(); void FastRTI();
     void FastBEQ(); void FastBNE(); void FastBPL(); void FastBMI();
     void FastBCC(); void FastBCS(); void FastBVC(); void FastBVS();
     void FastNOP();
+
+protected:
+    void jump(uint16 adr);
 };
 
 // Optimized memory access for SF2000
@@ -151,7 +154,7 @@ inline void MOS6510_SF2000::WriteMemoryFast(uint16 addr, uint8 value) {
 }
 
 // Flag calculation macros using lookup tables
-#define SET_NZ_FLAGS(val) reg_flags = (reg_flags & 0x7D) | flag_lookup.nz_table[val]
+#define SET_NZ_FLAGS(val) { z_flag = (val == 0); n_flag = (val & 0x80); }
 #define SET_CARRY(val) reg_flags = (reg_flags & 0xFE) | (val & 1)
 #define GET_CARRY() (reg_flags & 1)
 #define GET_ZERO() ((reg_flags & 2) == 0)

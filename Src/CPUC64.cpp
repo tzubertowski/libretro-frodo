@@ -91,9 +91,7 @@
 #include "Version.h"
 
 
-enum {
-	INT_RESET = 3
-};
+
 
 
 /*
