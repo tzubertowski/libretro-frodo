@@ -230,6 +230,7 @@ else ifeq ($(platform), sf2000)
    # MIPS-specific optimizations (compatible with mips32)
    CFLAGS += -mmemcpy -mno-check-zero-division
    CFLAGS += -fdelayed-branch -foptimize-register-move
+   CFLAGS += -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-exceptions -fno-strict-aliasing -fno-rtti
    CXXFLAGS = $(CFLAGS) -std=c++11
    STATIC_LINKING = 1
    NOLIBCO = 1
