@@ -16,6 +16,10 @@
 #include "types.h"
 #include "CPUC64.h"
 
+#ifdef SF2000_FAST_CPU
+#include "CPUC64_SF2000_flags.h"
+#endif
+
 // SF2000 performance optimizations enabled
 #ifdef __GNUC__
 #define SF2000_COMPUTED_GOTO 1
@@ -120,6 +124,10 @@ private:
     void FastBEQ(); void FastBNE(); void FastBPL(); void FastBMI();
     void FastBCC(); void FastBCS(); void FastBVC(); void FastBVS();
     void FastNOP();
+    
+    // Optimized flag calculation methods
+    void do_adc(uint8 byte);
+    void do_sbc(uint8 byte);
 
 protected:
     void jump(uint16 adr);
@@ -153,8 +161,8 @@ inline void MOS6510_SF2000::WriteMemoryFast(uint16 addr, uint8 value) {
     MOS6510::ExtWriteByte(addr, value);
 }
 
-// Flag calculation macros using lookup tables
-#define SET_NZ_FLAGS(val) { z_flag = (val == 0); n_flag = (val & 0x80); }
+// Flag calculation macros using lookup tables (renamed to avoid conflicts)
+#define SET_NZ_FLAGS_SIMPLE(val) { z_flag = (val == 0); n_flag = (val & 0x80); }
 #define SET_CARRY(val) reg_flags = (reg_flags & 0xFE) | (val & 1)
 #define GET_CARRY() (reg_flags & 1)
 #define GET_ZERO() ((reg_flags & 2) == 0)
@@ -171,7 +179,7 @@ inline void MOS6510_SF2000::WriteMemoryFast(uint16 addr, uint8 value) {
 // Common instruction patterns
 #define LOAD_OP(reg, addr) \
     reg = ReadMemoryFast(addr); \
-    SET_NZ_FLAGS(reg)
+    SET_NZ_FLAGS_SIMPLE(reg)
 
 #define STORE_OP(reg, addr) \
     WriteMemoryFast(addr, reg)
@@ -180,7 +188,7 @@ inline void MOS6510_SF2000::WriteMemoryFast(uint16 addr, uint8 value) {
     { \
         uint8 val = ReadMemoryFast(addr); \
         uint16 result = reg - val; \
-        SET_NZ_FLAGS(result); \
+        SET_NZ_FLAGS_SIMPLE(result); \
         SET_CARRY(result < 0x100); \
     }
 
