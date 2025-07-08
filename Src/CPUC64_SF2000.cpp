@@ -57,6 +57,10 @@ MOS6510_SF2000::MOS6510_SF2000(C64 *c64, uint8 *Ram, uint8 *Basic, uint8 *Kernal
     
     // Configuration tracking
     config_changed = false;
+    
+    // Initialize RAM pointer for optimized memory access
+    // This provides direct access to C64 RAM for fastest possible memory operations
+    ram_pointer = Ram;
 }
 
 /*
