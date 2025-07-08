@@ -23,7 +23,7 @@
 #if PC_IS_POINTER
 #define read_byte_imm() (*pc++)
 #else
-#define read_byte_imm() ExtReadByte(pc++)
+#define read_byte_imm() read_byte(pc++)
 #endif
 
 // Static lookup tables
@@ -57,9 +57,6 @@ MOS6510_SF2000::MOS6510_SF2000(C64 *c64, uint8 *Ram, uint8 *Basic, uint8 *Kernal
     
     // Configuration tracking
     config_changed = false;
-    
-    // CRITICAL: Initialize RAM pointer cache for direct memory access optimization
-    ram_ptr_cache = Ram;
 }
 
 /*
@@ -120,14 +117,18 @@ void MOS6510_SF2000::UpdateMemoryMap()
 }
 
 /*
- * Ultra-fast line emulation with minimal overhead
+ * Ultra-fast line emulation with simplified approach
  * 
- * Delegates to base class but with optimized memory access
+ * Delegates to base class without complex memory mapping
+ * to avoid recursion and performance overhead
  */
 int MOS6510_SF2000::EmulateLineFast(int cycles_left)
 {
-    // Simple delegation - our ExtReadByte/ExtWriteByte optimizations
-    // will provide the performance boost automatically
+    // Simple delegation to base class
+    // Avoids the memory mapping complexity that caused performance regression
+    fast_instructions++;
+    
+    // Call base class EmulateLine directly
     return MOS6510::EmulateLine(cycles_left);
 }
 
@@ -142,30 +143,6 @@ int MOS6510_SF2000::EmulateLineComputedGoto(int cycles_left)
     return EmulateLineFast(cycles_left);
 }
 
-/*
- * Ultra-fast memory read optimized for SF2000 MIPS
- * Branch optimized for common case (RAM access)
- */
-uint8 MOS6510_SF2000::ExtReadByte(uint16 addr)
-{
-    // Optimized branch: RAM access is the common case (75% of accesses)
-    // MIPS branch predictor will optimize this after a few iterations
-    return (addr < 0xa000) ? ram_ptr_cache[addr] : MOS6510::ExtReadByte(addr);
-}
-
-/*
- * Ultra-fast memory write optimized for SF2000 MIPS
- * Branch optimized for common case (RAM access)
- */
-void MOS6510_SF2000::ExtWriteByte(uint16 addr, uint8 value)
-{
-    // Optimized branch: RAM access is the common case
-    if (addr < 0xa000) {
-        ram_ptr_cache[addr] = value;
-    } else {
-        MOS6510::ExtWriteByte(addr, value);
-    }
-}
 
 /*
  * Execute single instruction with optimization
