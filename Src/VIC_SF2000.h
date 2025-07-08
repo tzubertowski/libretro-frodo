@@ -70,6 +70,10 @@ public:
     void UpdateSpriteCacheFast();
     void UpdateCharsetCacheFast();
     
+    // Fast path optimization methods
+    bool CanUseFastPath();
+    int EmulateLineFast();
+    
     // Direct framebuffer access
     void SetFramebuffer(uint16* framebuffer);
     
