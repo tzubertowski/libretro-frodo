@@ -57,6 +57,9 @@ MOS6510_SF2000::MOS6510_SF2000(C64 *c64, uint8 *Ram, uint8 *Basic, uint8 *Kernal
     
     // Configuration tracking
     config_changed = false;
+    
+    // CRITICAL: Initialize RAM pointer cache for direct memory access optimization
+    ram_ptr_cache = Ram;
 }
 
 /*

@@ -60,7 +60,7 @@ public:
     ~MOS6569_SF2000();
     
     // Optimized VIC methods
-    void EmulateLine();
+    int EmulateLine();
     void WriteRegister(uint16 adr, uint8 byte);
     uint8 ReadRegister(uint16 adr);
     
