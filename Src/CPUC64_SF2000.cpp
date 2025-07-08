@@ -40,13 +40,13 @@ MOS6510_SF2000::MOS6510_SF2000(C64 *c64, uint8 *Ram, uint8 *Basic, uint8 *Kernal
     fast_instructions = 0;
     slow_instructions = 0;
     
-    // Initialize memory cache
+    // Initialize memory cache (simplified)
     last_read_addr = 0xFFFF;  // Invalid address to force initial cache miss
     last_read_value = 0;
     last_write_addr = 0xFFFF;
     
-    // Initialize memory map
-    UpdateMemoryMap();
+    // Configuration tracking
+    config_changed = false;
 }
 
 /*
@@ -97,30 +97,28 @@ void MOS6510_SF2000::InitializeDispatchTable()
 
 /*
  * Update memory map for fast access
+ * Simplified version to avoid recursion issues
  */
 void MOS6510_SF2000::UpdateMemoryMap()
 {
-    // TODO: Implement memory map optimization when we can access base class members
-    // For now, this is a placeholder that doesn't access private members
+    // For now, just mark configuration as updated
+    // The complex memory mapping caused recursion issues
+    config_changed = false;
 }
 
 /*
- * Ultra-fast line emulation with minimal overhead
+ * Ultra-fast line emulation with simplified approach
  * 
- * This version simply calls the base class with minimal optimizations
- * Eliminates all GetState/SetState overhead while providing some fast paths
+ * Delegates to base class without complex memory mapping
+ * to avoid recursion and performance overhead
  */
 int MOS6510_SF2000::EmulateLineFast(int cycles_left)
 {
-    // For maximum performance with no state copying overhead,
-    // we mostly rely on the base class implementation.
-    // Only add fast paths for the most critical cases when we can
-    // determine them without accessing private state.
-    
+    // Simple delegation to base class
+    // Avoids the memory mapping complexity that caused performance regression
     fast_instructions++;
     
-    // Call base class EmulateLine for all instruction handling
-    // This eliminates the GetState/SetState overhead that was causing regression
+    // Call base class EmulateLine directly
     return MOS6510::EmulateLine(cycles_left);
 }
 

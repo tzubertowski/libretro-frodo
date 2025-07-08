@@ -74,6 +74,9 @@ public:
     inline uint8 ReadMemoryFast(uint16 addr);
     inline void WriteMemoryFast(uint16 addr, uint8 value);
     
+    // Remove memory access overrides to avoid recursion
+    // Base class methods will be used directly
+    
     // Instruction implementations (optimized)
     void ExecuteInstructionFast();
     
@@ -87,19 +90,12 @@ private:
     static void* dispatch_table[256];
     #endif
     
-    // Memory map cache for fast access
-    uint8* memory_map[256];  // 256 pages of 256 bytes each
-    
     // Fast memory cache for most common addresses
     mutable uint16 last_read_addr;
     mutable uint8 last_read_value;
     mutable uint16 last_write_addr;
     
-    // Optimized register file (local variables will be used in functions)
-    // Note: MIPS register allocation will be done in function scope
-    
-    // Fast memory configuration
-    uint8 current_config;
+    // Simplified configuration tracking
     bool config_changed;
     
     // Performance counters
@@ -123,14 +119,18 @@ private:
     void FastNOP();
 };
 
-// Inline memory access for maximum performance
-// Fast path through original functions with minimal overhead
+// Simplified memory access - removed complex mapping
+// The complex mapping caused recursion and performance issues
+// Base class memory access will be used directly
+
 inline uint8 MOS6510_SF2000::ReadMemoryFast(uint16 addr) {
-    return ExtReadByte(addr);
+    // Simple wrapper - for future optimization
+    return MOS6510::ExtReadByte(addr);
 }
 
 inline void MOS6510_SF2000::WriteMemoryFast(uint16 addr, uint8 value) {
-    ExtWriteByte(addr, value);
+    // Simple wrapper - for future optimization
+    MOS6510::ExtWriteByte(addr, value);
 }
 
 // Flag calculation macros using lookup tables
