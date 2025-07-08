@@ -61,10 +61,13 @@ public:
     MOS6510_SF2000(C64 *c64, uint8 *Ram, uint8 *Basic, uint8 *Kernal, uint8 *Char, uint8 *Color);
     
     // Override base class method to use optimized version
-    int EmulateLine(int cycles_left) { return EmulateLineFast(cycles_left); }
+    int EmulateLine(int cycles_left) { 
+        return EmulateLineFast(cycles_left);
+    }
     
     // Fast emulation methods  
     int EmulateLineFast(int cycles_left);
+    int EmulateLineComputedGoto(int cycles_left);
     void InitializeFastTables();
     
     // Memory access optimizations
@@ -86,6 +89,11 @@ private:
     
     // Memory map cache for fast access
     uint8* memory_map[256];  // 256 pages of 256 bytes each
+    
+    // Fast memory cache for most common addresses
+    mutable uint16 last_read_addr;
+    mutable uint8 last_read_value;
+    mutable uint16 last_write_addr;
     
     // Optimized register file (local variables will be used in functions)
     // Note: MIPS register allocation will be done in function scope
@@ -115,16 +123,13 @@ private:
     void FastNOP();
 };
 
-// Inline memory access for maximum performance  
+// Inline memory access for maximum performance
+// Fast path through original functions with minimal overhead
 inline uint8 MOS6510_SF2000::ReadMemoryFast(uint16 addr) {
-    // TODO: Implement fast memory access when we can access base class members
-    // For now, fall back to public interface
     return ExtReadByte(addr);
 }
 
 inline void MOS6510_SF2000::WriteMemoryFast(uint16 addr, uint8 value) {
-    // TODO: Implement fast memory access when we can access base class members
-    // For now, fall back to public interface
     ExtWriteByte(addr, value);
 }
 

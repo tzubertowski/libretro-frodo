@@ -1316,7 +1316,7 @@ void DigitalRenderer::EmulateLine(void)
     */
    divisor += SAMPLE_FREQ;
    while (divisor >= 0)
-      divisor -= TOTAL_RASTERS*CALC_FREQ, to_output++;
+      divisor -= TOTAL_RASTERS*SCREEN_FREQ, to_output++;
 
    /*
     * Calculate the sound data only when we have enough to fill
