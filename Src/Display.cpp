@@ -444,10 +444,10 @@ C64Display::~C64Display()
 {	
 	if(screen)
    {
-      free(screen->pixels);
+      if(screen->pixels)
+         free(screen->pixels);
       free(screen);
-      screen->pixels = NULL;
-      screen         = NULL;
+      screen = NULL;
    }
 }
 
