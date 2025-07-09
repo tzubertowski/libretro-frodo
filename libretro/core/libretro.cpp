@@ -27,6 +27,9 @@ int frameskip_type = 0;     // 0 = fixed, 1 = auto
 int frameskip_value = 0;    // Number of frames to skip
 int frameskip_counter = 0;  // Current frame counter
 
+// Shutdown flag
+static bool shutdown_requested = false;
+
 // Simple 8x8 font bitmap for splash screen text
 static const unsigned char font_8x8[][8] = {
    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // Space
@@ -258,7 +261,8 @@ static void retro_wrap_emulator(void)
    co_switch(mainThread);
 
    // Dead emulator, but libco says not to return
-   while(1)
+   // Check for shutdown to avoid infinite loop
+   while(!shutdown_requested)
       co_switch(mainThread);
 #endif
 }
@@ -286,6 +290,8 @@ void Emu_uninit(void)
 {
 #ifdef NO_LIBCO
    quit_frodo_emu();
+#else
+   shutdown_requested = true;
 #endif
    texture_uninit();
 }
@@ -294,6 +300,8 @@ void retro_shutdown_core(void)
 {
 #ifdef NO_LIBCO
 	quit_frodo_emu();
+#else
+   shutdown_requested = true;
 #endif
    texture_uninit();
    environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, NULL);
@@ -370,6 +378,7 @@ void retro_deinit(void)
       emuThread = 0;
    }
 #endif
+   shutdown_requested = false; // Reset for next time
 }
 
 unsigned retro_api_version(void)
@@ -560,6 +569,9 @@ bool retro_load_game(const struct retro_game_info *info)
 void retro_unload_game(void)
 {
    pauseg=0;
+#ifndef NO_LIBCO
+   shutdown_requested = true;
+#endif
 }
 
 unsigned retro_get_region(void)
