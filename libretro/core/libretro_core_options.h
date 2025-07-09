@@ -43,6 +43,22 @@ struct retro_core_option_definition option_defs_us[] = {
       },
       "384x288"
    },
+   {
+      "frodo_frameskip",
+      "Frame Skip",
+      "Skip frames to improve performance. Higher values = better performance but choppier animation.",
+      {
+         { "0",   "Off" },
+         { "1",   "Skip 1 frame" },
+         { "2",   "Skip 2 frames" },
+         { "3",   "Skip 3 frames" },
+         { "4",   "Skip 4 frames" },
+         { "5",   "Skip 5 frames" },
+         { "auto", "Auto" },
+         { NULL, NULL },
+      },
+      "0"
+   },
    { NULL, NULL, NULL, {{0}}, NULL },
 };
 
