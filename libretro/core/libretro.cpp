@@ -21,6 +21,11 @@ int VIRTUAL_WIDTH;
 int retrow=1024; 
 int retroh=1024;
 
+// Frameskip variables
+int frameskip_type = 0;     // 0 = fixed, 1 = auto
+int frameskip_value = 0;    // Number of frames to skip
+int frameskip_counter = 0;  // Current frame counter
+
 #ifdef NO_LIBCO
 extern C64 *TheC64;
 extern void quit_frodo_emu(void);
@@ -91,6 +96,28 @@ static void update_variables(void)
       VIRTUAL_WIDTH = retrow;
       texture_init();
       //reset_screen();
+   }
+
+   // Handle frameskip option
+   var.key   = "frodo_frameskip";
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "auto") == 0)
+      {
+         frameskip_type = 1;  // Auto frameskip
+         frameskip_value = 0; // Will be determined dynamically
+      }
+      else
+      {
+         frameskip_type = 0;  // Fixed frameskip
+         frameskip_value = strtoul(var.value, NULL, 0);
+      }
+      
+      if (log_cb)
+         log_cb(RETRO_LOG_INFO, "Frameskip set to: %s (type=%d, value=%d)\n", 
+                var.value, frameskip_type, frameskip_value);
    }
 }
 
@@ -309,7 +336,6 @@ void retro_run(void)
 
    if(pauseg==0)
    {
-
       if(SND==1)
          for(x=0;x<snd_sampler;x++)
             audio_cb(SNDBUF[x],SNDBUF[x]);
@@ -323,7 +349,33 @@ void retro_run(void)
 #endif
    }   
 
-   video_cb(Retro_Screen,retrow,retroh,retrow<<PIXEL_BYTES);
+   // Simple frame delay approach: Only apply frameskip after initial boot time
+   static int frame_count = 0;
+   frame_count++;
+   
+   // Give the C64 300 frames (~6 seconds at 50fps) to complete boot sequence
+   bool allow_frameskip = (frame_count > 300);
+
+   // Frameskip logic - only apply when emulator is running AND after boot delay
+   if(pauseg==0 && frameskip_value > 0 && allow_frameskip)
+   {
+      if (frameskip_counter < frameskip_value)
+      {
+         // Skip this frame - don't call video_cb at all
+         frameskip_counter++;
+      }
+      else
+      {
+         // Render this frame and reset counter
+         frameskip_counter = 0;
+         video_cb(Retro_Screen,retrow,retroh,retrow<<PIXEL_BYTES);
+      }
+   }
+   else
+   {
+      // Always render when paused/booting or frameskip disabled
+      video_cb(Retro_Screen,retrow,retroh,retrow<<PIXEL_BYTES);
+   }
 
 #ifndef NO_LIBCO   
    co_switch(emuThread);
