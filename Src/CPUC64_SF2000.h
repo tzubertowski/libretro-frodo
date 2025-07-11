@@ -16,9 +16,10 @@
 #include "types.h"
 #include "CPUC64.h"
 
-#ifdef SF2000_FAST_CPU
-#include "CPUC64_SF2000_flags.h"
-#endif
+// Commented these lines to allow the core to compile correctly.
+// #ifdef SF2000_FAST_CPU
+// #include "CPUC64_SF2000_flags.h"
+// #endif
 
 // SF2000 performance optimizations enabled
 #ifdef __GNUC__
