@@ -27,6 +27,9 @@ int frameskip_type = 0;     // 0 = fixed, 1 = auto
 int frameskip_value = 0;    // Number of frames to skip
 int frameskip_counter = 0;  // Current frame counter
 
+// Frodo_1541emul variable
+bool frodo_1541emul = true;
+
 // Shutdown flag
 static bool shutdown_requested = false;
 
@@ -224,6 +227,27 @@ static void update_variables(void)
       VIRTUAL_WIDTH = retrow;
       texture_init();
       //reset_screen();
+   }
+
+   // Handle Processor-level 1541 emulation
+   var.key   = "frodo_1541emul";
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "true") == 0)
+      {
+         frodo_1541emul = true;  // Enable processor-level 1541 emulation
+      }
+      else
+      {
+         frodo_1541emul = false;  // Disable processor-level 1541 emulation
+      }
+      ThePrefs.Emul1541Proc = frodo_1541emul;
+      
+      if (log_cb)
+         log_cb(RETRO_LOG_INFO, "Emul1541Proc set to: %s\n", 
+                var.value);
    }
 
    // Handle frameskip option

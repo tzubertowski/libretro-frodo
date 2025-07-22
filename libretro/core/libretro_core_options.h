@@ -59,6 +59,17 @@ struct retro_core_option_definition option_defs_us[] = {
       },
       "0"
    },
+   {
+      "frodo_1541emul",
+      "Enable processor-level 1541 emulation",
+      "Enable processor-level 1541 emulation. If set to true, operation are slower but better compability.",
+      {
+         { "true",   "On" },
+         { "false",   "Off" },
+         { NULL, NULL },
+      },
+      "true"
+   },
    { NULL, NULL, NULL, {{0}}, NULL },
 };
 

@@ -433,21 +433,6 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 		mbt[RETRO_DEVICE_ID_JOYPAD_B] = 0;
 	}
 
-	// Map a space to "X" button
-	// if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X) && shiftstate == 0)
-	// {
-	// 	mbt[RETRO_DEVICE_ID_JOYPAD_X]++;
-	// 	if (mbt[RETRO_DEVICE_ID_JOYPAD_X] > 2)
-	// 	{
-	// 		kbd_buf_feed((char*)" ");
-	// 		mbt[RETRO_DEVICE_ID_JOYPAD_X] = 0; // Reset to prevent repeated triggers
-	// 	}
-	// }
-	// else
-	// {
-	// 	mbt[RETRO_DEVICE_ID_JOYPAD_X] = 0;
-	// }
-
 	if ((SHOWKEY != 1) && (pauseg == 1))
 	{
 		if (slowdown > 0)
@@ -534,10 +519,15 @@ int Retro_PollEvent(uint8 *key_matrix, uint8 *rev_matrix, uint8 *joystick)
 		{
 			mbt[RETRO_DEVICE_ID_JOYPAD_SELECT] = 0;
 		}
+
+		// Map a ESC-RUN/STOP to "L" button
 		check_key_with_delay(RETRO_DEVICE_ID_JOYPAD_L, mbt, RETRO_DEVICE_ID_JOYPAD_L, MATRIX(7, 7));
 		
-		// Map a space to "X" button
+		// Map a SPACE to "X" button
 		check_key_with_delay(RETRO_DEVICE_ID_JOYPAD_X, mbt, RETRO_DEVICE_ID_JOYPAD_X, MATRIX(7, 4));
+	
+		// Map ENTER to "Y" button
+		check_key_with_delay(RETRO_DEVICE_ID_JOYPAD_Y, mbt, RETRO_DEVICE_ID_JOYPAD_Y, MATRIX(0, 1));
 
 		if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R))
 		{
