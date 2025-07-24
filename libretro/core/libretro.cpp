@@ -27,6 +27,12 @@ int frameskip_type = 0;     // 0 = fixed, 1 = auto
 int frameskip_value = 0;    // Number of frames to skip
 int frameskip_counter = 0;  // Current frame counter
 
+// Overscan variables - Initialize with default "auto" values
+int overscan_crop_left = 24;
+int overscan_crop_right = 24;
+int overscan_crop_top = 12;
+int overscan_crop_bottom = 12;
+
 // Shutdown flag
 static bool shutdown_requested = false;
 
@@ -70,6 +76,9 @@ static const unsigned char font_8x8[][8] = {
    {0x3C, 0x42, 0x42, 0x3C, 0x42, 0x42, 0x3C, 0x00}, // 8
    {0x3C, 0x42, 0x42, 0x3E, 0x02, 0x04, 0x38, 0x00}, // 9
    {0x00, 0x00, 0x18, 0x00, 0x00, 0x18, 0x00, 0x00}, // .
+   {0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x00}, // /
+   {0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x18, 0x00}, // :
+   {0x00, 0x00, 0x00, 0x7E, 0x00, 0x00, 0x00, 0x00}, // -
 };
 
 // Character to font index mapping
@@ -78,12 +87,21 @@ static int char_to_font_index(char c) {
    if (c >= 'a' && c <= 'z') return c - 'a' + 1;
    if (c >= '0' && c <= '9') return c - '0' + 27;
    if (c == '.') return 37;
-   return 0; // Space
+   if (c == '/') return 38;
+   if (c == ':') return 39;
+   if (c == '-') return 40;
+   return 0; // Space for any unsupported character
 }
 
 // Draw a character at x, y
 static void draw_char(int x, int y, char c, PIXEL_TYPE color) {
    int font_idx = char_to_font_index(c);
+   
+   // Bounds check for font array (0-40)
+   if (font_idx < 0 || font_idx >= 41) {
+      font_idx = 0; // Default to space
+   }
+   
    const unsigned char *font_data = font_8x8[font_idx];
    
    for (int row = 0; row < 8; row++) {
@@ -92,7 +110,8 @@ static void draw_char(int x, int y, char c, PIXEL_TYPE color) {
          if (byte & (0x80 >> col)) {
             int px = x + col;
             int py = y + row;
-            if (px >= 0 && px < retrow && py >= 0 && py < retroh) {
+            if (px >= 0 && px < retrow && py >= 0 && py < retroh && 
+                px < 1024 && py < 1024 && (py * retrow + px) < (1024 * 1024)) {
                Retro_Screen[py * retrow + px] = color;
             }
          }
@@ -114,23 +133,35 @@ static void draw_string(int x, int y, const char *str, PIXEL_TYPE color) {
    }
 }
 
-// Splash screen function
-static void render_splash_screen(void)
+// Splash screen function for FRODO DASH V
+static void draw_splash_screen(void)
 {
-   // Background color: #e791bf (RGB 231, 145, 191)
-   // Convert to RGB565 for 16-bit mode or RGB888 for 32-bit mode
+   // Background color: Pink #e791bf (RGB 231, 145, 191)
+   // Convert to RGB565: R=231>>3=28, G=145>>2=36, B=191>>3=23
 #ifdef RENDER16B
-   uint16_t bg_color = ((231 >> 3) << 11) | ((145 >> 2) << 5) | (191 >> 3);
+   uint16_t bg_color = ((231 >> 3) << 11) | ((145 >> 2) << 5) | (191 >> 3); // RGB565: Pink #e791bf
    uint16_t text_color = 0xFFFF; // White
 #else
-   uint32_t bg_color = 0xFFE791BF; // ARGB
+   uint32_t bg_color = 0xFFE791BF; // ARGB: Pink #e791bf
    uint32_t text_color = 0xFFFFFFFF; // White
 #endif
 
-   // Fill background
-   for (int y = 0; y < retroh; y++) {
-      for (int x = 0; x < retrow; x++) {
-         Retro_Screen[y * retrow + x] = bg_color;
+   // Fill entire screen buffer with pink background
+   // Ensure we don't exceed buffer bounds (1024x1024)
+   // Only fill if screen dimensions are safe
+   if (retrow <= 1024 && retroh <= 1024) {
+      for (int y = 0; y < retroh; y++) {
+         for (int x = 0; x < retrow; x++) {
+            int index = y * retrow + x;
+            if (index >= 0 && index < (1024 * 1024)) {
+               Retro_Screen[index] = bg_color;
+            }
+         }
+      }
+   } else {
+      // Fallback: fill first 1024x1024 if dimensions are too large
+      for (int i = 0; i < (1024 * 1024); i++) {
+         Retro_Screen[i] = bg_color;
       }
    }
 
@@ -138,20 +169,25 @@ static void render_splash_screen(void)
    int center_x = retrow / 2;
    int center_y = retroh / 2;
    
-   // First line: "FRODO V4.2"
-   char line1[] = "FRODO V4.2";
-   int line1_width = strlen(line1) * 8;
-   draw_string(center_x - line1_width / 2, center_y - 20, line1, text_color);
+   // Main title: "FRODO DASH V." - 50 pixels above center
+   char title[] = "FRODO DASH V.";
+   int title_width = strlen(title) * 8;
+   draw_string(center_x - title_width / 2, center_y - 50, title, text_color);
    
-   // Second line: "MODDED AND COMPILED BY PROSTY"
-   char line2[] = "MODDED AND COMPILED BY PROSTY";
-   int line2_width = strlen(line2) * 8;
-   draw_string(center_x - line2_width / 2, center_y + 10, line2, text_color);
+   // Credits: "MOD BY PROSTY" - 30 pixels above center
+   char credits[] = "MOD BY PROSTY";
+   int credits_width = strlen(credits) * 8;
+   draw_string(center_x - credits_width / 2, center_y - 30, credits, text_color);
    
-   // Bottom line: Compilation time
-   char line3[] = "COMPILED " __DATE__ " " __TIME__;
-   int line3_width = strlen(line3) * 8;
-   draw_string(center_x - line3_width / 2, retroh - 30, line3, text_color);
+   // Discord link: "discord.gg/bvfKkHvsXK" - 50 pixels from bottom
+   char discord[] = "discord.gg/bvfKkHvsXK";
+   int discord_width = strlen(discord) * 8;
+   draw_string(center_x - discord_width / 2, retroh - 50, discord, text_color);
+   
+   // Version date: dynamic compilation date - 30 pixels from bottom
+   char version[] = "ver " __DATE__;
+   int version_width = strlen(version) * 8;
+   draw_string(center_x - version_width / 2, retroh - 30, version, text_color);
 }
 
 #ifdef NO_LIBCO
@@ -246,6 +282,54 @@ static void update_variables(void)
       if (log_cb)
          log_cb(RETRO_LOG_INFO, "Frameskip set to: %s (type=%d, value=%d)\n", 
                 var.value, frameskip_type, frameskip_value);
+   }
+
+   // Handle overscan option
+   var.key   = "frodo_overscan";
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "none") == 0)
+      {
+         overscan_crop_left = 0;
+         overscan_crop_right = 0;
+         overscan_crop_top = 0;
+         overscan_crop_bottom = 0;
+      }
+      else if (strcmp(var.value, "small") == 0)
+      {
+         overscan_crop_left = 8;
+         overscan_crop_right = 8;
+         overscan_crop_top = 4;
+         overscan_crop_bottom = 4;
+      }
+      else if (strcmp(var.value, "medium") == 0)
+      {
+         overscan_crop_left = 16;
+         overscan_crop_right = 16;
+         overscan_crop_top = 8;
+         overscan_crop_bottom = 8;
+      }
+      else if (strcmp(var.value, "large") == 0)
+      {
+         overscan_crop_left = 32;
+         overscan_crop_right = 32;
+         overscan_crop_top = 16;
+         overscan_crop_bottom = 16;
+      }
+      else // "auto" or any other value
+      {
+         overscan_crop_left = 24;
+         overscan_crop_right = 24;
+         overscan_crop_top = 12;
+         overscan_crop_bottom = 12;
+      }
+      
+      if (log_cb)
+         log_cb(RETRO_LOG_INFO, "[FRODO] Overscan set to: %s (L=%d, R=%d, T=%d, B=%d)\n", 
+                var.value, overscan_crop_left, overscan_crop_right, 
+                overscan_crop_top, overscan_crop_bottom);
    }
 }
 
@@ -487,15 +571,18 @@ void retro_run(void)
    static int frame_count = 0;
    frame_count++;
    
-   // Show splash screen for first 120 frames (~2.4 seconds at 50fps)
-   if (frame_count <= 120)
+   // Show splash screen for first 180 frames (3 seconds at 60fps)
+   if (frame_count <= 180)
    {
-      render_splash_screen();
+      draw_splash_screen();
       video_cb(Retro_Screen,retrow,retroh,retrow<<PIXEL_BYTES);
       
-#ifndef NO_LIBCO   
-      co_switch(emuThread);
-#endif
+      // Upload silent audio samples during splash display
+      if(SND==1)
+         for(int x=0;x<snd_sampler;x++)
+            audio_cb(0,0);
+      
+      // Don't switch to emulator thread during splash - wait for core boot
       return;
    }
    
