@@ -59,6 +59,20 @@ struct retro_core_option_definition option_defs_us[] = {
       },
       "0"
    },
+   {
+      "frodo_overscan",
+      "Overscan Cropping",
+      "Crop the overscan area to show only the visible C64 display area or show the full display including borders.",
+      {
+         { "auto",   "Auto (recommended)" },
+         { "none",   "No cropping (full display)" },
+         { "small",  "Light cropping" },
+         { "medium", "Medium cropping" },
+         { "large",  "Heavy cropping" },
+         { NULL, NULL },
+      },
+      "auto"
+   },
    { NULL, NULL, NULL, {{0}}, NULL },
 };
 

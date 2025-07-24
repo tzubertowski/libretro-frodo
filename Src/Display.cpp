@@ -86,6 +86,12 @@ extern int BKGCOLOR;
 extern int SHIFTON;
 extern int SHOWKEY;
 
+// Overscan variables
+extern int overscan_crop_left;
+extern int overscan_crop_right;
+extern int overscan_crop_top;
+extern int overscan_crop_bottom;
+
 /* forward declarations */
 int Retro_PollEvent(uint8 *key_matrix,
       uint8 *rev_matrix, uint8 *joystick);
@@ -214,10 +220,20 @@ void Retro_BlitSurface(retro_Surface *ss)
 	retro_Rect src,dst;
 	int x,y,w;
 
-	src.x = 0;
-	src.y = 0;
-	src.w = ss->w;
-	src.h = ss->h;
+	// Apply overscan cropping
+	src.x = overscan_crop_left;
+	src.y = overscan_crop_top;
+	src.w = ss->w - overscan_crop_left - overscan_crop_right;
+	src.h = ss->h - overscan_crop_top - overscan_crop_bottom;
+	
+	// Ensure cropping doesn't exceed source dimensions
+	if (src.x < 0) src.x = 0;
+	if (src.y < 0) src.y = 0;
+	if (src.x + src.w > ss->w) src.w = ss->w - src.x;
+	if (src.y + src.h > ss->h) src.h = ss->h - src.y;
+	if (src.w <= 0) src.w = 1;
+	if (src.h <= 0) src.h = 1;
+	
 	dst.x = 0;
 	dst.y = 0;
 	dst.w = retrow;
@@ -550,12 +566,41 @@ void C64Display::Update(void)
    }
 
 	// Update display
-	//blit c64 scr 1bit depth to emu scr 4bit depth
+	//blit c64 scr 1bit depth to emu scr 4bit depth with overscan cropping
 	pout = (unsigned int *)Retro_Screen+((ThePrefs.ShowLEDs?0:8)*retrow);
 	pin  = (unsigned char *)screen->pixels;
 
-	for (x = 0; x < screen->w * screen->h; x++)
-		*pout++ = mpal[*pin++];
+	// Apply overscan cropping
+	int src_x = overscan_crop_left;
+	int src_y = overscan_crop_top;
+	int src_w = screen->w - overscan_crop_left - overscan_crop_right;
+	int src_h = screen->h - overscan_crop_top - overscan_crop_bottom;
+	
+	// Bounds checking
+	if (src_x < 0) src_x = 0;
+	if (src_y < 0) src_y = 0;
+	if (src_x + src_w > screen->w) src_w = screen->w - src_x;
+	if (src_y + src_h > screen->h) src_h = screen->h - src_y;
+	if (src_w <= 0) src_w = screen->w;
+	if (src_h <= 0) src_h = screen->h;
+
+	// Copy with overscan cropping and scaling to fill screen
+	for (int dst_y = 0; dst_y < retroh; dst_y++) {
+		// Map destination Y to source Y with scaling
+		int src_line_y = (dst_y * src_h) / retroh;
+		if (src_line_y >= src_h) src_line_y = src_h - 1;
+		
+		unsigned char *src_line = (unsigned char *)screen->pixels + ((src_y + src_line_y) * screen->w) + src_x;
+		unsigned int *dst_line = pout + (dst_y * retrow);
+		
+		for (int dst_x = 0; dst_x < retrow; dst_x++) {
+			// Map destination X to source X with scaling
+			int src_x_offset = (dst_x * src_w) / retrow;
+			if (src_x_offset >= src_w) src_x_offset = src_w - 1;
+			
+			*dst_line++ = mpal[src_line[src_x_offset]];
+		}
+	}
 
 	if (SHOWKEY==1)
       virtual_kdb(( char *)Retro_Screen,vkx,vky);
