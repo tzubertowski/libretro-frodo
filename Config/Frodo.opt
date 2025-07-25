@@ -1,0 +1,8 @@
+### [frodo_resolution]:[384x288]:[384x288|400x300|640x480|832x576|960x720|1024x768|1024x1024]
+frodo_resolution = "384x288"
+### [frodo_frameskip]:[0]:[auto|0|1|2|3|4|5]
+frodo_frameskip = "1"
+### [frodo_1541emul]:[true]:[true|false]
+frodo_1541emul = "false"
+### [frodo_overscan]:[none]:[none|auto|small|medium|large]
+frodo_overscan = "none"

@@ -33,6 +33,9 @@ int overscan_crop_right = 24;
 int overscan_crop_top = 12;
 int overscan_crop_bottom = 12;
 
+// Frodo_1541emul variable
+bool frodo_1541emul = true;
+
 // Shutdown flag
 static bool shutdown_requested = false;
 
@@ -262,6 +265,27 @@ static void update_variables(void)
       //reset_screen();
    }
 
+   // Handle Processor-level 1541 emulation
+   var.key   = "frodo_1541emul";
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "true") == 0)
+      {
+         frodo_1541emul = true;  // Enable processor-level 1541 emulation
+      }
+      else
+      {
+         frodo_1541emul = false;  // Disable processor-level 1541 emulation
+      }
+      ThePrefs.Emul1541Proc = frodo_1541emul;
+      
+      if (log_cb)
+         log_cb(RETRO_LOG_INFO, "Emul1541Proc set to: %s\n", 
+                var.value);
+   }
+   
    // Handle frameskip option
    var.key   = "frodo_frameskip";
    var.value = NULL;
