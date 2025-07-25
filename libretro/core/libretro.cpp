@@ -33,6 +33,12 @@ int overscan_crop_right = 24;
 int overscan_crop_top = 12;
 int overscan_crop_bottom = 12;
 
+// Overscan led bar variables - Initialize with default "auto" values
+int overscan_led_bar_x = 0;
+int overscan_led_bar_y = 27;
+int overscan_led_bar_w = 0;
+int overscan_led_bar_h = 11;
+
 // Frodo_1541emul variable
 bool frodo_1541emul = true;
 
@@ -320,34 +326,59 @@ static void update_variables(void)
          overscan_crop_right = 0;
          overscan_crop_top = 0;
          overscan_crop_bottom = 0;
+         
+         overscan_led_bar_x = 0;
+         overscan_led_bar_y = 0;
+         overscan_led_bar_w = 0;
+         overscan_led_bar_h = 16;
       }
       else if (strcmp(var.value, "small") == 0)
       {
          overscan_crop_left = 8;
          overscan_crop_right = 8;
-         overscan_crop_top = 4;
-         overscan_crop_bottom = 4;
+         overscan_crop_top = 8;
+         overscan_crop_bottom = 12;
+         
+         overscan_led_bar_x = 0;
+         overscan_led_bar_y = 7;
+         overscan_led_bar_w = 0;
+         overscan_led_bar_h = 11;
       }
       else if (strcmp(var.value, "medium") == 0)
       {
          overscan_crop_left = 16;
          overscan_crop_right = 16;
-         overscan_crop_top = 8;
-         overscan_crop_bottom = 8;
+         overscan_crop_top = 16;
+         overscan_crop_bottom = 22;
+         
+         overscan_led_bar_x = 0;
+         overscan_led_bar_y = 17;
+         overscan_led_bar_w = 0;
+         overscan_led_bar_h = 11;
       }
       else if (strcmp(var.value, "large") == 0)
       {
-         overscan_crop_left = 32;
-         overscan_crop_right = 32;
-         overscan_crop_top = 16;
-         overscan_crop_bottom = 16;
+         overscan_crop_left = 30; //32
+         overscan_crop_right = 28; //32
+         overscan_crop_top = 32; //16
+         overscan_crop_bottom = 42; //16
+         
+         overscan_led_bar_x = 0;
+         overscan_led_bar_y = 36;
+         overscan_led_bar_w = 0;
+         overscan_led_bar_h = 11;
       }
       else // "auto" or any other value
       {
          overscan_crop_left = 24;
          overscan_crop_right = 24;
-         overscan_crop_top = 12;
-         overscan_crop_bottom = 12;
+         overscan_crop_top = 24;
+         overscan_crop_bottom = 32;
+         
+         overscan_led_bar_x = 0;
+         overscan_led_bar_y = 27;
+         overscan_led_bar_w = 0;
+         overscan_led_bar_h = 11;
       }
       
       if (log_cb)
@@ -602,9 +633,11 @@ void retro_run(void)
       video_cb(Retro_Screen,retrow,retroh,retrow<<PIXEL_BYTES);
       
       // Upload silent audio samples during splash display
-      if(SND==1)
-         for(int x=0;x<snd_sampler;x++)
-            audio_cb(0,0);
+      // Commented because a buzzing noise is heard during splash in GB300
+
+//      if(SND==1)
+//         for(int x=0;x<snd_sampler;x++)
+//            audio_cb(0,0);
       
       // Don't switch to emulator thread during splash - wait for core boot
       return;
