@@ -74,6 +74,10 @@ int RSTOPON=-1;
 static int vkx=0,vky=0;
 unsigned int mpal[21];
 
+// Crop dimensions for LED bar
+const int led_h = 230;
+const int led_w = 330;
+
 extern int retrow; 
 extern int retroh;
 extern retro_input_state_t input_state_cb;
@@ -214,7 +218,7 @@ void Retro_BlitSurface(retro_Surface *ss)
 	retro_Rect src,dst;
 	int x,y,w;
 
-	src.x = 0;
+ 	src.x = 0;
 	src.y = 0;
 	src.w = ss->w;
 	src.h = ss->h;
@@ -478,47 +482,69 @@ void C64Display::Update(void)
    if(ThePrefs.ShowLEDs)
    {
       unsigned i;
+      const int led_h = 230;
+      const int led_w = 330;
       // Draw speedometer/LEDs
-      r.x   = 0;
-      r.y	= DISPLAY_Y;
-      r.w	= DISPLAY_X;
-      r.h	= 15;
+      r.x   = 30;
+      r.y	= led_h + 4;
+      r.w	= led_w -5;
+      r.h	= 11;
 
+      // LED bar Rectangle
       retro_FillRect(screen, &r, fill_gray);
-      r.w = DISPLAY_X; r.h = 1;
-      retro_FillRect(screen, &r, shine_gray);
-      r.y = DISPLAY_Y + 14;
-      retro_FillRect(screen, &r, shadow_gray);
-      r.w = 16;
-
-      for (i = 2; i < 6; i++)
-      {
-         r.x = DISPLAY_X * i/5 - 24; r.y = DISPLAY_Y + 4;
-         retro_FillRect(screen, &r, shadow_gray);
-         r.y = DISPLAY_Y + 10;
-         retro_FillRect(screen, &r, shine_gray);
-      }
-      r.y = DISPLAY_Y; r.w = 1; r.h = 15;
+//      r.w = led_w;
+//      r.h = 1;
+      // LED bar upper border (disabled)
+//      retro_FillRect(screen, &r, green);
+//      r.y = led_h + 14;
+      // LED bar lower border (disabled)
+//      retro_FillRect(screen, &r, fill_gray);
+      
+      // LED bar Drive Leds borders (disabled)
+//      r.w = 16;
+//      for (i = 2; i < 6; i++)
+//      {
+//         r.x = led_w * i/5 - 34; //24
+//         r.y = led_h + 4;
+//         // LED bar Drive Leds Upper Border (disabled)
+//         retro_FillRect(screen, &r, shadow_gray);
+//         r.y = led_h + 10;
+//         // LED bar Drive Leds Lower Border (disabled)
+//         retro_FillRect(screen, &r, shine_gray);
+//      }
+      
+      //Vertical separation Lines
+      r.y = led_h + 5;
+      r.w = 1;
+      r.h = 11;
       for (i = 0; i < 5; i++)
       {
-         r.x = DISPLAY_X * i / 5;
-         retro_FillRect(screen, &r, shine_gray);
-         r.x = DISPLAY_X * (i+1) / 5 - 1;
+//         r.x = led_w * i / 5 - 5; //0
+         //Vertical line light (disabled)
+//         retro_FillRect(screen, &r, shine_gray);
+         r.x = led_w * (i+1) / 5 + 20; // - 6
+         //Vertical line dark
          retro_FillRect(screen, &r, shadow_gray);
       }
-      r.y = DISPLAY_Y + 4; r.h = 7;
-      for (i = 2; i < 6; i++)
-      {
-         r.x = DISPLAY_X * i/5 - 24;
-         retro_FillRect(screen, &r, shadow_gray);
-         r.x = DISPLAY_X * i/5 - 9;
-         retro_FillRect(screen, &r, shine_gray);
-      }
-      r.y = DISPLAY_Y + 5; r.w = 14; r.h = 5;
+      
+      // Led vertical left & right borders (disabled)
+//       r.y = led_h + 4; r.h = 7;
+//       for (i = 2; i < 6; i++)
+//       {
+//          r.x = led_w * i/5 - 34; //24
+//          retro_FillRect(screen, &r, shadow_gray);
+//          r.x = led_w * i/5 - 9;
+//          retro_FillRect(screen, &r, red);
+//       }
+      
+      // Drive Leds
+      r.y = led_h + 6;
+      r.w = 14;
+      r.h = 5;
       for (i = 0; i < 4; i++)
       {
          int c;
-         r.x = DISPLAY_X * (i+2) / 5 - 23;
+         r.x = led_w * (i+2) / 5 + 2; //23
          switch (led_state[i])
          {
             case LED_ON:
@@ -533,32 +559,46 @@ void C64Display::Update(void)
          }
          retro_FillRect(screen, &r, c);
       }
+      
+      // LED bar Texts 
 #if defined(SF2000)
+      // Y text position
+      int yTPos = 5;      
       if ( shiftstate == 1 )
-         draw_string(screen, DISPLAY_X + 8, DISPLAY_Y + 4, "R ON", green, fill_gray);
+         draw_string(screen, led_w * 1/7 - 12, led_h + yTPos, "SH", green, fill_gray);
       else
-         draw_string(screen, DISPLAY_X + 8, DISPLAY_Y + 4, "R OFF", black, fill_gray);
+         draw_string(screen, led_w * 1/7 - 12, led_h + yTPos, "SH", black, fill_gray);
       if ( joystickport == 1 )
-         draw_string(screen, DISPLAY_X + (7*8), DISPLAY_Y + 4, "J 2", black, fill_gray);
+         draw_string(screen, led_w * 1/7 + 16, led_h + yTPos, "J2", black, fill_gray);
       else
-         draw_string(screen, DISPLAY_X + (7*8), DISPLAY_Y + 4, "J 1", black, fill_gray);
+         draw_string(screen, led_w * 1/7 + 16, led_h + yTPos, "J1", black, fill_gray);
 #endif
-      draw_string(screen, DISPLAY_X * 1/5 + 8, DISPLAY_Y + 4, "D\x12 8", black, fill_gray);
-      draw_string(screen, DISPLAY_X * 2/5 + 8, DISPLAY_Y + 4, "D\x12 9", black, fill_gray);
-      draw_string(screen, DISPLAY_X * 3/5 + 8, DISPLAY_Y + 4, "D\x12 10", black, fill_gray);
-      draw_string(screen, DISPLAY_X * 4/5 + 8, DISPLAY_Y + 4, "D\x12 11", black, fill_gray);
+      draw_string(screen, led_w * 1/5 + 24, led_h + yTPos, "D\x12 8", black, fill_gray);
+      draw_string(screen, led_w * 2/5 + 24, led_h + yTPos, "D\x12 9", black, fill_gray);
+      draw_string(screen, led_w * 3/5 + 24, led_h + yTPos, "D\x12 10", black, fill_gray);
+      draw_string(screen, led_w * 4/5 + 24, led_h + yTPos, "D\x12 11", black, fill_gray);
    }
+    // --- Begin crop modification ---    
+    // This one good for zooming but no bar included
+    const int crop_x = 28;   // Left border offset
+    const int crop_y = 33;   // Top border offset
+    const int crop_w = 330;  // Active width
+    const int crop_h = 210;  // Active height
 
-	// Update display
-	//blit c64 scr 1bit depth to emu scr 4bit depth
-	pout = (unsigned int *)Retro_Screen+((ThePrefs.ShowLEDs?0:8)*retrow);
-	pin  = (unsigned char *)screen->pixels;
+    pout = (unsigned int *)Retro_Screen;
+    pin  = (unsigned char *)screen->pixels + crop_x + crop_y * screen->w;
 
-	for (x = 0; x < screen->w * screen->h; x++)
-		*pout++ = mpal[*pin++];
+    for (int y = 0; y < crop_h; y++)
+    {
+        for (int x = 0; x < crop_w; x++)
+        {
+            *pout++ = mpal[*pin++];
+        }
+        pin += (screen->w - crop_w); // Skip border pixels
+    }
 
-	if (SHOWKEY==1)
-      virtual_kdb(( char *)Retro_Screen,vkx,vky);
+    if (SHOWKEY==1)
+        virtual_kdb(( char *)Retro_Screen,vkx,vky);
 }
 
 /* Return pointer to bitmap data */

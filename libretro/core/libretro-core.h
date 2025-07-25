@@ -24,8 +24,8 @@
 	#define PITCH 4	
 #endif 
 
-#define WINDOW_WIDTH 384//400
-#define WINDOW_HEIGHT 288//300
+#define WINDOW_WIDTH 330//384
+#define WINDOW_HEIGHT 210//288
 
 #ifndef NO_LIBCO
 #include "libco.h"

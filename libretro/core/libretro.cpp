@@ -27,7 +27,7 @@ int frameskip_type = 0;     // 0 = fixed, 1 = auto
 int frameskip_value = 0;    // Number of frames to skip
 int frameskip_counter = 0;  // Current frame counter
 
-// Frodo_1541emul variable
+// Frodo 1541 emulation variable
 bool frodo_1541emul = true;
 
 // Shutdown flag
@@ -126,7 +126,7 @@ static void render_splash_screen(void)
    uint16_t bg_color = ((231 >> 3) << 11) | ((145 >> 2) << 5) | (191 >> 3);
    uint16_t text_color = 0xFFFF; // White
 #else
-   uint32_t bg_color = 0xFFE791BF; // ARGB
+   uint32_t bg_color = 0x7F32A8; // ARGB deep purple
    uint32_t text_color = 0xFFFFFFFF; // White
 #endif
 
@@ -249,7 +249,7 @@ static void update_variables(void)
          log_cb(RETRO_LOG_INFO, "Emul1541Proc set to: %s\n", 
                 var.value);
    }
-
+   
    // Handle frameskip option
    var.key   = "frodo_frameskip";
    var.value = NULL;
