@@ -92,6 +92,11 @@ extern int overscan_crop_right;
 extern int overscan_crop_top;
 extern int overscan_crop_bottom;
 
+extern int overscan_led_bar_x;
+extern int overscan_led_bar_y;
+extern int overscan_led_bar_w;
+extern int overscan_led_bar_h;
+
 /* forward declarations */
 int Retro_PollEvent(uint8 *key_matrix,
       uint8 *rev_matrix, uint8 *joystick);
@@ -495,46 +500,67 @@ void C64Display::Update(void)
    {
       unsigned i;
       // Draw speedometer/LEDs
-      r.x   = 0;
-      r.y	= DISPLAY_Y;
-      r.w	= DISPLAY_X;
-      r.h	= 15;
-
+      // Commented some bar UI elements to simplify resizing
+      // (LED bar lower border, LED drive horizontal borders, Led drive vertical borders)
+      
+      // LED bar Rectangle
+      r.x = 0;
+      r.y = DISPLAY_Y - overscan_led_bar_y;
+      r.w = DISPLAY_X;
+      r.h = overscan_led_bar_h; //15
       retro_FillRect(screen, &r, fill_gray);
-      r.w = DISPLAY_X; r.h = 1;
+      
+      // LED bar upper border
+      r.w = DISPLAY_X;
+      r.h = 1;
       retro_FillRect(screen, &r, shine_gray);
-      r.y = DISPLAY_Y + 14;
-      retro_FillRect(screen, &r, shadow_gray);
-      r.w = 16;
-
-      for (i = 2; i < 6; i++)
-      {
-         r.x = DISPLAY_X * i/5 - 24; r.y = DISPLAY_Y + 4;
-         retro_FillRect(screen, &r, shadow_gray);
-         r.y = DISPLAY_Y + 10;
-         retro_FillRect(screen, &r, shine_gray);
-      }
-      r.y = DISPLAY_Y; r.w = 1; r.h = 15;
+      
+      // LED bar lower border 
+//      r.y = DISPLAY_Y + 10 - overscan_led_bar_y; //14
+//      retro_FillRect(screen, &r, shadow_gray);
+      
+      // LED bar Drive Leds borders
+//      r.w = 16; //16
+//      for (i = 2; i < 6; i++)
+//      {
+//         r.x = DISPLAY_X * i/5 + 2; //- 24;
+//         r.y = DISPLAY_Y + 4 - overscan_led_bar_y;
+//         retro_FillRect(screen, &r, shadow_gray);
+//         r.y = DISPLAY_Y + 10;
+//         retro_FillRect(screen, &r, shine_gray);
+//      }
+      
+      //Vertical separation Lines
+      r.y = DISPLAY_Y - overscan_led_bar_y;
+      r.w = 1;
+      r.h = overscan_led_bar_h; //15
       for (i = 0; i < 5; i++)
       {
-         r.x = DISPLAY_X * i / 5;
-         retro_FillRect(screen, &r, shine_gray);
-         r.x = DISPLAY_X * (i+1) / 5 - 1;
+//         r.x = DISPLAY_X * i / 6 + 10;
+//         retro_FillRect(screen, &r, shine_gray);
+         r.x = DISPLAY_X * (i+1) / 6 + 19;
          retro_FillRect(screen, &r, shadow_gray);
       }
-      r.y = DISPLAY_Y + 4; r.h = 7;
-      for (i = 2; i < 6; i++)
-      {
-         r.x = DISPLAY_X * i/5 - 24;
-         retro_FillRect(screen, &r, shadow_gray);
-         r.x = DISPLAY_X * i/5 - 9;
-         retro_FillRect(screen, &r, shine_gray);
-      }
-      r.y = DISPLAY_Y + 5; r.w = 14; r.h = 5;
+      
+      // Led vertical left & right borders
+//      r.y = DISPLAY_Y + 4 - overscan_led_bar_y; 
+//      r.h = 4;
+//      for (i = 2; i < 6; i++)
+//      {
+//         r.x = DISPLAY_X * i/5 + 1; //- 24;
+//         retro_FillRect(screen, &r, shadow_gray);
+//         r.x = DISPLAY_X * i/5 + 16; //- 9;
+//         retro_FillRect(screen, &r, shine_gray);
+//      }
+      
+      // Drive Leds
+      r.y = DISPLAY_Y + 3 - overscan_led_bar_y;
+      r.w = 14;
+      r.h = 4; //5
       for (i = 0; i < 4; i++)
       {
          int c;
-         r.x = DISPLAY_X * (i+2) / 5 - 23;
+         r.x = DISPLAY_X * (i+2) / 6 - 3; //- 23;
          switch (led_state[i])
          {
             case LED_ON:
@@ -549,20 +575,23 @@ void C64Display::Update(void)
          }
          retro_FillRect(screen, &r, c);
       }
+      
+      // LED bar Texts
+      int yTPos = 1;
 #if defined(SF2000)
       if ( shiftstate == 1 )
-         draw_string(screen, DISPLAY_X + 8, DISPLAY_Y + 4, "R ON", green, fill_gray);
+         draw_string(screen, DISPLAY_X + 35, DISPLAY_Y + yTPos - overscan_led_bar_y - 1, "F\x0E", green, fill_gray);
       else
-         draw_string(screen, DISPLAY_X + 8, DISPLAY_Y + 4, "R OFF", black, fill_gray);
+         draw_string(screen, DISPLAY_X + 35, DISPLAY_Y + yTPos - overscan_led_bar_y - 1, "F\x0E", black, fill_gray);
       if ( joystickport == 1 )
-         draw_string(screen, DISPLAY_X + (7*8), DISPLAY_Y + 4, "J 2", black, fill_gray);
+         draw_string(screen, DISPLAY_X + (7*8) + 5, DISPLAY_Y + yTPos - overscan_led_bar_y - 1, "J2", black, fill_gray);
       else
-         draw_string(screen, DISPLAY_X + (7*8), DISPLAY_Y + 4, "J 1", black, fill_gray);
+         draw_string(screen, DISPLAY_X + (7*8) + 5, DISPLAY_Y + yTPos - overscan_led_bar_y - 1, "J1", black, fill_gray);
 #endif
-      draw_string(screen, DISPLAY_X * 1/5 + 8, DISPLAY_Y + 4, "D\x12 8", black, fill_gray);
-      draw_string(screen, DISPLAY_X * 2/5 + 8, DISPLAY_Y + 4, "D\x12 9", black, fill_gray);
-      draw_string(screen, DISPLAY_X * 3/5 + 8, DISPLAY_Y + 4, "D\x12 10", black, fill_gray);
-      draw_string(screen, DISPLAY_X * 4/5 + 8, DISPLAY_Y + 4, "D\x12 11", black, fill_gray);
+      draw_string(screen, DISPLAY_X * 1/6 + 25, DISPLAY_Y + yTPos - overscan_led_bar_y, "D\x12" "8", black, fill_gray);
+      draw_string(screen, DISPLAY_X * 2/6 + 25, DISPLAY_Y + yTPos - overscan_led_bar_y, "D\x12" "9", black, fill_gray);
+      draw_string(screen, DISPLAY_X * 3/6 + 25, DISPLAY_Y + yTPos - overscan_led_bar_y, "D\x12" "10", black, fill_gray);
+      draw_string(screen, DISPLAY_X * 4/6 + 25, DISPLAY_Y + yTPos - overscan_led_bar_y, "D\x12" "11", black, fill_gray);
    }
 
 	// Update display
